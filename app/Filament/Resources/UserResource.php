@@ -18,9 +18,7 @@ use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-
-    protected static ?string $tenantOwnershipRelationshipName = 'field'; // Cambia 'user' a la relación correcta
-
+    protected static ?string $tenantOwnershipRelationshipName = 'fields';
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
@@ -31,7 +29,6 @@ class UserResource extends Resource
     protected static ?string $modelLabel = 'Usuario';
 
     protected static ?string $slug = 'usuarios';
-
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = 50;
@@ -62,7 +59,7 @@ class UserResource extends Resource
                     ->label('Campos')
                     ->searchable()
                     ->multiple()
-                    ->relationship('field', 'name')
+                    ->relationship('fields', 'name')
                     ->preload(),
             ]);
     }

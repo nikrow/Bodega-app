@@ -53,15 +53,46 @@ class Field extends Model implements Auditable
     {
         return $this->belongsTo(Field::class, 'field_id');
     }
-
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+    public function applicators()
+    {
+        return $this->hasMany(Applicator::class);
+    }
+    public function tractors()
+    {
+        return $this->hasMany(Tractor::class);
+    }
+    public function equipment()
+    {
+        return $this->hasMany(Equipment::class);
+    }
     public function wharehouses()
     {
         return $this->hasMany(Wharehouse::class);
     }
-
+    public function parcels()
+    {
+        return $this->hasMany(Parcel::class);
+    }
+    public function movimientos()
+    {
+        return $this->hasMany(Movimiento::class);
+    }
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
     public function user()
-        {
-            return $this->belongsTo(User::class, 'user_id');
-        }
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'field_user', 'field_id', 'user_id');
+    }
+
 }
 

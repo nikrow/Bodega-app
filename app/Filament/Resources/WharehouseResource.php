@@ -14,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class WharehouseResource extends Resource
 {
@@ -38,12 +39,6 @@ class WharehouseResource extends Resource
                     ->label('Nombre')
                     ->unique(wharehouse::class, 'name', ignoreRecord: true)
                     ->rules('required', 'max:255'),
-                forms\Components\Select::make('field_id')
-                    ->label('Campo')
-                    ->searchable()
-                    ->options(Field::all()->pluck('name', 'id')->toArray())
-                    ->required()
-                    ->rules('required'),
 
             ]);
     }
@@ -100,7 +95,7 @@ class WharehouseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AuditsRelationManager::class,
         ];
     }
 

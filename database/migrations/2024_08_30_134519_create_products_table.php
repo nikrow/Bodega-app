@@ -15,12 +15,20 @@ return new class extends Migration
             $table->id();
             $table->string('product_name');
             $table->string('active_ingredients');
-            $table->string("SAP_code");
-            $table->string('family');
-            $table->float('price');
+            $table->enum('SAP_family', ['fertilizantes-enmiendas', 'fitosanitarios', 'fitoreguladores', 'bioestimulantes', 'otros']);
+            $table->string('SAP_code');
+            $table->enum('unit_measure', ['kilogramo', 'litro', 'unidad'])->nullable();
+            $table->smallInteger('waiting_time')->nullable();
+            $table->smallInteger('reentry')->nullable();
+            $table->decimal('price', 13, 2);
+            $table->enum('family', ['insecticida', 'herbicida', 'fertilizante', 'acaricida', 'fungicida', 'bioestimulante', 'regulador', 'bloqueador']);
             $table->ForeignId('created_by')->constrained('users');
             $table->ForeignId('updated_by')->constrained('users');
-            $table->ForeignId('category_id')->constrained('categories');
+            $table->unsignedBigInteger('field_id')->nullable();
+            $table->foreign('field_id')->references('id')->on('fields');
+            $table->string('slug')->unique();
+            $table->decimal('dosis_min', 8, 3)->nullable();
+            $table->decimal('dosis_max', 8, 3)->nullable();
             $table->timestamps();
         });
     }

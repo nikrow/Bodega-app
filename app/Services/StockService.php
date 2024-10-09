@@ -16,7 +16,7 @@ class StockService
         $movimiento = $productoMovimiento->movimiento;
         $tipo = $movimiento->tipo->value;
         $cantidad = $productoMovimiento->cantidad;
-        $precioCompra = $productoMovimiento->precio_compra;
+
 
         // Capturamos el ID del usuario autenticado
         $userId = Auth::id();
@@ -32,15 +32,43 @@ class StockService
             throw new Exception('El ID de la bodega de destino no puede ser nulo.');
         }
 
-        $stockOrigen = null;
-        if ($tipo === 'salida' || $tipo === 'traslado') {
-            $stockOrigen = $this->getStock($productoMovimiento->producto_id, $movimiento->bodega_origen_id, $movimiento->field_id);
+        // Obtener el producto asociado al movimiento
+        $producto = $productoMovimiento->producto;
+        if (!$producto) {
+            Log::error('Producto no encontrado para el movimientoProducto ID: ' . $productoMovimiento->id);
+            throw new Exception('Producto no encontrado.');
         }
 
+        // Obtener el precio de compra desde la tabla Products si es una entrada
+        $precioCompra = null;
+        if ($tipo === 'entrada') {
+            $precioCompra = $producto->price;
+            if ($precioCompra === null) {
+                Log::error('El precio de compra es nulo para el producto ID: ' . $producto->id);
+                throw new Exception('El precio de compra no puede ser nulo.');
+            }
+
+            // Actualizar el precio en la tabla Products
+        $producto->price = $precioCompra; // Si deseas actualizarlo, ajusta según tus necesidades
+            $producto->save();
+        } elseif ($tipo === 'traslado') {
+
+        // En traslados, podrías querer mantener el precio original o ajustarlo según tu lógica
+        $precioCompra = $producto->price; // O cualquier otra lógica
+        } else {
+
+        // Para salidas, el precio de compra no es necesario
+        $precioCompra = null;
+            }
+        $stockOrigen = null;
+            if ($tipo === 'salida' || $tipo === 'traslado') {
+                $stockOrigen = $this->getStock($productoMovimiento->producto_id, $movimiento->bodega_origen_id, $movimiento->field_id);
+            }
+
         $stockDestino = null;
-        if ($tipo === 'entrada' || $tipo === 'traslado') {
-            $stockDestino = $this->getOrCreateStock($productoMovimiento->producto_id, $movimiento->bodega_destino_id, $movimiento->field_id, $precioCompra, $userId);
-        }
+            if ($tipo === 'entrada' || $tipo === 'traslado') {
+                $stockDestino = $this->getOrCreateStock($productoMovimiento->producto_id, $movimiento->bodega_destino_id, $movimiento->field_id, $precioCompra, $userId);
+            }
 
         // Manejo de los diferentes tipos de movimiento
         switch ($tipo) {
@@ -169,5 +197,22 @@ class StockService
                 throw new Exception('Tipo de movimiento no válido.');
         }
     }
+
+    public function validateStockBeforeCreating(MovimientoProducto $productoMovimiento): void
+    {
+        $movimiento = $productoMovimiento->movimiento;
+        $tipo = $movimiento->tipo->value;
+        $cantidad = $productoMovimiento->cantidad;
+
+        if ($tipo === 'salida') {
+            $stockOrigen = $this->getStock($productoMovimiento->producto_id, $movimiento->bodega_origen_id, $movimiento->field_id);
+
+            if ($stockOrigen->quantity < $cantidad) {
+                throw new Exception('Stock insuficiente para salida.');
+            }
+        }
+
+    }
+
 
 }

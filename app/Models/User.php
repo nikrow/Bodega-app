@@ -56,18 +56,13 @@ class User extends Authenticatable implements Auditable, HasTenants
             'password' => 'hashed',
         ];
     }
-
-    public function field(): BelongsToMany
-    {
-        return $this->belongsToMany(Field::class,);
-    }
     public function fields(): BelongsToMany
     {
         return $this->belongsToMany(Field::class, 'field_user', 'user_id', 'field_id');
     }
     public function getTenants(Panel $panel): array|\Illuminate\Support\Collection
     {
-        return $this->field()->get();
+        return $this->fields()->get();
     }
     public function audit()
     {
@@ -75,6 +70,6 @@ class User extends Authenticatable implements Auditable, HasTenants
     }
     public function canAccessTenant(Model $tenant): bool
     {
-        return $this->field()->whereKey($tenant)->exists();
+        return $this->fields()->whereKey($tenant)->exists();
     }
 }

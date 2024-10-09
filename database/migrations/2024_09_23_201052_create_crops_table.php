@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('crops', function (Blueprint $table) {
             $table->id();
             $table->string('especie');
-            $table->string('variedad');
+
             $table->ForeignId('created_by')->constrained('users');
             $table->ForeignId('updated_by')->constrained('users');
             $table->timestamps();

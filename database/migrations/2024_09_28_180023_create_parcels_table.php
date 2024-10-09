@@ -19,9 +19,10 @@ return new class extends Migration
             $table->smallInteger('planting_year');
             $table->string('planting-schema');
             $table->smallInteger('plants');
-            $table->decimal('Surface_area', 7, 2);
+            $table->decimal('surface', 7, 2);
             $table->ForeignId('created_by')->constrained('users');
             $table->ForeignId('updated_by')->constrained('users');
+            $table->string('slug')->unique();
             $table->timestamps();
         });
     }

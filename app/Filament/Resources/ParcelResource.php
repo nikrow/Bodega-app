@@ -2,16 +2,21 @@
 
 namespace App\Filament\Resources;
 
+
 use App\Filament\Resources\ParcelResource\Pages;
 use App\Filament\Resources\ParcelResource\RelationManagers;
+use App\Models\Crop;
 use App\Models\Parcel;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ParcelResource extends Resource
 {
@@ -37,25 +42,88 @@ class ParcelResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->label('Nombre')
+                    ->unique()
+                    ->rules('required', 'max:255'),
+                Forms\Components\Select::make('crop_id')
+                    ->label('Cultivo')
+                    ->options(Crop::all()->pluck('especie', 'id')->toArray())
+                    ->rules('required'),
+
+                Forms\Components\Select::make('planting_year')
+                    ->options(array_combine(range(1994, 2024), range(1994, 2024)))
+                    ->searchable(true)
+                    ->rules('required'),
+                Forms\Components\TextInput::make('planting-schema')
+                    ->label('Marco Plantación')
+                    ->rules('required'),
+                Forms\Components\TextInput::make('plants')
+                    ->label('Plantas')
+                    ->rules('required', 'numeric'),
+                Forms\Components\TextInput::make('surface')
+                    ->label('Superficie')
+                    ->suffix('ha')
+                    ->rules('required', 'numeric'),
+
+
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultGroup('crop.especie')
+            ->groups([
+                Group::make('crop.especie')
+                    ->collapsible()
+                    ->label('Cultivo'),
+            ])
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('crop.especie')
+                    ->label('Cultivo')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('planting_year')
+                    ->label('Año de Plantación')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('planting-schema')
+                    ->label('Marco Plantación')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('plants')
+                    ->label('Plantas')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('surface')
+                    ->label('Superficie')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('createdBy.name')
+                    ->label('Creado por')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updatedBy.name')
+                    ->label('Modificado por')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('crop_id')
+                    ->label('Cultivo')
+                    ->searchable(true)
+                    ->options(Crop::all()->pluck('especie', 'id')->toArray()),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    ExportBulkAction::make()
                 ]),
             ]);
     }
@@ -63,7 +131,7 @@ class ParcelResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AuditsRelationManager::class,
         ];
     }
 

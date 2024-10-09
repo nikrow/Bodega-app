@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fields', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->ForeignId('created_by')->nullable();
-            $table->timestamps();
+        Schema::table('fields', function (Blueprint $table) {
+            $table->string('slug')->unique();
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fields');
+        Schema::table('fields', function (Blueprint $table) {
+            $table->dropColumn('slug');
+        });
     }
 };

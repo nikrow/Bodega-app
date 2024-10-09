@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('wharehouses', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('estado');
+            $table->string('status');
             $table->ForeignId('created_by')->constrained('users');
-            $table->ForeignId('field')->constrained('fields');
+            $table->ForeignId('field_id')->constrained('fields');
             $table->timestamps();
         });
     }

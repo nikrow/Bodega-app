@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -32,9 +33,13 @@ class Wharehouse extends Model implements Auditable
             $field->created_by = Auth::id();
         });
 
+        static::creating(function ($warehouse) {
+            $warehouse->field_id = Filament::getTenant()->id;
+        });
+
         static::creating(function ($field) {
             // Genera el slug a partir del nombre
-            $field->slug = Str::slug($field->name); // Cambié 'title' por 'name'
+            $field->slug = Str::slug($field->name);
         });
 
         static::creating(function ($field) {
@@ -42,7 +47,6 @@ class Wharehouse extends Model implements Auditable
             $field->status = 'activo';
         });
     }
-
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

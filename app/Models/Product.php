@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
 
@@ -16,12 +17,18 @@ class Product extends Model implements Auditable
         'product_name',
         'active_ingredients',
         'SAP_code',
+        'SAP_family',
         'family',
         'price',
+        'waiting_time',
+        'reentry',
         'created_by',
         'updated_by',
-        'category_id',
         'unit_measure',
+        'field_id',
+        'slug',
+        'dosis_min',
+        'dosis_max',
     ];
     protected static function booted()
     {
@@ -29,6 +36,7 @@ class Product extends Model implements Auditable
 
             $field->created_by = Auth::id();
             $field->updated_by = Auth::id();
+            $field->slug = Str::slug($field->product_name);
         });
     }
     public function createdBy()
@@ -41,10 +49,6 @@ class Product extends Model implements Auditable
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function category()
-    {
-        return $this->belongsTo(Category::class, 'category_id');
-    }
     public function audit()
     {
         return $this->morphTo(Audit::class, 'auditable_id', 'id');
