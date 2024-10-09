@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Tenancy\RegisterField;
+use App\Models\Field;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,18 +35,26 @@ class BodegaPanelProvider extends PanelProvider
                 'primary' => ('#568203'),
                 'secondary' => ('#2F0381'),
             ])
+            ->tenant(field::class, slugAttribute: 'slug')
             ->brandLogo(asset('img/logovector.svg'))
             ->brandLogoHeight('7rem')
             ->favicon(asset('img/logovector.svg'))
             ->font('Manrope')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-
+            ->navigationGroups([
+                'Aplicaciones',
+                'Bodega',
+                'Anexos',
+                'Filament Shield'
+            ])
             ->pages([
                 Pages\Dashboard::class,
             ])
+
+
             ->plugins([
-                FilamentShieldPlugin::make()
+
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

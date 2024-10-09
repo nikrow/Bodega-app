@@ -17,7 +17,21 @@ class ParcelResource extends Resource
 {
     protected static ?string $model = Parcel::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'eos-dashboard';
+
+    protected static ?string $navigationGroup = 'Anexos';
+
+    protected static ?int $navigationSort = 40;
+
+    protected static ?string $navigationLabel = 'Cuartel';
+
+    protected static ?string $modelLabel = 'Cuartel';
+
+    protected static ?string $pluralModelLabel = 'Cuarteles';
+
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?string $slug = 'cuarteles';
 
     public static function form(Form $form): Form
     {

@@ -17,6 +17,8 @@ use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class CropResource extends Resource
 {
+    protected static bool $isScopedToTenant = false;
+
     protected static ?string $model = Crop::class;
 
     protected static ?string $navigationIcon = 'phosphor-plant';

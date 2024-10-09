@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
-use App\Models\Movement;
-use App\Observers\MovementObserver;
+use App\Models\Movimiento;
+use App\Models\MovimientoProducto;
+use App\Observers\MovimientoObserver;
+use App\Observers\MovimientoProductoObserver;
 use Illuminate\Support\ServiceProvider;
 
 
@@ -22,6 +24,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Movement::observe(MovementObserver::class);
+        MovimientoProducto::observe(MovimientoProductoObserver::class);
     }
 }

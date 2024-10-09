@@ -12,7 +12,7 @@ class Stock extends Model implements Auditable
     use HasFactory;
     use \OwenIt\Auditing\Auditable;
 
-    protected $table = 'stock';
+
     protected $fillable = [
         'product_id',
         'quantity',

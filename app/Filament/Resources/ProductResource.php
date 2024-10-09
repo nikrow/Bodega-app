@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UnidadMedida;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Category;
+use App\Models\Field;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,6 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ProductResource extends Resource
 {
@@ -20,6 +23,7 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'bi-box-seam';
 
+    protected static ?string $tenantOwnershipRelationshipName = 'field';
     protected static ?string $navigationGroup = 'Anexos';
 
     protected static ?string $navigationLabel = 'Productos';
@@ -59,6 +63,14 @@ class ProductResource extends Resource
                 Forms\Components\Select::make('category_id')
                     ->label('Categoría')
                     ->options(Category::all()->pluck('name', 'id')->toArray())
+                    ->rules('required'),
+                Forms\Components\Select::make('unit_measure')
+                    ->label('Unidad de Medida')
+                    ->options([
+                        UnidadMedida::KILOGRAMO->value => 'kilogramo',
+                        UnidadMedida::LITRO->value => 'litro',
+                        UnidadMedida::UNIDAD->value => 'unidad',
+                    ])
                     ->rules('required'),
 
                 ]);
@@ -101,9 +113,14 @@ class ProductResource extends Resource
                     ->sortable()
                     ->date('d/m/Y H:i')
                     ->label('Modificado el'),
+                Tables\Columns\TextColumn::make('unit_measure')
+                    ->label('Unidad de Medida')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                    Tables\Filters\SelectFilter::make('category_id')
+                    ->label('Categoría')
+                    ->options(Category::all()->pluck('name', 'id')->toArray()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -111,6 +128,7 @@ class ProductResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ExportBulkAction::make(),
                 ]),
             ]);
     }
@@ -118,7 +136,7 @@ class ProductResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AuditsRelationManager::class,
         ];
     }
 

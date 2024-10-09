@@ -36,7 +36,7 @@ class WharehouseResource extends Resource
                 forms\Components\TextInput::make('name')
                     ->required()
                     ->label('Nombre')
-                    ->unique()
+                    ->unique(wharehouse::class, 'name', ignoreRecord: true)
                     ->rules('required', 'max:255'),
                 forms\Components\Select::make('field_id')
                     ->label('Campo')

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FieldResource\Pages;
 use App\Filament\Resources\FieldResource\RelationManagers;
 use App\Models\Field;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -20,7 +21,9 @@ class FieldResource extends Resource
 
 
 
-    protected static ?string $navigationIcon = 'eos-dashboard';
+    protected static ?string $tenantOwnershipRelationshipName = 'field'; // Cambia 'user' a la relación correcta
+
+    protected static ?string $navigationIcon = 'eos-landscape-o';
 
     protected static ?string $navigationGroup = 'Anexos';
 
@@ -62,6 +65,10 @@ class FieldResource extends Resource
                     ->sortable()
                     ->date('d/m/Y H:i')
                     ->label('Modificado el'),
+                Tables\Columns\TextColumn::make('slug')
+                    ->sortable()
+                    ->label('Slug')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
 
             ])
@@ -93,4 +100,16 @@ class FieldResource extends Resource
             'edit' => Pages\EditField::route('/{record}/edit'),
         ];
     }
+
+    public static function query(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        $user = auth()->user();
+
+        // Obtener los IDs de los fields (bodegas) asignados al usuario
+        $fieldIds = $user->fields->pluck('id');
+
+        // Filtrar las bodegas que tienen esos IDs
+        return $query->whereIn('field_id', $fieldIds);
+    }
+
 }

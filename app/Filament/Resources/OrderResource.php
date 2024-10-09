@@ -17,16 +17,33 @@ class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'typ-th-list';
 
+    protected static ?string $navigationLabel = 'Orden Aplicaciones';
 
+    protected static ?string $modelLabel = 'Orden Aplicaciones';
+
+    protected static ?string $navigationGroup = 'Aplicaciones';
     protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //
+
+                forms\Components\Select::make('status')
+                    ->options([
+                        'pendiente' => 'pendiente',
+                        'enviado' => 'enviado',
+                        'recibido' => 'recibido',
+                        'cancelado' => 'cancelado',
+                        'entregado' => 'entregado',
+                        'entregado parcialmente' => 'entregado parcialmente',
+                    ])
+                    ->required()
+                    ->label('Estado')
+                    ->rules('required'),
+
             ]);
     }
 
@@ -34,7 +51,14 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('user_id')
+                    ->label('Usuario')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -52,7 +76,7 @@ class OrderResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\OrderLinesRelationManager::class,
         ];
     }
 

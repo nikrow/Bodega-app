@@ -17,7 +17,7 @@ use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class CategoryResource extends Resource
 {
-
+    protected static bool $isScopedToTenant = false;
 
     protected static ?string $model = Category::class;
 

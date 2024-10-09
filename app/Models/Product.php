@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use OwenIt\Auditing\Contracts\Auditable;
+use OwenIt\Auditing\Models\Audit;
 
-class Product extends Model
+class Product extends Model implements Auditable
 {
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'product_name',
         'active_ingredients',
@@ -18,6 +21,7 @@ class Product extends Model
         'created_by',
         'updated_by',
         'category_id',
+        'unit_measure',
     ];
     protected static function booted()
     {
@@ -41,4 +45,14 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
+    public function audit()
+    {
+        return $this->morphTo(Audit::class, 'auditable_id', 'id');
+    }
+
+    public function field()
+    {
+        return $this->belongsTo(Field::class);
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
+use App\Models\Field;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -18,6 +19,9 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    protected static ?string $tenantOwnershipRelationshipName = 'field'; // Cambia 'user' a la relación correcta
+
+
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $navigationGroup = 'Anexos';
@@ -25,6 +29,10 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'Usuarios';
 
     protected static ?string $modelLabel = 'Usuario';
+
+    protected static ?string $slug = 'usuarios';
+
+    protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = 50;
 
@@ -35,25 +43,27 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre')
                     ->required()
-                    ->unique()
+                    ->unique(user::class, 'name', ignoreRecord: true)
                     ->placeholder('Nombre del usuario')
                     ->rules('required', 'max:255'),
                 Forms\Components\TextInput::make('email')
                     ->label('Email')
                     ->required()
-                    ->unique()
+                    ->unique(user::class, 'email', ignoreRecord: true)
                     ->placeholder('Email del usuario')
                     ->rules('required', 'email', 'max:255'),
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
                     ->password()
+                    ->hiddenOn('edit')
                     ->placeholder('Contraseña del usuario')
                     ->rules('required', 'min:8'),
-                Forms\Components\Select::make('roles')
-                    ->relationship('roles', 'name')
-                    ->multiple()
-                    ->preload()
+                forms\Components\Select::make('fields')
+                    ->label('Campos')
                     ->searchable()
+                    ->multiple()
+                    ->relationship('field', 'name')
+                    ->preload(),
             ]);
     }
 
@@ -67,12 +77,6 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->sortable()
                     ->label('Email'),
-                Tables\Columns\BadgeColumn::make('roles.name')
-
-                    ->sortable()
-                    ->searchable()
-
-                    ->label('Rol'),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -86,9 +90,15 @@ class UserResource extends Resource
                     ->sortable()
                     ->date('d/m/Y H:i')
                     ->label('Modificado el'),
+                Tables\Columns\TextColumn::make('field.name')
+                    ->badge()
+                    ->label('Campos')
+                    ->sortable()
+                    ->color('secondary')
+                    ->searchable(),
             ])
             ->filters([
-                //
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
