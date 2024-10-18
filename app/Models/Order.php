@@ -27,7 +27,8 @@ class Order extends Model
         'epp',
         'created_at',
         'wharehouse_id',
-        'updated_at'
+        'updated_at',
+        'done'
     ];
     protected $casts = [
         'family' => 'array',
@@ -42,32 +43,33 @@ class Order extends Model
         static::creating(function ($order) {
 
             $order->user_id = Auth::id();
+            $order->orderNumber = self::generateUniqueOrderNumber();
             $order->field_id = Filament::getTenant()->id;
             $order->status = StatusType::PENDIENTE;
+        });
+        static::updating(function ($order) {
+            $order->updated_by = Auth::id();
+
         });
     }
     protected static function boot()
     {
         parent::boot();
-
-        static::creating(function ($order) {
-            $tenant = Filament::getTenant();
-            if ($tenant) {
-                $order->field_id = $tenant->id;
-            }
-            $order->orderNumber = self::generateUniqueOrderNumber($order->field_id);
-        });
     }
-    public static function generateUniqueOrderNumber($fieldId)
+    public static function generateUniqueOrderNumber()
     {
-        return DB::transaction(function () use ($fieldId) {
-            // Obtener el último número de orden para el campo específico
-            $lastOrder = Order::where('field_id', $fieldId)
-                ->lockForUpdate() // Bloqueo para evitar condiciones de carrera
-                ->max('orderNumber');
+        // Obtener el último movimiento creado
+        $latestOrder = self::latest('id')->lockForUpdate()->first();
 
-            return $lastOrder ? $lastOrder + 1 : 1;
-        });
+        // Calcular el siguiente número incrementando el último ID
+        $nextNumber = $latestOrder ? $latestOrder->id + 1 : 1;
+
+        // Formatear la fecha en el formato deseado (Año-Mes-Día)
+        $date = date('Y-m-d');
+
+        // Devolver el número de movimiento con la fecha y el número incremental
+        return $date . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        // Ejemplo: 2024-09-30-000001
     }
     public function createdBy()
     {
@@ -83,6 +85,10 @@ class Order extends Model
     {
         return $this->hasMany(order_line::class);
     }
+    public function ApplicationUsage()
+        {
+            return $this->hasMany(OrderApplicationUsage::class);
+        }
     public function wharehouse()
     {
         return $this->belongsTo(Wharehouse::class, 'wharehouse_id');

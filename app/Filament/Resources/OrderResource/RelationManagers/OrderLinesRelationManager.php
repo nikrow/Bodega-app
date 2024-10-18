@@ -113,7 +113,7 @@ class OrderLinesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('dosis')
                     ->label('Dosis')
                 ->suffix('      l/100l')
-                    ->numeric(2)
+                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reasons')
@@ -121,7 +121,8 @@ class OrderLinesRelationManager extends RelationManager
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('waiting_time')
-                    ->label('Tiempo de espera')
+                    ->label('Carencia')
+                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reentry')

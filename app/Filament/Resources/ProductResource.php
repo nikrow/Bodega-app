@@ -23,7 +23,7 @@ use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-
+    protected static bool $isScopedToTenant = false;
     protected static ?string $navigationIcon = 'bi-box-seam';
     protected static ?string $tenantOwnershipRelationshipName = 'field';
     protected static ?string $navigationGroup = 'Anexos';
@@ -37,6 +37,8 @@ class ProductResource extends Resource
 
                 Forms\Components\TextInput::make('product_name')
                     ->label('Nombre')
+                    ->required()
+                    ->unique()
                     ->placeholder('Nombre del producto')
                     ->rules('required', 'max:255'),
                 Forms\Components\TextInput::make('active_ingredients')
@@ -45,6 +47,7 @@ class ProductResource extends Resource
                     ->nullable(),
                 Forms\Components\TextInput::make('SAP_code')
                     ->label('Código SAP')
+                    ->unique()
                     ->rules('required', 'max:255'),
 
                 Forms\Components\Select::make('SAP_family')

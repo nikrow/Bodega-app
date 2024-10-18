@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('moisture', 6, 1);
             $table->ForeignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->ForeignId('updated_by')->constrained('users')->cascadeOnDelete();
-            $table->decimal(6,2)->nullable();
+            $table->decimal('surface',6, 2)->nullable();
             $table->timestamps();
         });
     }

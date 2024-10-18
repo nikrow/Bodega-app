@@ -54,30 +54,69 @@
 <div class="box">
     <div class="header" border="1">
         <img src="{{ public_path('img/logo-js.png') }}" alt="logo">
-        <h1>Orden de Aplicación N° {{ $order->orderNumber }}</h1>
+        <h2>Orden de Aplicación N° {{ $order->orderNumber }}</h2>
     </div>
-    <div>
-        <p><strong>Fecha:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</p>
+    <div column="50" class="header" border="1">
+        <ul>
+            <li><strong>Fecha:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</li>
+            <li><strong>Campo:</strong> {{ $order->field->name ?? 'N/A' }}</li>
+            <li><strong>Encargado:</strong> {{ $order->user->name ?? 'N/A' }}</li>
+            <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
+            <li><strong>Estado:</strong> {{ $order->status->value ?? 'N/A' }}</li>
+            <li><strong>Mojamiento:</strong> {{ $order->wetting ?? 'N/A' }}</li>
+        </ul>
     </div>
+</div>
 
-    <p><strong>Campo:</strong> {{ $order->field->name ?? 'N/A' }}</p>
-    <p><strong>Encargado:</strong> {{ $order->user->name ?? 'N/A' }}</p>
-    <p><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</p>
-    <p><strong>Estado:</strong> {{ $order->status->value ?? 'N/A' }}</p>
-
+<div class="box">
     <h2>Cuarteles</h2>
     @if ($order->orderAplications->isNotEmpty())
-        <ul>
+        <table>
+            <thead>
+            <tr>
+                <th>Cuarteles</th>
+            </tr>
+            </thead>
+            <tbody>
             @foreach ($order->orderAplications as $aplication)
                 @if ($aplication->parcel)
-                    <li>{{ $aplication->parcel->name }}</li>
+                    <tr>
+                        <td>{{ $aplication->parcel->name }}</td>
+                    </tr>
                 @endif
             @endforeach
-        </ul>
+            </tbody>
+        </table>
     @else
         <p>No hay cuarteles aplicados.</p>
     @endif
+</div>
 
+<div class="box">
+    <h2>Equipamiento y EPP</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Equipamiento</th>
+            <th>EPP</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php
+            $maxCount = max(count($order->equipment), count($order->epp));
+        @endphp
+
+        @for ($i = 0; $i < $maxCount; $i++)
+            <tr>
+                <td>{{ $order->equipment[$i] ?? '' }}</td>
+                <td>{{ $order->epp[$i] ?? '' }}</td>
+            </tr>
+        @endfor
+        </tbody>
+    </table>
+</div>
+
+<div class="box">
     <h2>Productos</h2>
     @if ($order->orderLines->isNotEmpty())
         <table>

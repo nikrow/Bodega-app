@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('product_name');
             $table->string('active_ingredients');
             $table->enum('SAP_family', ['fertilizantes-enmiendas', 'fitosanitarios', 'fitoreguladores', 'bioestimulantes', 'otros']);
-            $table->string('SAP_code');
+            $table->string('SAP_code')->unique();
             $table->enum('unit_measure', ['kilogramo', 'litro', 'unidad'])->nullable();
             $table->smallInteger('waiting_time')->nullable();
             $table->smallInteger('reentry')->nullable();

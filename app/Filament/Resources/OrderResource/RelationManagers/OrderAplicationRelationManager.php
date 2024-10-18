@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\OrderResource\RelationManagers;
 
+use App\Enums\StatusType;
 use App\Models\OrderParcel;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class OrderAplicationRelationManager extends RelationManager
 {
@@ -47,6 +49,7 @@ class OrderAplicationRelationManager extends RelationManager
                 Forms\Components\TextInput::make('wetting')
                     ->label('Mojamiento')
                     ->suffix('l/ha')
+                    ->default(fn () => $this->ownerRecord->wetting)
                     ->numeric()
                     ->live(onBlur: true)
                     ->required()
@@ -57,8 +60,6 @@ class OrderAplicationRelationManager extends RelationManager
 
                         $set('surface', ($wetting > 0) ? ($liter / $wetting) : 0);
                     }),
-
-
 
                 Forms\Components\TextInput::make('wind_speed')
                     ->label('Viento')
@@ -76,6 +77,7 @@ class OrderAplicationRelationManager extends RelationManager
                     ->numeric()
                     ->suffix('%')
                     ->required(),
+
                 Forms\Components\TextInput::make('surface')
                     ->label('Superficie aplicada')
                     ->default(0)
@@ -83,9 +85,16 @@ class OrderAplicationRelationManager extends RelationManager
                     ->suffix('has')
                     ->numeric()
                     ->reactive(),
+
             ]);
     }
-
+    protected function saved(Model $record): void
+    {
+        $order = $record->order;
+        if ($order->status !== StatusType::ENPROCESO->value) {
+            $order->update(['status' => StatusType::ENPROCESO->value]);
+        }
+    }
     public function table(Table $table): Table
     {
         return $table
@@ -95,33 +104,48 @@ class OrderAplicationRelationManager extends RelationManager
                     ->label('ID aplicación')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Fecha Aplicación')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('parcel.name')
                     ->label('Cuartel')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('liter')
                     ->label('Litros aplicados')
+                    ->suffix('  l')
+                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('surface')
                     ->label('Superficie aplicada')
+                    ->suffix('  ha')
+                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('wetting')
                     ->label('Mojamiento')
+                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('wind_speed')
                     ->label('Viento')
+                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('temperature')
                     ->label('Temperatura')
+                    ->suffix('  °C')
+                    ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('moisture')
                     ->label('Humedad')
+                    ->suffix('  %')
+                    ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
             ])

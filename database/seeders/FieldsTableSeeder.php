@@ -30,12 +30,12 @@ class FieldsTableSeeder extends Seeder
             [
                 'name' => 'Las Palmas',
                 'slug' => 'las-palmas',
-                'created_by' => $userId,
+                'created_by' => 1,
             ],
             [
                 'name' => 'DASA',
                 'slug' => 'dasa',
-                'created_by' => $userId,
+                'created_by' => 1,
             ],
             // Añade más campos según necesites
         ];

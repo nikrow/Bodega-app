@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
+            $table->string('orderNumber')->unique();
+            $table->foreignId('wharehouse_id')->constrained('wharehouses')->onDelete('cascade');
             $table->enum('status', ['Pendiente','En proceso', 'Completo', 'Cancelado'])->default('Pendiente');
             $table->foreignId('field_id')->constrained('fields')->onDelete('cascade');
             $table->foreignId('crops_id')->constrained('fields')->onDelete('cascade');
@@ -21,6 +23,8 @@ return new class extends Migration
             $table->json('equipment', ['turbonebulizador', 'turbocañon', 'helicoptero', 'dron', 'caracol', 'bomba_espalda', 'barra_levera_parada', 'azufrador']);
             $table->json('family', ['insecticida', 'herbicida', 'fertilizante', 'acaricida', 'fungicida', 'bioestimulante', 'regulador', 'bloqueador']);
             $table->json('epp', ['traje_aplicacion', 'guantes', 'botas', 'protector_auditivo', 'anteojos', 'antiparras', 'mascara_filtro']);
+            $table->dateTime('done')->nullable()->default(null);
+            $table->foreignId('updated_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

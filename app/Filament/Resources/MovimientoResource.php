@@ -39,6 +39,7 @@ class MovimientoResource extends Resource
             ->schema([
                 Select::make('tipo')
                     ->label('Tipo de Movimiento')
+                    ->searchable()
                     ->options([
                         MovementType::ENTRADA->value => 'entrada',
                         MovementType::SALIDA->value => 'salida',
@@ -148,14 +149,26 @@ class MovimientoResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('bodega')
+                    ->label('Bodega')
+                    ->options(
+                        Wharehouse::all()->pluck('name', 'id')
+                    )
+                    ->query(function (Builder $query, array $data) {
+                        if (!empty($data['value'])) {
+                            $query->where(function ($q) use ($data) {
+                                $q->where('bodega_origen_id', $data['value'])
+                                    ->orWhere('bodega_destino_id', $data['value']);
+                            });
+                        }
+                    })
             ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
                     ExportBulkAction::make(),
                 ]),
             ]);

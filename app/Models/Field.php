@@ -57,17 +57,9 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(Product::class);
     }
-    public function applicators()
+    public function aplicators()
     {
-        return $this->hasMany(Applicator::class);
-    }
-    public function tractors()
-    {
-        return $this->hasMany(Tractor::class);
-    }
-    public function equipment()
-    {
-        return $this->hasMany(Equipment::class);
+        return $this->hasMany(Aplicator::class);
     }
     public function wharehouses()
     {
@@ -88,6 +80,10 @@ class Field extends Model implements Auditable
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+    public function climates()
+    {
+        return $this->hasMany(Climate::class);
     }
     public function users()
     {

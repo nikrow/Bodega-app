@@ -6,6 +6,7 @@ use App\Enums\FamilyType;
 use App\Enums\StatusType;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\RelationManagers;
+use App\Filament\Resources\OrderResource\RelationManagers\ApplicationUsageRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderAplicationRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderLinesRelationManager;
 
@@ -16,15 +17,19 @@ use App\Models\Parcel;
 use App\Models\OrderParcel;
 use App\Models\User;
 use App\Models\Wharehouse;
+use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
@@ -40,8 +45,6 @@ class OrderResource extends Resource
     protected static ?string $pluralModelLabel = 'Ordenes de aplicación';
     protected static ?string $modelLabel = 'Orden';
     protected static ?int $navigationSort = 3;
-
-
 
     public static function form(Form $form): Form
     {
@@ -67,7 +70,7 @@ class OrderResource extends Resource
                                 ->reactive(),
 
                             Forms\Components\Select::make('user_id')
-                                ->label('Encargado')
+                                ->label('Responsable técnico')
                                 ->options(function () {
                                     return User::all()->pluck('name', 'id')->toArray();
                                 })
@@ -81,7 +84,10 @@ class OrderResource extends Resource
                             Forms\Components\Select::make('wharehouse_id')
                                 ->label('Bodega preparación')
                                 ->required()
-                                ->options(Wharehouse::all()->pluck('name', 'id')->toArray()),
+                                ->options(function () {
+                                    $tenantId = Filament::getTenant()->id;
+                                    return Wharehouse::where('field_id', $tenantId)->pluck('name', 'id');
+                                }),
 
                             Forms\Components\Select::make('family')
                                 ->options(collect(FamilyType::cases())
@@ -89,62 +95,63 @@ class OrderResource extends Resource
                                     ->toArray())
                                 ->label('Grupo')
                                 ->multiple(),
-
-
-                ]),
-                    Wizard\Step::make('Cuarteles')
-                    ->columns(2)
-                    ->schema([
-                        Forms\Components\CheckboxList::make('parcels')
-                            ->label('Cuarteles')
-                            ->columns(2)
-                            ->searchable()
-                            ->gridDirection('row')
-                            ->bulkToggleable()
-                            ->options(function (callable $get) {
-                                $cropId = $get('crops_id');
-                                if ($cropId) {
-                                    return Parcel::where('crop_id', $cropId)->pluck('name', 'id')->toArray();
-                                }
-                                return [];
-                            })
-                            ->saveRelationshipsUsing(function (Order $record, $state) {
-                                if (!is_array($state)) {
-                                    $state = json_decode($state, true);
-                                }
-
-                                // Eliminar todas las relaciones previas
-                                OrderParcel::where('order_id', $record->id)->delete();
-
-                                // Crear las nuevas relaciones
-                                foreach ($state as $parcelId) {
-                                    OrderParcel::create([
-                                        'order_id' => $record->id,
-                                        'parcel_id' => $parcelId,
-                                        'field_id' => $record->field_id,
-                                        'created_by' => Auth::id(),
-                                        'updated_by' => Auth::id(),
-                                    ]);
-                                }
-                            })
-                            ->afterStateHydrated(function ($state, callable $set, $record) {
-                                if ($record) {
-                                    // Obtener las parcelas relacionadas con la orden
-                                    $selectedParcels = OrderParcel::where('order_id', $record->id)
-                                        ->pluck('parcel_id')
-                                        ->toArray();
-                                    // Establecer las parcelas seleccionadas
-                                    $set('parcels', $selectedParcels);
-                                }
-                            })
-
-                    ]),
-                    Wizard\Step::make('Equipamientos')
-                        ->columns(2)
-                        ->schema([
                             Forms\Components\TextInput::make('wetting')
                                 ->label('Mojamiento')
                                 ->rules('required'),
+
+                        ]),
+                    Wizard\Step::make('Cuarteles')
+                        ->columns(2)
+                        ->schema([
+                            Forms\Components\CheckboxList::make('parcels')
+                                ->label('Cuarteles')
+                                ->columns(2)
+                                ->searchable()
+                                ->gridDirection('row')
+                                ->bulkToggleable()
+                                ->options(function (callable $get) {
+                                    $tenantId = Filament::getTenant()->id;
+                                    $cropId = $get('crops_id');
+                                    if ($cropId) {
+                                        return Parcel::where('crop_id', $cropId)->pluck('name', 'id')->toArray();
+                                    }
+                                    return [];
+                                })
+                                ->saveRelationshipsUsing(function (Order $record, $state) {
+                                    if (!is_array($state)) {
+                                        $state = json_decode($state, true);
+                                    }
+
+                                    // Eliminar todas las relaciones previas
+                                    OrderParcel::where('order_id', $record->id)->delete();
+
+                                    // Crear las nuevas relaciones
+                                    foreach ($state as $parcelId) {
+                                        OrderParcel::create([
+                                            'order_id' => $record->id,
+                                            'parcel_id' => $parcelId,
+                                            'field_id' => $record->field_id,
+                                            'created_by' => Auth::id(),
+                                            'updated_by' => Auth::id(),
+                                        ]);
+                                    }
+                                })
+                                ->afterStateHydrated(function ($state, callable $set, $record) {
+                                    if ($record) {
+                                        // Obtener las parcelas relacionadas con la orden
+                                        $selectedParcels = OrderParcel::where('order_id', $record->id)
+                                            ->pluck('parcel_id')
+                                            ->toArray();
+                                        // Establecer las parcelas seleccionadas
+                                        $set('parcels', $selectedParcels);
+                                    }
+                                })
+
+                        ]),
+                    Wizard\Step::make('Equipamientos')
+                        ->columns(2)
+                        ->schema([
+
                             Forms\Components\CheckboxList::make('equipment')
                                 ->label('Equipamiento')
                                 ->columns(2)
@@ -164,6 +171,7 @@ class OrderResource extends Resource
                             Forms\Components\CheckboxList::make('epp')
                                 ->label('EPP')
                                 ->columns(2)
+                                ->bulkToggleable()
                                 ->gridDirection('row')
                                 ->options([
                                     'traje_aplicacion' => 'Traje de aplicación',
@@ -177,12 +185,13 @@ class OrderResource extends Resource
 
                                 ->rules('required'),
 
-                            ])
+                        ])
 
-                ]) ->skippable()
+                ]) ->skippable(),
+
             ]);
 
-            }
+    }
 
     public static function table(Table $table): Table
     {
@@ -203,7 +212,7 @@ class OrderResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('Usuario')
+                    ->label('Responsable')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
@@ -233,6 +242,11 @@ class OrderResource extends Resource
                     ->searchable()
                     ->date('d/m/Y H:i')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('done')
+                    ->label('Finalizado')
+                    ->searchable()
+                    ->date('d/m/Y')
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -246,13 +260,36 @@ class OrderResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->disabled(fn ($record) => $record->status == StatusType::COMPLETO->value), // Disable edit for completed orders
 
+                Action::make('completarOrden')
+                    ->label('Completar Orden')
+                    ->disabled(fn ($record) => $record->status == StatusType::COMPLETO->value)
+                    ->icon('heroicon-o-check-circle')
+                    ->action(function ($record) {
+                        if ($record->status !== StatusType::COMPLETO->value) {
+                            // Update order to "COMPLETO"
+                            $record->update([
+                                'status' => StatusType::COMPLETO->value,
+                                'done' => now(),
+                            ]);
 
+                            Notification::make()
+                                ->title('Terminada')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make('warning', 'La orden ya está completada.')
+                                ->send();
+                        }
+                    })
+                    ->requiresConfirmation()
+                    ->color('success')
+                    ->icon('heroicon-o-check'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
                     ExportBulkAction::make()
                 ]),
             ]);
@@ -263,8 +300,7 @@ class OrderResource extends Resource
         return [
             OrderLinesRelationManager::class,
             OrderAplicationRelationManager::class,
-
-
+            ApplicationUsageRelationManager::class,
         ];
     }
 
@@ -275,7 +311,7 @@ class OrderResource extends Resource
 
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
-            'view' => Pages\ViewOrder::route('/{record}'),
+
         ];
     }
 }

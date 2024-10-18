@@ -44,6 +44,7 @@ class BodegaPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->navigationGroups([
                 'Aplicaciones',
+                'Informes',
                 'Bodega',
                 'Anexos',
                 'Filament Shield'
