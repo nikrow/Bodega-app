@@ -9,11 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Enum;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
     use HasFactory;
-
+    use LogsActivity;
 
     protected $fillable = [
         'user_id',
@@ -26,8 +28,10 @@ class Order extends Model
         'family',
         'epp',
         'created_at',
-        'wharehouse_id',
+        'warehouse_id',
         'updated_at',
+        'updated_by',
+        'applicators',
         'done'
     ];
     protected $casts = [
@@ -37,12 +41,17 @@ class Order extends Model
         'parcels' => 'array',
         'status' => StatusType::class,
     ];
-
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($order) {
 
             $order->user_id = Auth::id();
+            $order->updated_by = Auth::id();
             $order->orderNumber = self::generateUniqueOrderNumber();
             $order->field_id = Filament::getTenant()->id;
             $order->status = StatusType::PENDIENTE;
@@ -89,9 +98,9 @@ class Order extends Model
         {
             return $this->hasMany(OrderApplicationUsage::class);
         }
-    public function wharehouse()
+    public function warehouse()
     {
-        return $this->belongsTo(Wharehouse::class, 'wharehouse_id');
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
     public function field()
     {
@@ -109,9 +118,12 @@ class Order extends Model
     {
         return $this->belongsToMany(Parcel::class, 'order_parcels', 'order_id', 'parcel_id');
     }
-    public function orderAplications()
+    public function orderApplications()
     {
-        return $this->hasMany(OrderAplication::class, 'order_id', 'id');
+        return $this->hasMany(OrderApplication::class, 'order_id', 'id');
     }
-
+    public function orderApplicators()
+    {
+        return $this->hasMany(OrderApplicator::class);
+    }
 }

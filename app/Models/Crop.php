@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Crop extends Model implements Auditable
 {
     use HasFactory;
+    use LogsActivity;
     use \OwenIt\Auditing\Auditable;
     protected $table = 'crops';
     protected $fillable = [
@@ -19,7 +22,11 @@ class Crop extends Model implements Auditable
         'created_by',
         'updated_by',
     ];
-
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($field) {

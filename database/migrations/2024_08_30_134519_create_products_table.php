@@ -22,8 +22,8 @@ return new class extends Migration
             $table->smallInteger('reentry')->nullable();
             $table->decimal('price', 13, 2);
             $table->enum('family', ['insecticida', 'herbicida', 'fertilizante', 'acaricida', 'fungicida', 'bioestimulante', 'regulador', 'bloqueador']);
-            $table->ForeignId('created_by')->constrained('users');
-            $table->ForeignId('updated_by')->constrained('users');
+            $table->ForeignId('created_by')->constrained('users')->nullable();
+            $table->ForeignId('updated_by')->constrained('users')->nullable();
             $table->unsignedBigInteger('field_id')->nullable();
             $table->foreign('field_id')->references('id')->on('fields');
             $table->string('slug')->unique();

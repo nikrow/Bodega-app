@@ -122,9 +122,9 @@ class ParcelResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+
                     ExportBulkAction::make()
-                ]),
+
             ]);
     }
 

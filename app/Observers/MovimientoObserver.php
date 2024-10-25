@@ -105,13 +105,13 @@ class MovimientoObserver
         $stockOrigen = Stock::where([
             'product_id' => $productoMovimiento->producto_id,
             'field_id' => $productoMovimiento->movimiento->field_id,
-            'wharehouse_id' => $productoMovimiento->movimiento->bodega_origen_id,
+            'warehouse_id' => $productoMovimiento->movimiento->bodega_origen_id,
         ])->first();
 
         $stockDestino = Stock::where([
             'product_id' => $productoMovimiento->producto_id,
             'field_id' => $productoMovimiento->movimiento->field_id,
-            'wharehouse_id' => $productoMovimiento->movimiento->bodega_destino_id,
+            'warehouse_id' => $productoMovimiento->movimiento->bodega_destino_id,
         ])->first();
 
         if ($productoMovimiento->movimiento->tipo === 'entrada' && $stockDestino) {
@@ -140,13 +140,13 @@ class MovimientoObserver
         $stockOrigen = Stock::where([
             'producto_id' => $productoMovimiento->producto_id,
             'field_id' => $productoMovimiento->movimiento->field_id,
-            'wharehouse_id' => $productoMovimiento->movimiento->bodega_origen_id,
+            'warehouse_id' => $productoMovimiento->movimiento->bodega_origen_id,
         ])->first();
 
         $stockDestino = Stock::firstOrCreate([
             'product_id' => $productoMovimiento->producto_id,
             'field_id' => $productoMovimiento->movimiento->field_id,
-            'wharehouse_id' => $productoMovimiento->movimiento->bodega_destino_id,
+            'warehouse_id' => $productoMovimiento->movimiento->bodega_destino_id,
         ], [
             'quantity' => 0,
         ]);

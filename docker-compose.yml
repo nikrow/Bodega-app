@@ -111,6 +111,7 @@ services:
             PMA_PORT: 3306
         networks:
             - sail
+
 networks:
     sail:
         driver: bridge
@@ -121,3 +122,5 @@ volumes:
         driver: local
     sail-meilisearch:
         driver: local
+
+

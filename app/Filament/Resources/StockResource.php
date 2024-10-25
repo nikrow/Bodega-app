@@ -6,7 +6,7 @@ use App\Filament\Resources\StockResource\Pages;
 use App\Filament\Resources\StockResource\RelationManagers;
 use App\Filament\Resources\StockResource\RelationManagers\MovimientoProductosRelationManager;
 use App\Models\Stock;
-use App\Models\Wharehouse;
+use App\Models\Warehouse;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,6 +14,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class StockResource extends Resource
 {
@@ -33,7 +35,7 @@ class StockResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('wharehouse.name')
+                Tables\Columns\TextColumn::make('warehouse.name')
                     ->label('Bodega')
                     ->searchable()
                     ->sortable(),
@@ -51,21 +53,22 @@ class StockResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('wharehouse_id', 'Bodega')
-                ->options(Wharehouse::all()->pluck('name', 'id')),
+                Tables\Filters\SelectFilter::make('warehouse_id', 'Bodega')
+                ->options(Warehouse::all()->pluck('name', 'id')),
             ])
             ->actions([
 
             ])
             ->bulkActions([
-
+                    ExportBulkAction::make(),
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            MovimientoProductosRelationManager::class,
+            AuditsRelationManager::class
+
         ];
     }
 

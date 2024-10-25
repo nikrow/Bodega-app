@@ -6,11 +6,13 @@ use DateTimeInterface;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class OrderApplicationUsage extends Model
 {
     use HasFactory;
-
+    use LogsActivity;
     protected $table = 'order_application_usages';
     protected $fillable = [
         'field_id',
@@ -24,6 +26,11 @@ class OrderApplicationUsage extends Model
         'created_at',
         'updated_at',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function boot()
     {
         parent::boot();
@@ -41,7 +48,7 @@ class OrderApplicationUsage extends Model
     // Relación con OrderApplication
     public function orderApplication()
     {
-        return $this->belongsTo(OrderAplication::class, 'application_id');
+        return $this->belongsTo(OrderApplication::class, 'application_id');
     }
 
     public function field()

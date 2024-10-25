@@ -6,10 +6,13 @@ use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class OrderParcel extends Model
 {
     use HasFactory;
+    use LogsActivity;
     protected $table = 'order_parcels';
     protected $fillable = [
         'order_id',
@@ -18,6 +21,11 @@ class OrderParcel extends Model
         'created_by',
         'updated_by',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($orderParcel) {
@@ -54,9 +62,9 @@ class OrderParcel extends Model
     {
         return $this->belongsTo(Field::class, 'field_id');
     }
-    public function orderAplications()
+    public function orderApplications()
     {
-        return $this->hasMany(OrderAplication::class, 'order_id', 'order_id');
+        return $this->hasMany(OrderApplication::class, 'order_id', 'order_id');
     }
 
 

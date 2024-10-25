@@ -19,8 +19,8 @@ return new class extends Migration
             $table->float('comprobante')->nullable();
             $table->string('encargado')->nullable();
             $table->foreignId('field_id')->constrained('fields')->cascadeOnDelete();
-            $table->foreignId('bodega_origen_id')->nullable()->constrained('wharehouses')->cascadeOnDelete();
-            $table->foreignId('bodega_destino_id')->nullable()->constrained('wharehouses')->cascadeOnDelete();
+            $table->foreignId('bodega_origen_id')->nullable()->constrained('warehouses')->cascadeOnDelete();
+            $table->foreignId('bodega_destino_id')->nullable()->constrained('warehouses')->cascadeOnDelete();
             $table->string('orden_compra')->nullable();
             $table->string('nombre_proveedor')->nullable();
             $table->string('guia_despacho')->nullable();

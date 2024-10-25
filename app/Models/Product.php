@@ -8,10 +8,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Product extends Model implements Auditable
 {
     use HasFactory;
+    use LogsActivity;
     use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'product_name',
@@ -30,6 +33,11 @@ class Product extends Model implements Auditable
         'dosis_min',
         'dosis_max',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($field) {
@@ -53,7 +61,10 @@ class Product extends Model implements Auditable
     {
         return $this->morphTo(Audit::class, 'auditable_id', 'id');
     }
-
+    public function movimientos()
+    {
+        return $this->hasMany(MovimientoProducto::class, 'producto_id');
+    }
     public function field()
     {
         return $this->belongsTo(Field::class);

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\MovimientoResource\Pages;
 
 use App\Filament\Resources\MovimientoResource;
-use App\Models\Wharehouse;
+use App\Models\Warehouse;
 use Filament\Actions;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\ListRecords;
@@ -18,7 +18,7 @@ class ListMovimientos extends ListRecords
         $currentFieldId = Filament::getTenant()->id;
 
         // Obtener todas las bodegas que pertenecen al campo actual
-        $wharehouses = Wharehouse::where('field_id', $currentFieldId)->get();
+        $wharehouses = Warehouse::where('field_id', $currentFieldId)->get();
 
         // Crear una pestaña para todas las bodegas que pertenecen al campo actual
         $tabs = [

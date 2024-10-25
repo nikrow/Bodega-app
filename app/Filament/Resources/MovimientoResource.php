@@ -8,7 +8,7 @@ use App\Filament\Resources\MovimientoResource\RelationManagers;
 use App\Filament\Resources\MovimientoResource\RelationManagers\MovimientoProductosRelationManager;
 use App\Models\Field;
 use App\Models\Movimiento;
-use App\Models\Wharehouse;
+use App\Models\Warehouse;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
@@ -53,7 +53,7 @@ class MovimientoResource extends Resource
                     ->relationship('bodega_origen', 'name')
                     ->options(function () {
                         $tenantId = Filament::getTenant()->id;
-                        return Wharehouse::where('field_id', $tenantId)->pluck('name', 'id');
+                        return Warehouse::where('field_id', $tenantId)->pluck('name', 'id');
                     })
                     ->required()
                     ->searchable()
@@ -64,7 +64,7 @@ class MovimientoResource extends Resource
                     ->relationship('bodega_destino', 'name')
                     ->options(function () {
                         $tenantId = Filament::getTenant()->id;
-                        return Wharehouse::where('field_id', $tenantId)->pluck('name', 'id');
+                        return Warehouse::where('field_id', $tenantId)->pluck('name', 'id');
                     })
                     ->required()
                     ->visible(fn ($get) => $get('tipo') !== MovementType::SALIDA->value)
@@ -152,7 +152,7 @@ class MovimientoResource extends Resource
                 Tables\Filters\SelectFilter::make('bodega')
                     ->label('Bodega')
                     ->options(
-                        Wharehouse::all()->pluck('name', 'id')
+                        Warehouse::all()->pluck('name', 'id')
                     )
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['value'])) {
@@ -168,9 +168,9 @@ class MovimientoResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+
                     ExportBulkAction::make(),
-                ]),
+
             ]);
     }
 

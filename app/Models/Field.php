@@ -57,13 +57,13 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(Product::class);
     }
-    public function aplicators()
+    public function applicators()
     {
-        return $this->hasMany(Aplicator::class);
+        return $this->hasMany(Applicator::class);
     }
-    public function wharehouses()
+    public function warehouses()
     {
-        return $this->hasMany(Wharehouse::class);
+        return $this->hasMany(Warehouse::class);
     }
     public function parcels()
     {

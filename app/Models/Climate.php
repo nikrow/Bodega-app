@@ -6,11 +6,13 @@ use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Climate extends Model
 {
     use HasFactory;
-
+    use LogsActivity;
     protected $table = 'climates';
     protected $fillable = [
         'field_id',
@@ -21,6 +23,11 @@ class Climate extends Model
         'created_by',
         'updated_by',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($climate) {

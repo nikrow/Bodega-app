@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->string('orderNumber')->unique();
-            $table->foreignId('wharehouse_id')->constrained('wharehouses')->onDelete('cascade');
+            $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->enum('status', ['Pendiente','En proceso', 'Completo', 'Cancelado'])->default('Pendiente');
             $table->foreignId('field_id')->constrained('fields')->onDelete('cascade');
             $table->foreignId('crops_id')->constrained('fields')->onDelete('cascade');
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->json('epp', ['traje_aplicacion', 'guantes', 'botas', 'protector_auditivo', 'anteojos', 'antiparras', 'mascara_filtro']);
             $table->dateTime('done')->nullable()->default(null);
             $table->foreignId('updated_by')->constrained('users')->onDelete('cascade');
+            $table->Json('applicators')->nullable();
             $table->timestamps();
         });
     }

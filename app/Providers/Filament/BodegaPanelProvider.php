@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Tenancy\RegisterField;
+use App\Filament\Resources\ActivityLogResource;
 use App\Models\Field;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -20,6 +21,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Rmsramos\Activitylog\ActivitylogPlugin;
 
 
 class BodegaPanelProvider extends PanelProvider
@@ -47,15 +49,20 @@ class BodegaPanelProvider extends PanelProvider
                 'Informes',
                 'Bodega',
                 'Anexos',
-                'Filament Shield'
             ])
             ->pages([
                 Pages\Dashboard::class,
+
             ])
 
 
             ->plugins([
-
+                ActivitylogPlugin::make()
+                    ->resource(ActivityLogResource::class)
+                    ->navigationGroup('Anexos')
+                    ->navigationCountBadge(true)
+                    ->label('Log')
+                    ->pluralLabel('Logs'),
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

@@ -17,9 +17,10 @@ return new class extends Migration
             $table->foreignId('producto_id')->constrained('products')->cascadeOnDelete();
             $table->decimal('precio_compra', 13, 1)->nullable();  // 10 dígitos en total, 2 decimales
             $table->enum('unidad_medida', ['kilogramo', 'litro', 'unidad']);
-            $table->unsignedSmallInteger('cantidad');
+            $table->decimal('cantidad', 13, 2)->default(0);
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
+            $table->float('total', 10, 2, '0')->default(0);
             $table->timestamps();
         });
     }

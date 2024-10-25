@@ -17,7 +17,7 @@ class ClimateResource extends Resource
 {
     protected static ?string $model = Climate::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-sun';
     protected static ?string $navigationGroup = 'Aplicaciones';
     protected static ?string $navigationTitle = 'Datos climáticos';
 
@@ -79,9 +79,9 @@ class ClimateResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+
                     Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
 

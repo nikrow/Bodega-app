@@ -9,10 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Movimiento extends Model implements Auditable
 {
     use HasFactory;
+    use LogsActivity;
     use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'user_id',
@@ -30,7 +33,11 @@ class Movimiento extends Model implements Auditable
         'created_by',
         'updated_by',
     ];
-
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     private static function generateUniqueMovementNumber()
     {
         // Obtenemos el último movimiento creado
@@ -83,17 +90,17 @@ class Movimiento extends Model implements Auditable
         return $this->belongsTo(Field::class, 'field_id');
     }
 
-    // Relación con Wharehouse (Bodega de Origen)
+    // Relación con Warehouse (Bodega de Origen)
     public function bodega_origen()
     {
-        return $this->belongsTo(Wharehouse::class, 'bodega_origen_id')
+        return $this->belongsTo(Warehouse::class, 'bodega_origen_id')
             ->where('field_id', Filament::getTenant()->id);
     }
 
-    // Relación con Wharehouse (Bodega de Destino)
+    // Relación con Warehouse (Bodega de Destino)
     public function bodega_destino()
     {
-        return $this->belongsTo(Wharehouse::class, 'bodega_destino_id')
+        return $this->belongsTo(Warehouse::class, 'bodega_destino_id')
             ->where('field_id', Filament::getTenant()->id);
     }
     public function audit()

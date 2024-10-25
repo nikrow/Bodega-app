@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\StockResource\Pages;
 
 use App\Filament\Resources\StockResource;
-use App\Models\Wharehouse;
+use App\Models\Warehouse;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Enums\FiltersLayout;
@@ -21,7 +21,7 @@ class ListStocks extends ListRecords
         $currentFieldId = Filament::getTenant()->id;
 
         // Obtener todas las bodegas que pertenecen al campo actual
-        $wharehouses = Wharehouse::where('field_id', $currentFieldId)->get();
+        $warehouses = Warehouse::where('field_id', $currentFieldId)->get();
 
         // Crear una pestaña para todas las bodegas que pertenecen al campo actual
         $tabs = [
@@ -34,12 +34,12 @@ class ListStocks extends ListRecords
         ];
 
         // Crear pestañas para cada bodega del campo actual
-        foreach ($wharehouses as $wharehouse) {
-            $tabs[$wharehouse->id] = ListRecords\Tab::make()
-                ->label($wharehouse->name)
-                ->modifyQueryUsing(function ($query) use ($wharehouse, $currentFieldId) {
+        foreach ($warehouses as $warehouse) {
+            $tabs[$warehouse->id] = ListRecords\Tab::make()
+                ->label($warehouse->name)
+                ->modifyQueryUsing(function ($query) use ($warehouse, $currentFieldId) {
                     // Filtrar los registros por bodega y field actual
-                    return $query->where('wharehouse_id', $wharehouse->id)
+                    return $query->where('warehouse_id', $warehouse->id)
                         ->where('field_id', $currentFieldId);
                 });
         }

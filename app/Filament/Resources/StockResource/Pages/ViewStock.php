@@ -38,7 +38,7 @@ class ViewStock extends ViewRecord
             Section::make('Detalles')
                 ->collapsed()
                 ->schema([
-                    TextEntry::make('wharehouse.name')
+                    TextEntry::make('warehouse.name')
                         ->label('Bodega'),
                     TextEntry::make('product.family')
                         ->label('Grupo')

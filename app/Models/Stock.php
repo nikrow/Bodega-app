@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Audit;
 use OwenIt\Auditing\Contracts\Auditable;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Stock extends Model implements Auditable
 {
     use HasFactory;
     use \OwenIt\Auditing\Auditable;
-
+    use LogsActivity;
 
     protected $fillable = [
         'product_id',
@@ -21,8 +23,13 @@ class Stock extends Model implements Auditable
         'created_by',
         'updated_by',
         'field_id',
-        'wharehouse_id',
+        'warehouse_id',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -49,8 +56,8 @@ class Stock extends Model implements Auditable
 
     }
 
-    public function wharehouse()
+    public function warehouse()
     {
-        return $this->belongsTo(Wharehouse::class, 'wharehouse_id');
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 }

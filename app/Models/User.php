@@ -4,6 +4,10 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+
+
+
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,14 +17,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
-use Spatie\Permission\Traits\HasRoles;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 
 class User extends Authenticatable implements Auditable, HasTenants
 {
 
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable;
     use \OwenIt\Auditing\Auditable;
+    use LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -33,7 +39,11 @@ class User extends Authenticatable implements Auditable, HasTenants
         'password',
         'role'
     ];
-
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -72,4 +82,9 @@ class User extends Authenticatable implements Auditable, HasTenants
     {
         return $this->fields()->whereKey($tenant)->exists();
     }
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
 }

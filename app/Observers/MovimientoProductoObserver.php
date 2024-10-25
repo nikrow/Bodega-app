@@ -31,10 +31,12 @@ class MovimientoProductoObserver
      */
     public function updated(MovimientoProducto $productoMovimiento): void
     {
-        // Permitir que las excepciones se propaguen
-        $original = MovimientoProducto::find($productoMovimiento->id);
-        $this->stockService->revertProductMovementImpact($original);
-        $this->stockService->applyStockChanges($productoMovimiento);
+        // Obtener la cantidad anterior antes de la actualización
+        $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
+
+        // Revertir el impacto anterior en el stock
+        $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
+
         Log::info("Stock actualizado correctamente para el producto ID: {$productoMovimiento->producto_id}");
     }
 
@@ -43,7 +45,7 @@ class MovimientoProductoObserver
      */
     public function deleted(MovimientoProducto $productoMovimiento): void
     {
-        // Permitir que las excepciones se propaguen
+        // Revertir el impacto del movimiento cuando se borra
         $this->stockService->revertProductMovementImpact($productoMovimiento);
         Log::info("Stock revertido correctamente para el producto ID: {$productoMovimiento->producto_id}");
     }

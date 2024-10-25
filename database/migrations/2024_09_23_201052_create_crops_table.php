@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('especie');
 
-            $table->ForeignId('created_by')->constrained('users');
-            $table->ForeignId('updated_by')->constrained('users');
+            $table->ForeignId('created_by')->nullable();
+            $table->ForeignId('updated_by')->nullable();
             $table->timestamps();
         });
     }

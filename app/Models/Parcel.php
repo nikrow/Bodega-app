@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Parcel extends Model implements Auditable
 {
     use HasFactory;
+    use LogsActivity;
     use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
@@ -27,6 +30,11 @@ class Parcel extends Model implements Auditable
         'updated_by',
         'slug',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($parcel) {

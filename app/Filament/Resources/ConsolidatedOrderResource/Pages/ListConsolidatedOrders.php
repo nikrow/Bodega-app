@@ -10,10 +10,5 @@ class ListConsolidatedOrders extends ListRecords
 {
     protected static string $resource = ConsolidatedOrderResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
-    }
+
 }

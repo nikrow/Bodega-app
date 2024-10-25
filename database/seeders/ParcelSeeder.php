@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,6 +13,13 @@ class ParcelSeeder extends Seeder
      */
     public function run(): void
     {
+        $userId = User::first()->id;
+
+        // Verificar que existe al menos un usuario
+        if (!$userId) {
+            $this->command->error('No hay usuarios en la tabla users. Por favor, ejecuta el seeder de usuarios primero.');
+            return;
+        }
         $parcels = [
             [
                 'name' => 'Mandarino 1',

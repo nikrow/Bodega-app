@@ -88,9 +88,11 @@ class ProductResource extends Resource
                     ->rules('required'),
                 Forms\Components\TextInput::make('dosis_min')
                     ->label('Dosis Min')
+                    ->helperText ('Lt-Kg/100l')
                     ->rules('required', 'decimal'),
                 Forms\Components\TextInput::make('dosis_max')
                     ->label('Dosis Max')
+                    ->helperText ('Lt-Kg/100l')
                     ->rules('required', 'decimal'),
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia'),
@@ -155,10 +157,10 @@ class ProductResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+
                     ExportBulkAction::make()
 
-                ]),
+
             ]);
     }
 

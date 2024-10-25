@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-            $table->unsignedSmallInteger('quantity');
-            $table->unsignedSmallInteger('price');
+            $table->decimal('quantity',13,2);
+            $table->decimal('price', 13,2);
             $table->float('total_price')->virtualAs('quantity * price');
             $table->ForeignId('created_by')->constrained('users');
             $table->ForeignId('updated_by')->constrained('users');
             $table->ForeignId('field_id')->constrained('fields');
-            $table->ForeignId('wharehouse_id')->constrained('wharehouses');
+            $table->ForeignId('warehouse_id')->constrained('warehouses');
             $table->timestamps();
         });
     }

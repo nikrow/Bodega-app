@@ -37,7 +37,16 @@ class FieldsTableSeeder extends Seeder
                 'slug' => 'dasa',
                 'created_by' => 1,
             ],
-            // Añade más campos según necesites
+            [
+                'name' => 'Llayquen',
+                'slug' => 'llayquen',
+                'created_by' => 1,
+            ],
+            [
+                'name' => 'Santa Isabel',
+                'slug' => 'santa-isabel',
+                'created_by' => 1,
+            ],
         ];
 
         foreach ($fields as $field) {

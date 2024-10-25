@@ -7,16 +7,17 @@ use App\Enums\StatusType;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Filament\Resources\OrderResource\RelationManagers\ApplicationUsageRelationManager;
-use App\Filament\Resources\OrderResource\RelationManagers\OrderAplicationRelationManager;
+use App\Filament\Resources\OrderResource\RelationManagers\OrderApplicationRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderLinesRelationManager;
 
+use App\Models\Applicator;
 use App\Models\Crop;
 use App\Models\Field;
 use App\Models\Order;
 use App\Models\Parcel;
 use App\Models\OrderParcel;
 use App\Models\User;
-use App\Models\Wharehouse;
+use App\Models\Warehouse;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
 use Filament\Forms;
@@ -81,12 +82,12 @@ class OrderResource extends Resource
                             Forms\Components\Select::make('crops_id')
                                 ->label('Cultivo')
                                 ->options(Crop::all()->pluck('especie', 'id')->toArray()),
-                            Forms\Components\Select::make('wharehouse_id')
+                            Forms\Components\Select::make('warehouse_id')
                                 ->label('Bodega preparación')
                                 ->required()
                                 ->options(function () {
                                     $tenantId = Filament::getTenant()->id;
-                                    return Wharehouse::where('field_id', $tenantId)->pluck('name', 'id');
+                                    return Warehouse::where('field_id', $tenantId)->pluck('name', 'id');
                                 }),
 
                             Forms\Components\Select::make('family')
@@ -185,9 +186,20 @@ class OrderResource extends Resource
 
                                 ->rules('required'),
 
+                        ]),
+                    Wizard\Step::make('Aplicadores')
+                        ->columns(2)
+                        ->schema([
+                            Forms\Components\CheckboxList::make('applicators')
+                                ->label('Aplicadores')
+                                ->bulkToggleable()
+                                ->columns(2)
+                                ->gridDirection('row')
+                                ->options(fn() => Applicator::all()->pluck('name', 'id'))
+                                ->rules('required'),
+                            ])
                         ])
-
-                ]) ->skippable(),
+                    ->skippable(),
 
             ]);
 
@@ -289,9 +301,9 @@ class OrderResource extends Resource
                     ->icon('heroicon-o-check'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+
                     ExportBulkAction::make()
-                ]),
+
             ]);
     }
 
@@ -299,8 +311,9 @@ class OrderResource extends Resource
     {
         return [
             OrderLinesRelationManager::class,
-            OrderAplicationRelationManager::class,
+            OrderApplicationRelationManager::class,
             ApplicationUsageRelationManager::class,
+
         ];
     }
 

@@ -78,10 +78,10 @@
             </tr>
             </thead>
             <tbody>
-            @foreach ($order->orderAplications as $aplication)
-                @if ($aplication->parcel)
+            @foreach ($order->orderAplications as $application)
+                @if ($application->parcel)
                     <tr>
-                        <td>{{ $aplication->parcel->name }}</td>
+                        <td>{{ $application->parcel->name }}</td>
                     </tr>
                 @endif
             @endforeach
