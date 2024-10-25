@@ -33,7 +33,14 @@ class AppServiceProvider extends ServiceProvider
     {
 
     }
-
+    protected $listen = [
+        \Illuminate\Auth\Events\Login::class => [
+            \App\Listeners\UpdateLoginTime::class,
+        ],
+        \Illuminate\Auth\Events\Logout::class => [
+            \App\Listeners\UpdateActiveHoursOnLogout::class,
+        ],
+    ];
     /**
      * Bootstrap any application services.
      */

@@ -37,7 +37,9 @@ class User extends Authenticatable implements Auditable, HasTenants
         'name',
         'email',
         'password',
-        'role'
+        'role',
+        'last_login_at',
+        'active_hours',
     ];
     public function getActivitylogOptions(): LogOptions
     {
