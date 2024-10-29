@@ -21,7 +21,7 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 
-class User extends Authenticatable implements Auditable, HasTenants
+class User extends Authenticatable implements Auditable, HasTenants, FilamentUser
 {
 
     use HasFactory, Notifiable;
@@ -61,13 +61,10 @@ class User extends Authenticatable implements Auditable, HasTenants
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
+    protected $casts = [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
     public function fields(): BelongsToMany
     {
         return $this->belongsToMany(Field::class, 'field_user', 'user_id', 'field_id');
@@ -78,7 +75,7 @@ class User extends Authenticatable implements Auditable, HasTenants
     }
     public function audit()
     {
-        return $this->morphMany(Audit::class, 'auditable_id', 'id');
+        return $this->morphMany(Audit::class, 'auditable');
     }
     public function canAccessTenant(Model $tenant): bool
     {
@@ -89,4 +86,8 @@ class User extends Authenticatable implements Auditable, HasTenants
         return $this->belongsTo(Role::class);
     }
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
+    }
 }
