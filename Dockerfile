@@ -2,7 +2,7 @@ FROM dunglas/frankenphp:1.2.5-php8.3.13-bookworm
 
 WORKDIR /app
 
-ARG NODE_VERSION=16
+ARG NODE_VERSION=22
 
 # Enable PHP production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -28,7 +28,7 @@ RUN rm -rf /app/composer.lock
 # Instalamos Node.js y otras herramientas de JavaScript
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g npm \
+    && npm install -g npm@10.9.0 \
     && npm install -g pnpm \
     && npm install -g bun \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarnkey.gpg \
