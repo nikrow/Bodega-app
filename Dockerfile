@@ -18,12 +18,14 @@ RUN apt-get update \
 
 # Instalamos extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Instalamos Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN rm -rf /app/vendor
 RUN rm -rf /app/composer.lock
+
+
 
 # Instalamos Node.js y otras herramientas de JavaScript
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
@@ -38,7 +40,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos dependencias de PHP y Laravel Octane
-RUN composer install --ignore-platform-req=ext-intl \
+RUN composer install \
     && php artisan octane:install --server=frankenphp
 
 RUN mkdir -p /app/storage/logs
