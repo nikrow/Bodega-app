@@ -28,6 +28,6 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platform: linux/amd64
+          platforms: linux/amd64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/laravel:latest

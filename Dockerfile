@@ -25,9 +25,6 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
 # Instalamos Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN rm -rf /app/vendor
-RUN rm -rf /app/composer.lock
-
-
 
 # Instalamos Node.js y otras herramientas de JavaScript
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
@@ -44,8 +41,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
 # Instalamos dependencias de PHP y Laravel Octane
 RUN composer install \
     && php artisan octane:install --server=frankenphp \
-
-
 RUN mkdir -p /app/storage/logs
 RUN php artisan cache:clear
 RUN php artisan view:clear
