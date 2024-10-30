@@ -14,7 +14,6 @@ COPY . /app
 RUN apt-get update \
     && apt-get install -y \
     zip \
-    opcache \
     libzip-dev \
     gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
@@ -23,7 +22,7 @@ RUN apt-get update \
 
 # Instalamos extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl opcache
+    && docker-php-ext-install pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl opcache
 
 RUN curl -sS https://getcomposer.org/installer | php -- \
      --install-dir=/usr/local/bin --filename=composer
