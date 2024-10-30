@@ -40,7 +40,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos dependencias de PHP y Laravel Octane
-RUN composer install \
+RUN composer update && composer install \
     && php artisan octane:install --server=frankenphp \
 RUN mkdir -p /app/storage/logs
 RUN php artisan cache:clear
