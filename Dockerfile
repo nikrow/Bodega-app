@@ -57,11 +57,10 @@ RUN npm install \
 # Configuramos permisos
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 COPY .env.example .env
-CMD php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000
 # Exponemos los puertos necesarios
 EXPOSE 8000
 EXPOSE 80
 EXPOSE 443
 
 # Comando de inicio
-CMD ["frankenphp", "--config", "/etc/frankenphp.yaml"]
+CMD php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000
