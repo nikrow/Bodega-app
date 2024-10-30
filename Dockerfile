@@ -54,7 +54,6 @@ RUN npm install \
     && npm audit fix
 
 # Configuramos permisos
-RUN chown -R www-data:www-data /app/html/storage /app/html/bootstrap/cache
 COPY .env.example .env
 # Exponemos los puertos necesarios
 EXPOSE 8000
