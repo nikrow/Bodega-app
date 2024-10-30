@@ -22,10 +22,6 @@ RUN apt-get update \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Instalamos Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-RUN rm -rf /app/vendor
-
 # Instalamos Node.js y otras herramientas de JavaScript
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y nodejs \
