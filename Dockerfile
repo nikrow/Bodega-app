@@ -8,6 +8,7 @@ ARG NODE_VERSION=22
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY . .
+
 # Instalamos dependencias del sistema
 RUN apt-get update \
     && apt-get install -y \
