@@ -36,9 +36,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_$NODE_VERSION.x | bash - \
     && apt-get install -y yarn \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiamos el código de la aplicación
-COPY Bodega-app/ /var/www/html/
-
 # Instalamos dependencias de PHP y Laravel Octane
 RUN composer update \
     && composer install --optimize-autoloader --no-dev \
@@ -63,4 +60,5 @@ EXPOSE 80
 EXPOSE 443
 
 # Comando de inicio
-CMD php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000
+CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8000"]
+
