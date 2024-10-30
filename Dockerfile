@@ -50,10 +50,11 @@ RUN php artisan octane:install
 
 # Instalamos dependencias de Node.js y construimos los activos
 RUN npm install \
-    && npm run build
+    && npm run build \
+    && npm audit fix
 
 # Configuramos permisos
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /app/html/storage /app/html/bootstrap/cache
 COPY .env.example .env
 # Exponemos los puertos necesarios
 EXPOSE 8000
