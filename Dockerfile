@@ -2,17 +2,19 @@ FROM dunglas/frankenphp:1.2.5-php8.2-bookworm
 
 WORKDIR /app
 
+ENV SERVER_NAME=campo.gjs.cl
 ARG NODE_VERSION=22
 
 # Enable PHP production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-COPY . .
+COPY . /app
 
 # Instalamos dependencias del sistema
 RUN apt-get update \
     && apt-get install -y \
     zip \
+    opcache \
     libzip-dev \
     gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
@@ -21,7 +23,7 @@ RUN apt-get update \
 
 # Instalamos extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl opcache
 
 RUN curl -sS https://getcomposer.org/installer | php -- \
      --install-dir=/usr/local/bin --filename=composer
@@ -50,7 +52,7 @@ RUN mkdir -p /app/storage/logs
 RUN php artisan cache:clear
 RUN php artisan view:clear
 RUN php artisan config:clear
-RUN php artisan octane:install --server=frankenphp
+RUN php artisan octane:install --server="frankenphp"
 
 # Instalamos dependencias de Node.js y construimos los activos
 RUN npm install \
@@ -65,5 +67,5 @@ EXPOSE 80
 EXPOSE 443
 
 # Comando de inicio
-CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8000"]
+ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
 
