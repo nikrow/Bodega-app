@@ -11,6 +11,8 @@ COPY . .
 # Instalamos dependencias del sistema
 RUN apt-get update \
     && apt-get install -y \
+    zip \
+    libzip-dev \
     gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libjpeg-dev libfreetype6-dev libwebp-dev \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
