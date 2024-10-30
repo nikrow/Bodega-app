@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build_and_push:
@@ -12,39 +15,20 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login en GitHub Container Registry
+      - name: login Docker Hub
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Construir y Push de la imagen Docker
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile
+          platforms: linux/amd64, linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/laravel-app:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=${{ github.repository }}
-
-  deploy:
-    needs: build_and_push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Desplegar al Servidor
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker pull ghcr.io/${{ github.repository_owner }}/laravel-app:${{ github.sha }}
-            docker stop laravel_app || true
-            docker rm laravel_app || true
-            docker run -d --name laravel_app -p 80:80 \
-              --env-file /Bodega-app/.env \
-              ghcr.io/${{ github.repository_owner }}/laravel-app:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/laravel:latest
