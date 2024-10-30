@@ -44,7 +44,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
 # Instalamos dependencias de PHP y Laravel Octane
 RUN composer update && composer install --no-dev --no-autoloader  \
 
-RUN composer require laravel/octane \
+RUN composer require laravel/octane
 
 RUN mkdir /app/storage/logs
 
