@@ -14,13 +14,13 @@ RUN apt-get update \
     zip \
     libzip-dev \
     gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin \
-    libpng-dev libonig-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    libpng-dev libonig-dev libicu-devlibjpeg-dev libfreetype6-dev libwebp-dev \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
 RUN curl -sS https://getcomposer.org/installer | php -- \
      --install-dir=/usr/local/bin --filename=composer
