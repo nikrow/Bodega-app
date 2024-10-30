@@ -15,7 +15,7 @@ RUN apt-get update \
     zip \
     libzip-dev \
     gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin \
-    libpng-dev libonig-dev libicu-devlibjpeg-dev libfreetype6-dev libwebp-dev \
+    libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
     && rm -rf /var/lib/apt/lists/*
 
