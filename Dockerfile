@@ -4,7 +4,7 @@ WORKDIR /app
 
 ENV SERVER_NAME=campo.gjs.cl
 ARG NODE_VERSION=22
-ARG NODE_ENV=production
+
 
 # Enable PHP production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
