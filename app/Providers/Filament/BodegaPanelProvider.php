@@ -31,16 +31,14 @@ class BodegaPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('bodega')
-            ->path('bodega')
+            ->path('/')
             ->login()
             ->colors([
                 'primary' => ('#568203'),
                 'secondary' => ('#2F0381'),
             ])
             ->tenant(field::class, slugAttribute: 'slug')
-            ->brandLogo(asset('img/logovector.svg'))
-            ->brandLogoHeight('7rem')
-            ->favicon(asset('img/logovector.svg'))
+            ->favicon(asset('../../img/logovector.svg'))
             ->font('Manrope')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

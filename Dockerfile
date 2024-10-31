@@ -4,6 +4,7 @@ WORKDIR /app
 
 ENV SERVER_NAME=campo.gjs.cl
 ARG NODE_VERSION=22
+ARG NODE_ENV=production
 
 # Enable PHP production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -22,10 +23,7 @@ RUN apt-get update \
 
 # Instalamos extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl opcache
-
-RUN curl -sS https://getcomposer.org/installer | php -- \
-     --install-dir=/usr/local/bin --filename=composer
+    && docker-php-ext-install pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -42,7 +40,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos dependencias de PHP y Laravel Octane
-RUN composer update && composer install --no-dev
+RUN composer install --no-dev --optimize-autoloader
 
 RUN mkdir -p /app/storage/logs
 RUN php artisan config:clear
@@ -50,11 +48,9 @@ RUN php artisan octane:install
 
 # Instalamos dependencias de Node.js y construimos los activos
 RUN npm install \
-    && npm run build \
-    && npm audit fix
+    && npm audit fix \
+    && npm run build
 
-# Configuramos permisos
-COPY .env.example .env
 # Exponemos los puertos necesarios
 EXPOSE 8000
 EXPOSE 80
