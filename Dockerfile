@@ -2,7 +2,7 @@ FROM dunglas/frankenphp:1.2.5-php8.2-bookworm
 
 WORKDIR /app
 
-ENV SERVER_NAME=campo.gjs.cl
+ENV SERVER_NAME=gjs.cl
 ARG NODE_VERSION=22
 
 
