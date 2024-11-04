@@ -3,7 +3,7 @@ services:
     frankenphp:
         build:
             context: .
-        entrypoint: php artisan octane:frankenphp --workers=1 --max-requests=1
+        entrypoint: php artisan octane:frankenphp --workers=4 --max-requests=4
         ports:
             - "8000:8000"
         volumes:
@@ -81,14 +81,15 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
-    selenium:
-        image: selenium/standalone-chrome
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        volumes:
-            - '/dev/shm:/dev/shm'
-        networks:
-            - sail
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        container_name: phpmyadmin
+        restart: unless-stopped
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+            PMA_USER: ${DB_USERNAME}
+            PMA_PASSWORD: ${DB_PASSWORD}
 
 networks:
     sail:

@@ -25,7 +25,8 @@
         "rmsramos/activitylog": "^1.0",
         "spatie/laravel-pdf": "^1.5",
         "tapp/filament-auditing": "^3.0",
-        "xtend-packages/rest-presenter": "^1.1"
+        "xtend-packages/rest-presenter": "^1.1",
+        "ext-pdo": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",
