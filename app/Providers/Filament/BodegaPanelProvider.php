@@ -36,9 +36,9 @@ class BodegaPanelProvider extends PanelProvider
                 'secondary' => ('#2F0381'),
             ])
             ->tenant(field::class, slugAttribute: 'slug')
-            ->brandLogo(asset('../img/logovector2.svg'))
+            ->brandLogo(asset('../public/img/logogjs.webp'))
             ->brandLogoHeight(1.5)
-            ->favicon(asset('../img/logo-js.png'))
+            ->favicon(asset('../public/img/logogjs.webp'))
             ->font('Manrope')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
