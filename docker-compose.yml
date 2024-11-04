@@ -8,6 +8,7 @@ services:
             - "8000:8000"
         volumes:
             - .:/app
+            - vendor:/app/vendor
         networks:
             - sail
         depends_on:
@@ -15,7 +16,7 @@ services:
             - redis
             - meilisearch
             - mailpit
-            - selenium
+
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
@@ -101,5 +102,5 @@ volumes:
         driver: local
     sail-meilisearch:
         driver: local
-
-
+    vendor:
+        driver: local
