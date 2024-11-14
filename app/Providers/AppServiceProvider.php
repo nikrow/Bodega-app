@@ -8,12 +8,16 @@ use App\Models\Movimiento;
 use App\Models\MovimientoProducto;
 use App\Models\OrderApplication;
 
+use App\Models\OrderApplicationUsage;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Observers\MovimientoObserver;
 use App\Observers\MovimientoProductoObserver;
 use App\Observers\OrderApplicationObserver;
+use App\Observers\OrderApplicationUsageObserver;
 use App\Policies\ActivityLogPolicy;
+use App\Services\StockService;
+use Livewire\Livewire;
 use Spatie\Activitylog\Models\Activity;
 use App\Policies\CropPolicy;
 use App\Policies\WarehousePolicy;
@@ -31,7 +35,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-
+        $this->app->singleton(StockService::class, function ($app) {
+            return new StockService();
+        });
+        Gate::policy(Activity::class, ActivityLogPolicy::class);
     }
     protected $listen = [
         \Illuminate\Auth\Events\Login::class => [
@@ -46,9 +53,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Movimiento::observe(MovimientoObserver::class);
         MovimientoProducto::observe(MovimientoProductoObserver::class);
         OrderApplication::observe(OrderApplicationObserver::class);
-
+        OrderApplicationUsage::observe(OrderApplicationUsageObserver::class);
 
     }
 }

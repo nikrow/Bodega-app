@@ -50,14 +50,13 @@ class ParcelResource extends Resource
                     ->label('Cultivo')
                     ->options(Crop::all()->pluck('especie', 'id')->toArray())
                     ->rules('required'),
-
                 Forms\Components\Select::make('planting_year')
+                    ->label('Año Plantación')
                     ->options(array_combine(range(1994, 2024), range(1994, 2024)))
                     ->searchable(true)
                     ->rules('required'),
                 Forms\Components\TextInput::make('planting-schema')
-                    ->label('Marco Plantación')
-                    ->rules('required'),
+                    ->label('Marco Plantación'),
                 Forms\Components\TextInput::make('plants')
                     ->label('Plantas')
                     ->rules('required', 'numeric'),
@@ -73,6 +72,7 @@ class ParcelResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(50)
             ->defaultGroup('crop.especie')
             ->groups([
                 Group::make('crop.especie')

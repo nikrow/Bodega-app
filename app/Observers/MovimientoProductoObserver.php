@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\MovimientoProducto;
 use App\Services\StockService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -21,9 +22,13 @@ class MovimientoProductoObserver
      */
     public function created(MovimientoProducto $productoMovimiento): void
     {
-        // Permitir que las excepciones se propaguen
-        $this->stockService->applyStockChanges($productoMovimiento);
-        Log::info("Stock actualizado correctamente para el producto ID: {$productoMovimiento->producto_id}");
+        try {
+            $this->stockService->applyStockChanges($productoMovimiento);
+            Log::info("Stock actualizado correctamente para el producto ID: {$productoMovimiento->producto_id}");
+        } catch (Exception $e) {
+            Log::error("Error al aplicar cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
+            throw $e; // Opcional: lanzar excepción para revertir la transacción
+        }
     }
 
     /**
@@ -31,13 +36,14 @@ class MovimientoProductoObserver
      */
     public function updated(MovimientoProducto $productoMovimiento): void
     {
-        // Obtener la cantidad anterior antes de la actualización
-        $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
-
-        // Revertir el impacto anterior en el stock
-        $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
-
-        Log::info("Stock actualizado correctamente para el producto ID: {$productoMovimiento->producto_id}");
+        try {
+            $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
+            $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
+            Log::info("Stock actualizado correctamente para el producto ID: {$productoMovimiento->producto_id}");
+        } catch (Exception $e) {
+            Log::error("Error al actualizar cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
+        }
     }
 
     /**
@@ -45,8 +51,21 @@ class MovimientoProductoObserver
      */
     public function deleted(MovimientoProducto $productoMovimiento): void
     {
-        // Revertir el impacto del movimiento cuando se borra
-        $this->stockService->revertProductMovementImpact($productoMovimiento);
-        Log::info("Stock revertido correctamente para el producto ID: {$productoMovimiento->producto_id}");
+        try {
+            // Iniciar una transacción para asegurar la consistencia
+            DB::transaction(function () use ($productoMovimiento) {
+                    // Revertir el impacto en el stock
+                    $this->stockService->revertProductMovementImpact($productoMovimiento);
+
+                    // Eliminar los StockMovements asociados
+                    $productoMovimiento->stockMovements()->delete();
+
+                    Log::info("StockService: Impacto revertido y StockMovements eliminados para MovimientoProducto ID: {$productoMovimiento->id}");
+                });
+        } catch (Exception $e) {
+            Log::error("Error al revertir cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
+        }
     }
+
 }

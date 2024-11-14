@@ -21,13 +21,13 @@ class ConsolidatedOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->recordTitleAttribute('id')
             ->columns([
-                // Numero
                 Tables\Columns\TextColumn::make('orderNumber')
                     ->label('Número de Orden')
                     ->sortable()
                     ->searchable(),
-                TAbles\Columns\TextColumn::make('applicationUsage.created_at')
+                TAbles\Columns\TextColumn::make('orderApplications.created_at')
                     ->label('Fecha Aplicación')
                     ->date('d/m/Y')
                     ->sortable()
@@ -47,10 +47,6 @@ class ConsolidatedOrderResource extends Resource
 
                 Tables\Columns\TextColumn::make('orderApplications.parcel.name')
                     ->label('Cuartel Aplicado')
-                    ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('orderApplications.id')
-                    ->label('ID Aplicación')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('orderApplications.liter')

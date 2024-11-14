@@ -47,6 +47,21 @@ class Product extends Model implements Auditable
             $field->slug = Str::slug($field->product_name);
         });
     }
+    public function setDosisMinAttribute($value)
+    {
+        $this->attributes['dosis_min'] = str_replace(',', '.', $value);
+    }
+
+    /**
+     * Set the dosis_max attribute.
+     *
+     * @param  string  $value
+     * @return void
+     */
+    public function setDosisMaxAttribute($value)
+    {
+        $this->attributes['dosis_max'] = str_replace(',', '.', $value);
+    }
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('climates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('field_id')->constrained('fields')->onDelete('cascade')->onUpdate('cascade');
-            $table->string('slug')->unique();
             $table->decimal('wind', 6, 1)->nullable();
             $table->decimal('temperature', 8, 1)->nullable();
             $table->decimal('humidity', 8, 1)->nullable();

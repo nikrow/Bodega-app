@@ -53,7 +53,7 @@
 <body>
 <div class="box">
     <div class="header" border="1">
-        <img src="{{ public_path('img/logo-js.png') }}" alt="logo">
+        @include('filament.admin.logo')
         <h2>Orden de Aplicación N° {{ $order->orderNumber }}</h2>
     </div>
     <div column="50" class="header" border="1">
@@ -62,7 +62,6 @@
             <li><strong>Campo:</strong> {{ $order->field->name ?? 'N/A' }}</li>
             <li><strong>Encargado:</strong> {{ $order->user->name ?? 'N/A' }}</li>
             <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
-            <li><strong>Estado:</strong> {{ $order->status->value ?? 'N/A' }}</li>
             <li><strong>Mojamiento:</strong> {{ $order->wetting ?? 'N/A' }}</li>
         </ul>
     </div>
@@ -70,7 +69,7 @@
 
 <div class="box">
     <h2>Cuarteles</h2>
-    @if ($order->orderAplications->isNotEmpty())
+    @if ($order->orderApplications->isNotEmpty())
         <table>
             <thead>
             <tr>
@@ -78,7 +77,7 @@
             </tr>
             </thead>
             <tbody>
-            @foreach ($order->orderAplications as $application)
+            @foreach ($order->orderApplications as $application)
                 @if ($application->parcel)
                     <tr>
                         <td>{{ $application->parcel->name }}</td>

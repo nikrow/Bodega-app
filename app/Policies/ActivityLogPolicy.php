@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\RoleType;
 use App\Models\User;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogPolicy
 {
@@ -18,7 +19,7 @@ class ActivityLogPolicy
     /**
      * Determina si el usuario puede ver un registro de actividad específico.
      */
-    public function view(User $user, User $model): bool
+    public function view(User $user, Activity $activity): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }

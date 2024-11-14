@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use function Laravel\Prompts\multiselect;
 
@@ -195,8 +196,7 @@ class OrderResource extends Resource
                                 ->bulkToggleable()
                                 ->columns(2)
                                 ->gridDirection('row')
-                                ->options(fn() => Applicator::all()->pluck('name', 'id'))
-                                ->rules('required'),
+                                ->options(fn() => Applicator::all()->pluck('name', 'id')->toArray())
                             ])
                         ])
                     ->skippable(),
@@ -227,33 +227,9 @@ class OrderResource extends Resource
                     ->label('Responsable')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Estado')
-                    ->badge()
-                    ->formatStateUsing(function ($state) {
-                        return match($state) {
-                            StatusType::PENDIENTE => 'Pendiente',
-                            StatusType::ENPROCESO => 'En proceso',
-                            StatusType::COMPLETO => 'Completo',
-                            StatusType::CANCELADO => 'Cancelado',
-                            default => 'Desconocido',
-
-                        };
-                    })
-                    ->colors([
-                        'Pendiente' => 'danger',
-                        'En proceso' => 'warning',
-                        'Completo' => 'success',
-                        'Cancelado' => 'danger',
-
-                    ])
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Creado el')
-                    ->searchable()
-                    ->date('d/m/Y H:i')
-                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_completed')
+                    ->boolean()
+                    ->label('Completado'),
                 Tables\Columns\TextColumn::make('done')
                     ->label('Finalizado')
                     ->searchable()
@@ -261,44 +237,34 @@ class OrderResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->label('Estado')
+                Tables\Filters\SelectFilter::make('is_completed')
+                    ->label('Completado')
                     ->options([
-                        StatusType::PENDIENTE->value => 'Pendiente',
-                        StatusType::ENPROCESO->value => 'En proceso',
-                        StatusType::COMPLETO->value => 'Completo',
-                        StatusType::CANCELADO->value => 'Cancelado',
+                        'true' => 'Completado',
+                        'false' => 'Pendiente',
                     ])
+
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
-                    ->disabled(fn ($record) => $record->status == StatusType::COMPLETO->value), // Disable edit for completed orders
+                    ->hidden(fn (Order $record) => $record->is_completed),
 
-                Action::make('completarOrden')
-                    ->label('Completar Orden')
-                    ->disabled(fn ($record) => $record->status == StatusType::COMPLETO->value)
-                    ->icon('heroicon-o-check-circle')
-                    ->action(function ($record) {
-                        if ($record->status !== StatusType::COMPLETO->value) {
-                            // Update order to "COMPLETO"
-                            $record->update([
-                                'status' => StatusType::COMPLETO->value,
-                                'done' => now(),
-                            ]);
-
-                            Notification::make()
-                                ->title('Terminada')
-                                ->success()
-                                ->send();
-                        } else {
-                            Notification::make('warning', 'La orden ya está completada.')
-                                ->send();
-                        }
-                    })
-                    ->requiresConfirmation()
+                Action::make('complete')
+                    ->label('Cerrar')
                     ->color('success')
-                    ->icon('heroicon-o-check'),
+                    ->icon('heroicon-o-check-circle')
+                    ->requiresConfirmation()
+                    ->action(function (Order $record) {
+                        // Lógica para marcar como completado
+                        $record->is_completed = true;
+                        $record->save();
+
+                        // Opcional: Registrar una entrada en los logs
+                        Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
+                    })
+                    ->hidden(fn (Order $record) => $record->is_completed),
+
             ])
             ->bulkActions([
 
@@ -321,7 +287,7 @@ class OrderResource extends Resource
     {
         return [
             'index' => Pages\ListOrders::route('/'),
-
+            'view' => Pages\ViewOrder::route('/{record}'),
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
 

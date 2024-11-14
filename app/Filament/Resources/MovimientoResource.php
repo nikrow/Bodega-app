@@ -16,10 +16,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
@@ -97,7 +100,7 @@ class MovimientoResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultGroup('tipo')
+            ->defaultPaginationPageOption(50)
             ->columns([
 
                 Tables\Columns\TextColumn::make('tipo')
@@ -131,6 +134,9 @@ class MovimientoResource extends Resource
                     ->label('Destino')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\IconColumn::make('is_completed')
+                    ->boolean()
+                    ->label('Completado'),
                 Tables\Columns\TextColumn::make('comprobante')
                     ->label('Comprobante')
                     ->searchable()
@@ -165,7 +171,24 @@ class MovimientoResource extends Resource
             ])
 
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->hidden(fn (Movimiento $record) => $record->is_completed),
+
+                Action::make('complete')
+                    ->label('Cerrar')
+                    ->color('success')
+                    ->icon('heroicon-o-check')
+                    ->requiresConfirmation()
+                    ->action(function (Movimiento $record) {
+                        // Lógica para marcar como completado
+                        $record->is_completed = true;
+                        $record->save();
+
+                        // Opcional: Registrar una entrada en los logs
+                        Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
+                    })
+                    ->hidden(fn (Movimiento $record) => $record->is_completed),
             ])
             ->bulkActions([
 
@@ -178,7 +201,7 @@ class MovimientoResource extends Resource
     {
         return [
             MovimientoProductosRelationManager::class,
-            AuditsRelationManager::class
+
         ];
     }
 
@@ -188,6 +211,7 @@ class MovimientoResource extends Resource
             'index' => Pages\ListMovimientos::route('/'),
             'create' => Pages\CreateMovimiento::route('/create'),
             'edit' => Pages\EditMovimiento::route('/{record}/edit'),
+            'view' => Pages\ViewMovimiento::route('/{record}'),
         ];
     }
 }

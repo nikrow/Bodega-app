@@ -7,6 +7,7 @@ use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
@@ -30,6 +31,7 @@ class Movimiento extends Model implements Auditable
         'orden_compra',
         'nombre_proveedor',
         'guia_despacho',
+        'is_completed',
         'created_by',
         'updated_by',
     ];
@@ -67,9 +69,23 @@ class Movimiento extends Model implements Auditable
             $movement->updated_by = Auth::id();
         });
 
-        static::updating(function ($movement) {
-            $movement->updated_by = Auth::id();
+        static::updating(function ($movimiento) {
+            // Permitir solo la actualización de 'is_completed'
+            if ($movimiento->is_completed && $movimiento->isDirty()) {
+                $cambiosRelevantes = collect($movimiento->getDirty())->except(['is_completed']);
+
+                if ($cambiosRelevantes->isEmpty()) {
+                    // Solo se está actualizando 'is_completed', permitir la operación
+                    return;
+                }
+
+                // Si se intenta modificar otros campos, lanzar excepción
+                throw ValidationException::withMessages([
+                    'is_completed' => 'No puedes modificar un movimiento que ya ha sido completado.',
+                ]);
+            }
         });
+
     }
     public function createdBy()
     {

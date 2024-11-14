@@ -3,8 +3,10 @@
 namespace App\Providers\Filament;
 
 
+use App\Enums\RoleType;
 use App\Filament\Resources\ActivityLogResource;
 use App\Models\Field;
+use App\Models\User;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -29,16 +31,18 @@ class BodegaPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('campo')
-            ->path('')
+            ->path('campo')
             ->login()
             ->colors([
                 'primary' => ('#568203'),
                 'secondary' => ('#2F0381'),
             ])
+            ->spa()
+            ->databaseTransactions()
             ->tenant(field::class, slugAttribute: 'slug')
-            ->brandLogo(asset('../public/img/logogjs.webp'))
-            ->brandLogoHeight(1.5)
-            ->favicon(asset('../public/img/logogjs.webp'))
+            ->brandLogo(fn () => view('filament.admin.logo'))
+            ->brandLogoHeight('1.5rem')
+            ->favicon(fn () => view('filament.admin.logo'))
             ->font('Manrope')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -48,6 +52,7 @@ class BodegaPanelProvider extends PanelProvider
                 'Bodega',
                 'Anexos',
             ])
+            ->unsavedChangesAlerts()
             ->pages([
                 Pages\Dashboard::class,
 
@@ -58,10 +63,10 @@ class BodegaPanelProvider extends PanelProvider
                 ActivitylogPlugin::make()
                     ->resource(ActivityLogResource::class)
                     ->navigationGroup('Anexos')
-                    ->navigationCountBadge(true)
                     ->label('Log')
                     ->pluralLabel('Logs'),
             ])
+
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,

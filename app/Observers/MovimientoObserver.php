@@ -4,12 +4,20 @@ namespace App\Observers;
 
 use App\Models\Movimiento;
 use App\Models\MovimientoProducto;
-use App\Models\Stock;
+use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Exception;
 
 class MovimientoObserver
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService)
+    {
+        $this->stockService = $stockService;
+    }
+
     /**
      * Handle the Movimiento "created" event.
      */
@@ -17,15 +25,20 @@ class MovimientoObserver
     {
         Log::info("Movimiento creado. ID: {$movimiento->id}");
 
-        DB::transaction(function () use ($movimiento) {
-            // Asegurarte de que la relación esté cargada
-            $movimiento->load('movimientoProductos');
+        try {
+            DB::transaction(function () use ($movimiento) {
+                // Asegurarte de que la relación esté cargada
+                $movimiento->load('movimientoProductos');
 
-            foreach ($movimiento->movimientoProductos as $productoMovimiento) {
-                $this->applyProductMovementImpact($productoMovimiento);
-            }
-        });
-
+                foreach ($movimiento->movimientoProductos as $productoMovimiento) {
+                    $this->stockService->applyStockChanges($productoMovimiento);
+                    // El registro en stock_movements ya se maneja dentro del StockService
+                }
+            });
+        } catch (Exception $e) {
+            Log::error("Error al procesar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
+        }
     }
 
     /**
@@ -33,36 +46,57 @@ class MovimientoObserver
      */
     public function updated(Movimiento $movimiento): void
     {
-        DB::transaction(function () use ($movimiento) {
-            $oldMovement = $movimiento->getOriginal();
-            if ($movimiento->relationLoaded('movimientoProductos')) {
-                foreach ($oldMovement->movimientoProductos as $productoMovimiento) {
-                    $this->revertProductMovementImpact($productoMovimiento);
-                }
+        // Definir los campos que deben ser ignorados al verificar cambios
+        $ignorarCampos = ['is_completed', 'updated_at', 'updated_by'];
+
+        // Obtener los campos que han cambiado excluyendo los campos a ignorar
+        $cambiosRelevantes = collect($movimiento->getChanges())->except($ignorarCampos);
+
+        // Verificar si solo se ha cambiado 'is_completed' y los campos a ignorar
+        if ($movimiento->wasChanged('is_completed') && $cambiosRelevantes->isEmpty()) {
+            Log::info("Movimiento ID: {$movimiento->id} ha sido marcado como completado. No se aplicarán cambios en el stock.");
+            return; // Salir sin aplicar cambios en el stock
+        }
+
+        // Aplicar cambios en el stock si hay cambios relevantes
+        try {
+            DB::transaction(function () use ($movimiento) {
+                // Cargar las relaciones necesarias
+                $movimiento->load('movimientoProductos');
 
                 foreach ($movimiento->movimientoProductos as $productoMovimiento) {
-                    $this->applyProductMovementImpact($productoMovimiento);
+                    $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
+                    $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
                 }
-            } else {
-                Log::error("No se cargaron los productos del movimiento para el movimiento ID: {$movimiento->id}");
-            }
-        });
+            });
+
+            Log::info("MovimientoObserver: Cambios de stock aplicados correctamente para Movimiento ID: {$movimiento->id}");
+        } catch (Exception $e) {
+            Log::error("MovimientoObserver: Error al actualizar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
+        }
     }
+
 
     /**
      * Handle the Movimiento "deleted" event.
      */
     public function deleted(Movimiento $movimiento): void
     {
-        DB::transaction(function () use ($movimiento) {
-            if ($movimiento->relationLoaded('movimientoProductos')) {
+        try {
+            DB::transaction(function () use ($movimiento) {
+                // Asegurarte de que la relación esté cargada
+                $movimiento->load('movimientoProductos');
+
                 foreach ($movimiento->movimientoProductos as $productoMovimiento) {
-                    $this->revertProductMovementImpact($productoMovimiento);
+                    $this->stockService->revertProductMovementImpact($productoMovimiento);
+                    // El registro en stock_movements ya se maneja dentro del StockService
                 }
-            } else {
-                Log::error("No se cargaron los productos del movimiento para el movimiento ID: {$movimiento->id}");
-            }
-        });
+            });
+        } catch (Exception $e) {
+            Log::error("Error al eliminar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
+        }
     }
 
     /**
@@ -70,15 +104,19 @@ class MovimientoObserver
      */
     public function restored(Movimiento $movimiento): void
     {
-        DB::transaction(function () use ($movimiento) {
-            if ($movimiento->relationLoaded('movimientoProductos')) {
+        try {
+            DB::transaction(function () use ($movimiento) {
+                $movimiento->load('movimientoProductos');
+
                 foreach ($movimiento->movimientoProductos as $productoMovimiento) {
-                    $this->applyProductMovementImpact($productoMovimiento);
+                    $this->stockService->applyStockChanges($productoMovimiento);
+                    // El registro en stock_movements ya se maneja dentro del StockService
                 }
-            } else {
-                Log::error("No se cargaron los productos del movimiento para el movimiento ID: {$movimiento->id}");
-            }
-        });
+            });
+        } catch (Exception $e) {
+            Log::error("Error al restaurar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
+        }
     }
 
     /**
@@ -86,93 +124,18 @@ class MovimientoObserver
      */
     public function forceDeleted(Movimiento $movimiento): void
     {
-        DB::transaction(function () use ($movimiento) {
-            if ($movimiento->relationLoaded('movimientoProductos')) {
+        try {
+            DB::transaction(function () use ($movimiento) {
+                $movimiento->load('movimientoProductos');
+
                 foreach ($movimiento->movimientoProductos as $productoMovimiento) {
-                    $this->revertProductMovementImpact($productoMovimiento);
+                    $this->stockService->revertProductMovementImpact($productoMovimiento);
+                    // El registro en stock_movements ya se maneja dentro del StockService
                 }
-            } else {
-                Log::error("No se cargaron los productos del movimiento para el movimiento ID: {$movimiento->id}");
-            }
-        });
-    }
-
-    /**
-     * Revertir el impacto de un producto en el stock.
-     */
-    private function revertProductMovementImpact(MovimientoProducto $productoMovimiento): void
-    {
-        $stockOrigen = Stock::where([
-            'product_id' => $productoMovimiento->producto_id,
-            'field_id' => $productoMovimiento->movimiento->field_id,
-            'warehouse_id' => $productoMovimiento->movimiento->bodega_origen_id,
-        ])->first();
-
-        $stockDestino = Stock::where([
-            'product_id' => $productoMovimiento->producto_id,
-            'field_id' => $productoMovimiento->movimiento->field_id,
-            'warehouse_id' => $productoMovimiento->movimiento->bodega_destino_id,
-        ])->first();
-
-        if ($productoMovimiento->movimiento->tipo === 'entrada' && $stockDestino) {
-            $stockDestino->quantity -= $productoMovimiento->cantidad;
-            $stockDestino->save();
-        } elseif ($productoMovimiento->movimiento->tipo === 'salida' && $stockOrigen) {
-            $stockOrigen->quantity += $productoMovimiento->cantidad;
-            $stockOrigen->save();
-        } elseif ($productoMovimiento->movimiento->tipo === 'traslado') {
-            if ($stockOrigen) {
-                $stockOrigen->quantity += $productoMovimiento->cantidad;
-                $stockOrigen->save();
-            }
-            if ($stockDestino) {
-                $stockDestino->quantity -= $productoMovimiento->cantidad;
-                $stockDestino->save();
-            }
-        }
-    }
-
-    /**
-     * Aplicar el impacto de un producto en el stock.
-     */
-    private function applyProductMovementImpact(MovimientoProducto $productoMovimiento): void
-    {
-        $stockOrigen = Stock::where([
-            'producto_id' => $productoMovimiento->producto_id,
-            'field_id' => $productoMovimiento->movimiento->field_id,
-            'warehouse_id' => $productoMovimiento->movimiento->bodega_origen_id,
-        ])->first();
-
-        $stockDestino = Stock::firstOrCreate([
-            'product_id' => $productoMovimiento->producto_id,
-            'field_id' => $productoMovimiento->movimiento->field_id,
-            'warehouse_id' => $productoMovimiento->movimiento->bodega_destino_id,
-        ], [
-            'quantity' => 0,
-        ]);
-
-        if ($productoMovimiento->movimiento->tipo === 'entrada') {
-            $stockDestino->quantity += $productoMovimiento->cantidad;
-            $stockDestino->save();
-        } elseif ($productoMovimiento->movimiento->tipo === 'salida') {
-            if ($stockOrigen && $stockOrigen->quantity >= $productoMovimiento->cantidad) {
-                $stockOrigen->quantity -= $productoMovimiento->cantidad;
-                $stockOrigen->save();
-            } else {
-                Log::error("Stock insuficiente para salida. Movimiento ID: {$productoMovimiento->movimiento->id}");
-                throw new \Exception("Stock insuficiente en la bodega de origen.");
-            }
-        } elseif ($productoMovimiento->movimiento->tipo === 'traslado') {
-            if ($stockOrigen && $stockOrigen->quantity >= $productoMovimiento->cantidad) {
-                $stockOrigen->quantity -= $productoMovimiento->cantidad;
-                $stockOrigen->save();
-
-                $stockDestino->quantity += $productoMovimiento->cantidad;
-                $stockDestino->save();
-            } else {
-                Log::error("Stock insuficiente para traslado. Movimiento ID: {$productoMovimiento->movimiento->id}");
-                throw new \Exception("Stock insuficiente en la bodega de origen.");
-            }
+            });
+        } catch (Exception $e) {
+            Log::error("Error al eliminar forzosamente el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
         }
     }
 }

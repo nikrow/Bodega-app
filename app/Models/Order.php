@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -20,7 +21,6 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'orderNumber',
-        'status',
         'field_id',
         'crops_id',
         'wetting',
@@ -31,15 +31,16 @@ class Order extends Model
         'warehouse_id',
         'updated_at',
         'updated_by',
+        'is_completed',
         'applicators',
-        'done'
+
     ];
     protected $casts = [
         'family' => 'array',
         'equipment' => 'array',
         'epp' => 'array',
-        'parcels' => 'array',
-        'status' => StatusType::class,
+        'applicators' => 'array',
+        'is_completed' => 'boolean',
     ];
     public function getActivitylogOptions(): LogOptions
     {
@@ -54,12 +55,23 @@ class Order extends Model
             $order->updated_by = Auth::id();
             $order->orderNumber = self::generateUniqueOrderNumber();
             $order->field_id = Filament::getTenant()->id;
-            $order->status = StatusType::PENDIENTE;
+            $order->is_completed = false;
         });
         static::updating(function ($order) {
-            $order->updated_by = Auth::id();
+            if ($order->is_completed && $order->isDirty()) {
+                $cambiosRelevantes = collect($order->getDirty())->except(['is_completed']);
+                if ($cambiosRelevantes->isEmpty()) {
+                    // Solo se está actualizando 'is_completed' y los campos a ignorar
+                    return;
+                }
+                // Si se intenta modificar otros campos, lanzar excepción
+                throw ValidationException::withMessages([
+                    'is_completed' => 'No puedes modificar un movimiento que ya ha sido completado.',
+                ]);
 
+            }
         });
+
     }
     protected static function boot()
     {
@@ -94,7 +106,7 @@ class Order extends Model
     {
         return $this->hasMany(order_line::class);
     }
-    public function ApplicationUsage()
+    public function applicationUsage()
         {
             return $this->hasMany(OrderApplicationUsage::class);
         }
@@ -122,8 +134,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderApplication::class, 'order_id', 'id');
     }
-    public function orderApplicators()
-    {
-        return $this->hasMany(OrderApplicator::class);
-    }
+   public function applicators()
+        {
+            return $this->hasMany(Applicator::class);
+        }
+
 }

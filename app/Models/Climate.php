@@ -16,7 +16,6 @@ class Climate extends Model
     protected $table = 'climates';
     protected $fillable = [
         'field_id',
-        'slug',
         'wind',
         'temperature',
         'humidity',
@@ -33,7 +32,6 @@ class Climate extends Model
         static::creating(function ($climate) {
             $climate->created_by = auth()->id();
             $climate->field_id = Filament::getTenant()->id;
-            $climate->slug = Str::slug($climate->created_at);
             $climate->updated_by = auth()->id();
         });
         static::updating(function ($climate) {

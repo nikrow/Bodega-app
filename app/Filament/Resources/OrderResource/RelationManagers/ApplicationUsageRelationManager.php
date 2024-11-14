@@ -13,7 +13,7 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class ApplicationUsageRelationManager extends RelationManager
 {
-    protected static string $relationship = 'ApplicationUsage';
+    protected static string $relationship = 'applicationUsage';
 
     protected static ?string $title = 'Cantidad producto utilizado';
     protected static ?string $modelLabel = 'Producto utilizado';
@@ -69,7 +69,7 @@ class ApplicationUsageRelationManager extends RelationManager
                     ->label('Reingreso Cosecha')
                     ->getStateUsing(function ($record) {
                         // Calcula la fecha de reingreso a la cosecha sumando la carencia en días a la fecha de creación
-                        $createdDate = $record->created_at ?? now();
+                        $createdDate = $record->created_at ? $record->created_at->copy() : now();
                         $waitingTimeDays = $record->product->waiting_time ?? 0;
 
                         return $createdDate->addDays($waitingTimeDays);

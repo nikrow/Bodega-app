@@ -41,7 +41,7 @@ class ParcelPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+
         ]);
     }
 
@@ -52,7 +52,7 @@ class ParcelPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+
         ]);
     }
 

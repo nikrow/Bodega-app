@@ -38,13 +38,17 @@ class MovimientoProducto extends Model
         static::creating(function ($field) {
 
             $field->created_by = Auth::id();
-            $field->updated_by = Auth::id();
             $field->field_id = Filament::getTenant()->id;
             $field->total = $field->cantidad * $field->precio_compra;
 
         });
-    }
 
+
+    }
+    public function stockMovements()
+    {
+        return $this->morphMany(StockMovement::class, 'related');
+    }
     public function movimiento()
     {
         return $this->belongsTo(Movimiento::class, 'movimiento_id');

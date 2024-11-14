@@ -89,11 +89,9 @@ class OrderLinesRelationManager extends RelationManager
                 Forms\Components\Textarea::make('reasons')
                     ->label('Razón'),
                 Forms\Components\TextInput::make('waiting_time')
-                    ->readonly()
                     ->label('Carencia')
                     ->numeric(),
                 Forms\Components\TextInput::make('reentry')
-                    ->readOnly()
                     ->label('Reingreso')
                     ->numeric(),
 

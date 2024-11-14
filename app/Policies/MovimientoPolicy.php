@@ -91,4 +91,13 @@ class MovimientoPolicy
     {
         return in_array($user->role, $roles);
     }
+    private function audit(User $user, Movimiento $movimiento): bool
+    {
+        return $user->isAdmin();
+
+    }
+    private function restoreAudit(User $user, Movimiento $movimiento): bool
+    {
+        return $user->isAdmin();
+    }
 }

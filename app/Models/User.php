@@ -69,6 +69,14 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
     {
         return $this->belongsToMany(Field::class, 'field_user', 'user_id', 'field_id');
     }
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
     public function getTenants(Panel $panel): array|\Illuminate\Support\Collection
     {
         return $this->fields()->get();

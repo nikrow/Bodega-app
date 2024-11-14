@@ -68,4 +68,8 @@ class OrderApplicationUsage extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
 }
