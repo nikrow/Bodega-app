@@ -8,6 +8,7 @@ use App\Filament\Resources\MovimientoResource\RelationManagers;
 use App\Filament\Resources\MovimientoResource\RelationManagers\MovimientoProductosRelationManager;
 use App\Models\Field;
 use App\Models\Movimiento;
+use App\Models\User;
 use App\Models\Warehouse;
 use Filament\Facades\Filament;
 use Filament\Forms;
@@ -93,7 +94,16 @@ class MovimientoResource extends Resource
 
                 TextInput::make('encargado')
                     ->label('Encargado')
-                    ->visible(fn ($get) => $get('tipo') !== MovementType::ENTRADA->value)
+                    ->visible(fn ($get) => $get('tipo') !== MovementType::ENTRADA->value),
+
+                Select::make('user_id')
+                    ->label('Responsable técnico')
+                    ->options(function () {
+                        return User::all()->pluck('name', 'id')->toArray();
+                    })
+                    ->default(fn () => Auth::id())
+                    ->disabled()
+                    ->reactive(),
             ]);
     }
 
@@ -147,10 +157,12 @@ class MovimientoResource extends Resource
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
-                Tables\Columns\TextColumn::make('createdBy.name')
-                    ->label('Creado por')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updatedBy.name')
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Responsable')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('user.name')
                     ->label('Modificado por')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -211,7 +223,7 @@ class MovimientoResource extends Resource
             'index' => Pages\ListMovimientos::route('/'),
             'create' => Pages\CreateMovimiento::route('/create'),
             'edit' => Pages\EditMovimiento::route('/{record}/edit'),
-            'view' => Pages\ViewMovimiento::route('/{record}'),
+            'view' => Pages\ViewMovimiento::route('/{record}')
         ];
     }
 }

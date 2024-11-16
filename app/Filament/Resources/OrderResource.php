@@ -230,11 +230,9 @@ class OrderResource extends Resource
                 Tables\Columns\IconColumn::make('is_completed')
                     ->boolean()
                     ->label('Completado'),
-                Tables\Columns\TextColumn::make('done')
-                    ->label('Finalizado')
-                    ->searchable()
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Fecha de actualización')
                     ->date('d/m/Y')
-                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('is_completed')

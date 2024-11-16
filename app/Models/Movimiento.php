@@ -87,9 +87,9 @@ class Movimiento extends Model implements Auditable
         });
 
     }
-    public function createdBy()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class);
     }
 
     // Relación con el usuario que actualizó el movimiento
