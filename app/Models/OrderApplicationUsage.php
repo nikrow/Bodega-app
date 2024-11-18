@@ -20,9 +20,12 @@ class OrderApplicationUsage extends Model
         'orderNumber',
         'parcel_id',
         'product_id',
+        'price',
+        'total_cost',
         'liters_applied',
         'dose_per_100l',
         'product_usage',
+        'order_application_id',
         'created_at',
         'updated_at',
     ];
@@ -41,9 +44,26 @@ class OrderApplicationUsage extends Model
         });
 
     }
+    protected static function booted()
+    {
+        static::creating(function ($usage) {
+            $usage->calculatePriceAndTotalCost();
+        });
 
-    // Método para calcular la cantidad utilizada
+        static::updating(function ($usage) {
+            $usage->calculatePriceAndTotalCost();
+        });
+    }
 
+    public function calculatePriceAndTotalCost()
+    {
+        // Obtener el precio del producto
+        $product = Product::find($this->product_id);
+        $price = $product->price ?? 0;
+
+        $this->price = $price;
+        $this->total_cost = $price * $this->product_usage;
+    }
 
     // Relación con OrderApplication
     public function orderApplication()

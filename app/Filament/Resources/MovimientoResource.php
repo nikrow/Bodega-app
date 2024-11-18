@@ -97,7 +97,7 @@ class MovimientoResource extends Resource
                     ->visible(fn ($get) => $get('tipo') !== MovementType::ENTRADA->value),
 
                 Select::make('user_id')
-                    ->label('Responsable técnico')
+                    ->label('Usuario')
                     ->options(function () {
                         return User::all()->pluck('name', 'id')->toArray();
                     })

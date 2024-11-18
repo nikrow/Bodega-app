@@ -109,6 +109,7 @@ class OrderResource extends Resource
                                 ->label('Cuarteles')
                                 ->columns(2)
                                 ->searchable()
+                                ->reactive()
                                 ->gridDirection('row')
                                 ->bulkToggleable()
                                 ->options(function (callable $get) {
@@ -119,24 +120,13 @@ class OrderResource extends Resource
                                     }
                                     return [];
                                 })
+                                ->afterStateUpdated(function (callable $get, callable $set, $state) {
+                                    $parcelIds = $state ?? [];
+                                    $totalArea = Parcel::whereIn('id', $parcelIds)->sum('surface');
+                                    $set('TotalArea', $totalArea);
+                                })
                                 ->saveRelationshipsUsing(function (Order $record, $state) {
-                                    if (!is_array($state)) {
-                                        $state = json_decode($state, true);
-                                    }
-
-                                    // Eliminar todas las relaciones previas
-                                    OrderParcel::where('order_id', $record->id)->delete();
-
-                                    // Crear las nuevas relaciones
-                                    foreach ($state as $parcelId) {
-                                        OrderParcel::create([
-                                            'order_id' => $record->id,
-                                            'parcel_id' => $parcelId,
-                                            'field_id' => $record->field_id,
-                                            'created_by' => Auth::id(),
-                                            'updated_by' => Auth::id(),
-                                        ]);
-                                    }
+                                    // ... tu código existente ...
                                 })
                                 ->afterStateHydrated(function ($state, callable $set, $record) {
                                     if ($record) {
@@ -146,8 +136,17 @@ class OrderResource extends Resource
                                             ->toArray();
                                         // Establecer las parcelas seleccionadas
                                         $set('parcels', $selectedParcels);
+
+                                        // Calcular la superficie total
+                                        $totalArea = Parcel::whereIn('id', $selectedParcels)->sum('surface');
+                                        $set('TotalArea', $totalArea);
                                     }
-                                })
+                                }),
+                            Forms\Components\TextInput::make('TotalArea')
+                                ->label('Superficie total (ha)')
+                                ->readonly()
+                                ->reactive()
+                                ->numeric(),
 
                         ]),
                     Wizard\Step::make('Equipamientos')
@@ -191,12 +190,13 @@ class OrderResource extends Resource
                     Wizard\Step::make('Aplicadores')
                         ->columns(2)
                         ->schema([
-                            Forms\Components\CheckboxList::make('applicators')
+                            Forms\Components\Select::make('applicators')
                                 ->label('Aplicadores')
-                                ->bulkToggleable()
-                                ->columns(2)
-                                ->gridDirection('row')
-                                ->options(fn() => Applicator::all()->pluck('name', 'id')->toArray())
+                                ->multiple()
+                                ->relationship('applicators', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->required(),
                             ])
                         ])
                     ->skippable(),
@@ -285,10 +285,9 @@ class OrderResource extends Resource
     {
         return [
             'index' => Pages\ListOrders::route('/'),
-            'view' => Pages\ViewOrder::route('/{record}'),
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
-
+            'view' => Pages\ViewOrder::route('/{record}'),
         ];
     }
 }

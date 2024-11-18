@@ -80,7 +80,6 @@ class ClimateResource extends Resource
             ])
             ->bulkActions([
 
-                    Tables\Actions\DeleteBulkAction::make(),
 
             ]);
     }

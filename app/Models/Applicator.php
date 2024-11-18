@@ -51,6 +51,7 @@ class Applicator extends Model
     }
     public function orders()
     {
-        return $this->hasMany(Order::class);
+        return $this->belongsToMany(Order::class, 'applicator_order', 'applicator_id', 'order_id');
     }
+
 }

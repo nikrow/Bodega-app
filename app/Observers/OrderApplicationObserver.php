@@ -31,6 +31,7 @@ class OrderApplicationObserver
 
                         OrderApplicationUsage::create([
                             'field_id' => $orderApplication->order->field_id,
+                            'order_application_id' => $orderApplication->id,
                             'order_id' => $orderApplication->order->id,
                             'orderNumber' => $orderApplication->order->orderNumber,
                             'parcel_id' => $orderApplication->parcel_id,
@@ -83,6 +84,7 @@ class OrderApplicationObserver
 
                         OrderApplicationUsage::updateOrCreate(
                             [
+                                'order_application_id' => $orderApplication->id, // <-- Agregar esta línea
                                 'order_id' => $orderApplication->order->id,
                                 'parcel_id' => $orderApplication->parcel_id,
                                 'product_id' => $orderLine->product_id,
@@ -106,6 +108,7 @@ class OrderApplicationObserver
             Log::error('Error while updating OrderApplicationUsage for OrderApplication ID: ' . $orderApplication->id . '. Error: ' . $e->getMessage());
         }
     }
+
 
     /**
      * Handle the OrderApplication "deleted" event.

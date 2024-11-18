@@ -46,12 +46,31 @@ class OrderLinesRelationManager extends RelationManager
                                 $set('waiting_time', $product->waiting_time);
                                 $set('reentry', $product->reentry);
                                 $set('active_ingredients', $product->active_ingredients);
+
+                                // Obtener el stock de producto en la bodega
+                                $order = $this->getOwnerRecord();
+                                $warehouseId = $order->warehouse_id ?? null;
+
+                                if ($warehouseId) {
+                                    $stock = \App\Models\Stock::where('product_id', $productId)
+                                        ->where('warehouse_id', $warehouseId)
+                                        ->value('quantity') ?? 0;
+
+                                    $set('ProductStock', $stock);
+                                } else {
+                                    // Si no hay bodega asociada, establecer el stock a null o un mensaje
+                                    $set('ProductStock', 'No hay bodega asociada a la orden');
+                                }
                             }
                         } else {
                             // Si no hay un producto seleccionado, establecer los valores a null o un valor predeterminado
                             $set('waiting_time', null);
                             $set('reentry', null);
+                            $set('ProductStock', null);
                         }
+
+                        // También recalculamos el uso estimado en caso de que el producto haya cambiado
+                        $this->recalculateEstimatedUsage($get, $set);
                     }),
                 Forms\Components\TextInput::make('active_ingredients')
                     ->label('Ingredientes Activos')
@@ -78,12 +97,22 @@ class OrderLinesRelationManager extends RelationManager
                     })
                     ->afterStateUpdated(function (callable $get, callable $set) {
                         $productId = $get('product_id');
-                        if ($productId) {
-                            $product = Product::find($productId);
-                            $dosis = $get('dosis');
-                            if ($product && $dosis) {
-                                $set('dosis', $dosis);
+                        $dosis = $get('dosis') ?? 0;
+                        if ($productId && $dosis > 0) {
+                            $order = $this->getOwnerRecord();
+                            $totalArea = $order->orderApplications->sum(function ($application) {
+                                return $application->parcel->surface ?? 0;
+                            });
+                            $wetting = $order->wetting ?? 0;
+
+                            if ($totalArea > 0 && $wetting > 0) {
+                                $estimatedUsage = ($totalArea * $wetting * $dosis) / 100;
+                                $set('EstimatedProductUsage', round($estimatedUsage, 2));
+                            } else {
+                                $set('EstimatedProductUsage', 'Datos insuficientes para calcular');
                             }
+                        } else {
+                            $set('EstimatedProductUsage', null);
                         }
                     }),
                 Forms\Components\Textarea::make('reasons')
@@ -94,8 +123,30 @@ class OrderLinesRelationManager extends RelationManager
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
                     ->numeric(),
+                Forms\Components\TextInput::make('EstimatedProductUsage')
+                    ->label('Cantidad estimada de uso de producto')
+                    ->readonly()
+                    ->reactive()
+                    ->suffix('kg/lt')
+                    ->numeric()
+                    ->helperText(function (callable $get) {
+                        $estimatedUsage = $get('EstimatedProductUsage');
+                        $productStock = $get('ProductStock');
 
+                        if (is_numeric($estimatedUsage) && is_numeric($productStock)) {
+                            if ($estimatedUsage > $productStock) {
+                                return new \Illuminate\Support\HtmlString('<span style="color: red;">El uso estimado supera el stock disponible.</span>');
+                            }
+                        }
 
+                        return null;
+                    }),
+                Forms\Components\TextInput::make('ProductStock')
+                    ->label('Stock de producto')
+                    ->readonly()
+                    ->suffix('kg/lt')
+                    ->reactive()
+                    ->numeric(),
             ]);
     }
 
@@ -143,5 +194,27 @@ class OrderLinesRelationManager extends RelationManager
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+    private function recalculateEstimatedUsage(callable $get, callable $set)
+    {
+        $productId = $get('product_id');
+        $dosis = $get('dosis') ?? 0;
+
+        if ($productId && $dosis > 0) {
+            $order = $this->getOwnerRecord();
+            $totalArea = $order->orderApplications->sum(function ($application) {
+                return $application->parcel->surface ?? 0;
+            });
+            $wetting = $order->wetting ?? 0;
+
+            if ($totalArea > 0 && $wetting > 0) {
+                $estimatedUsage = ($totalArea * $wetting * $dosis) / 100;
+                $set('EstimatedProductUsage', round($estimatedUsage, 2));
+            } else {
+                $set('EstimatedProductUsage', 'Datos insuficientes para calcular');
+            }
+        } else {
+            $set('EstimatedProductUsage', null);
+        }
     }
 }

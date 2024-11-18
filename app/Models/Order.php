@@ -134,9 +134,10 @@ class Order extends Model
     {
         return $this->hasMany(OrderApplication::class, 'order_id', 'id');
     }
-   public function applicators()
-        {
-            return $this->hasMany(Applicator::class);
-        }
+    public function applicators()
+    {
+        return $this->belongsToMany(Applicator::class, 'applicator_order', 'order_id', 'applicator_id');
+    }
+
 
 }

@@ -79,5 +79,9 @@ class OrderApplication extends Model
     {
         return $this->belongsTo(Climate::class, 'climate_id');
     }
+    public function orderApplication()
+    {
+        return $this->belongsTo(OrderApplication::class, 'order_application_id');
+    }
 
 }
