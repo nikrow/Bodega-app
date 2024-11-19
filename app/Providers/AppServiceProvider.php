@@ -17,6 +17,7 @@ use App\Observers\OrderApplicationObserver;
 use App\Observers\OrderApplicationUsageObserver;
 use App\Policies\ActivityLogPolicy;
 use App\Services\StockService;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Spatie\Activitylog\Models\Activity;
 use App\Policies\CropPolicy;
@@ -57,6 +58,8 @@ class AppServiceProvider extends ServiceProvider
         MovimientoProducto::observe(MovimientoProductoObserver::class);
         OrderApplication::observe(OrderApplicationObserver::class);
         OrderApplicationUsage::observe(OrderApplicationUsageObserver::class);
-
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
