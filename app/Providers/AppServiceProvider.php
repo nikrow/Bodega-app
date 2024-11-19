@@ -57,7 +57,6 @@ class AppServiceProvider extends ServiceProvider
         Movimiento::observe(MovimientoObserver::class);
         MovimientoProducto::observe(MovimientoProductoObserver::class);
         OrderApplication::observe(OrderApplicationObserver::class);
-        OrderApplicationUsage::observe(OrderApplicationUsageObserver::class);
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }

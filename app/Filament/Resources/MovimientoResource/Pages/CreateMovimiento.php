@@ -13,10 +13,7 @@ class CreateMovimiento extends CreateRecord
     {
         return $this->getResource()::getUrl('edit', ['record' => $this->record]);
     }
-    protected function afterCreate(): void
-    {
-        $this->notify('success', 'El registro se ha creado exitosamente.');
-    }
+
 
 }
 

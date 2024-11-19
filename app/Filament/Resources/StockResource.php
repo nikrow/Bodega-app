@@ -49,7 +49,7 @@ class StockResource extends Resource
                     ->numeric(decimalPlaces: 0, thousandsSeparator: '.')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at', 'Última Actualización')
-                    ->date('d/m/Y')
+                    ->label('Última Actualización')
                     ->sortable(),
             ])
             ->filters([
@@ -67,7 +67,6 @@ class StockResource extends Resource
     public static function getRelations(): array
     {
         return [
-            AuditsRelationManager::class
 
         ];
     }

@@ -8,6 +8,7 @@ use App\Filament\Resources\MovimientoResource\RelationManagers;
 use App\Filament\Resources\MovimientoResource\RelationManagers\MovimientoProductosRelationManager;
 use App\Models\Field;
 use App\Models\Movimiento;
+use App\Models\Order;
 use App\Models\User;
 use App\Models\Warehouse;
 use Filament\Facades\Filament;
@@ -34,6 +35,7 @@ class MovimientoResource extends Resource
     protected static ?string $navigationGroup = 'Bodega';
 
     protected static ?int $navigationSort = 20;
+    protected static ?string $navigationLabel = 'Agregar movimiento';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -48,6 +50,7 @@ class MovimientoResource extends Resource
                         MovementType::ENTRADA->value => 'entrada',
                         MovementType::SALIDA->value => 'salida',
                         MovementType::TRASLADO->value => 'traslado',
+                        MovementType::PREPARACION->value => 'preparación',
                     ])
                     ->required()
                     ->reactive(),
@@ -61,7 +64,18 @@ class MovimientoResource extends Resource
                     })
                     ->required()
                     ->searchable()
-                    ->visible(fn ($get) => $get('tipo') !== MovementType::ENTRADA->value),
+                    ->visible(fn ($get) => in_array($get('tipo'), [MovementType::SALIDA->value, MovementType::TRASLADO->value, MovementType::PREPARACION->value])),
+
+                Select::make('order_id')
+                    ->label('Orden de Aplicación')
+                    ->options(function () {
+                        $tenantId = Filament::getTenant()->id;
+                        return Order::where('field_id', $tenantId)->pluck('orderNumber', 'id');
+                    })
+                    ->searchable()
+                    ->nullable()
+                    ->visible(fn ($get) => $get('tipo') === MovementType::PREPARACION->value)
+                    ->reactive(),
 
                 Select::make('bodega_destino_id')
                     ->label('Destino')
@@ -71,7 +85,7 @@ class MovimientoResource extends Resource
                         return Warehouse::where('field_id', $tenantId)->pluck('name', 'id');
                     })
                     ->required()
-                    ->visible(fn ($get) => $get('tipo') !== MovementType::SALIDA->value)
+                    ->visible(fn ($get) => in_array($get('tipo'), [MovementType::ENTRADA->value, MovementType::TRASLADO->value]))
                     ->searchable(),
 
                 TextInput::make('orden_compra')
@@ -89,12 +103,12 @@ class MovimientoResource extends Resource
 
                 TextInput::make('comprobante')
                     ->label('Comprobante')
-                    ->visible(fn ($get) => $get('tipo') !== MovementType::ENTRADA->value)
+                    ->visible(fn ($get) => in_array($get('tipo'), [MovementType::SALIDA->value, MovementType::TRASLADO->value]))
                     ->rules('numeric|min:1'),
 
                 TextInput::make('encargado')
                     ->label('Encargado')
-                    ->visible(fn ($get) => $get('tipo') !== MovementType::ENTRADA->value),
+                    ->visible(fn ($get) => in_array($get('tipo'), [MovementType::SALIDA->value, MovementType::TRASLADO->value])),
 
                 Select::make('user_id')
                     ->label('Usuario')
@@ -111,7 +125,13 @@ class MovimientoResource extends Resource
     {
         return $table
             ->defaultPaginationPageOption(50)
+            ->defaultSort('created_at', 'desc')
             ->columns([
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Fecha de Aplicación')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('tipo')
                     ->label('Tipo de Movimiento')
@@ -121,6 +141,7 @@ class MovimientoResource extends Resource
                             MovementType::ENTRADA => 'entrada',
                             MovementType::SALIDA => 'salida',
                             MovementType::TRASLADO => 'traslado',
+                            MovementType::PREPARACION => 'preparación',
                             default => 'Desconocido',
 
                         };
@@ -129,6 +150,7 @@ class MovimientoResource extends Resource
                         'entrada' => 'success',
                         'salida' => 'danger',
                         'traslado' => 'warning',
+                        'preparacion' => 'danger',
 
                     ]),
                 Tables\Columns\TextColumn::make('movement_number')

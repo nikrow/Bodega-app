@@ -98,6 +98,16 @@ class StockService
                 $this->handleRevertTraslado($stockOrigen, $stockDestino, $cantidadAnterior, $movimiento->user_id);
                 break;
 
+            case 'preparacion':
+                if ($movimiento->bodega_origen_id) {
+                    $stockOrigen = $this->getStock(
+                        $productoMovimiento->producto_id,
+                        $movimiento->bodega_origen_id,
+                        $movimiento->field_id
+                    );
+                    $this->updateStock($stockOrigen, $cantidadAnterior, $productoMovimiento->producto->price, $movimiento->user_id);
+                    break;
+                }
             default:
                 Log::warning("Tipo de movimiento no reconocido para revertir: {$tipo}");
         }
@@ -166,6 +176,20 @@ class StockService
                 // Registrar en stock_movements
                 $this->logStockMovement($movimiento, $productoMovimiento, 'traslado', -$cantidadNueva);
                 $this->logStockMovement($movimiento, $productoMovimiento, 'traslado', $cantidadNueva, 'entrada');
+                break;
+
+            case 'preparacion':
+                if ($movimiento->bodega_origen_id) {
+                    $stockOrigen = $this->getStock(
+                        $productoMovimiento->producto_id,
+                        $movimiento->bodega_origen_id,
+                        $movimiento->field_id
+                    );
+                    $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
+
+                    // Registrar en stock_movements
+                    $this->logStockMovement($movimiento, $productoMovimiento, 'preparacion', -$cantidadNueva);
+                }
                 break;
 
             default:
@@ -439,7 +463,7 @@ class StockService
         $tipo = strtolower($movimiento->tipo->value);
         $cantidad = $productoMovimiento->cantidad;
 
-        if ($tipo === 'salida') {
+        if (in_array($tipo, ['salida', 'preparacion'])) {
             $stockOrigen = $this->getStock(
                 $productoMovimiento->producto_id,
                 $movimiento->bodega_origen_id,
@@ -447,11 +471,12 @@ class StockService
             );
 
             if ($stockOrigen->quantity < $cantidad) {
-                Log::error("Stock insuficiente para salida: Producto ID {$productoMovimiento->producto_id}, Bodega Origen ID {$movimiento->bodega_origen_id}");
-                throw new Exception('Stock insuficiente para salida.');
+                Log::error("Stock insuficiente para {$tipo}: Producto ID {$productoMovimiento->producto_id}, Bodega Origen ID {$movimiento->bodega_origen_id}");
+                throw new Exception("Stock insuficiente para {$tipo}.");
             }
         }
     }
+
 
     /**
      * Deduce stock basado en el uso de una aplicación.
@@ -462,7 +487,7 @@ class StockService
      * @return void
      * @throws Exception
      */
-    public function deductUsageStock(int $productId, int $warehouseId, float $quantity): void
+    /*public function deductUsageStock(int $productId, int $warehouseId, float $quantity): void
     {
         DB::transaction(function () use ($productId, $warehouseId, $quantity) {
             $stock = Stock::where([
@@ -495,58 +520,58 @@ class StockService
      * @param float $quantity
      * @return void
      */
-    public function revertUsageStock(int $productId, int $warehouseId, float $quantity): void
-    {
-        DB::transaction(function () use ($productId, $warehouseId, $quantity) {
-            $stock = Stock::where([
-                'product_id' => $productId,
-                'warehouse_id' => $warehouseId,
-            ])->first();
+    /*public function revertUsageStock(int $productId, int $warehouseId, float $quantity): void
+   {
+       DB::transaction(function () use ($productId, $warehouseId, $quantity) {
+           $stock = Stock::where([
+               'product_id' => $productId,
+               'warehouse_id' => $warehouseId,
+           ])->first();
 
-            if (!$stock) {
-                // Si el stock no existe, lo creamos
-                $stock = Stock::create([
-                    'product_id' => $productId,
-                    'warehouse_id' => $warehouseId,
-                    'quantity' => 0,
-                    'price' => 0, // Ajustar según necesidades
-                    'total_price' => 0, // Ajustar según necesidades
-                    'field_id' => Filament::getTenant()->id,
-                    'created_by' => Auth::id(),
-                    'updated_by' => Auth::id(),
-                ]);
-            }
+           if (!$stock) {
+               // Si el stock no existe, lo creamos
+               $stock = Stock::create([
+                   'product_id' => $productId,
+                   'warehouse_id' => $warehouseId,
+                   'quantity' => 0,
+                   'price' => 0, // Ajustar según necesidades
+                   'total_price' => 0, // Ajustar según necesidades
+                   'field_id' => Filament::getTenant()->id,
+                   'created_by' => Auth::id(),
+                   'updated_by' => Auth::id(),
+               ]);
+           }
 
-            $stock->quantity += $quantity;
-            $stock->save();
+           $stock->quantity += $quantity;
+           $stock->save();
 
-            Log::info("Stock revertido por uso: Producto ID {$productId}, Bodega ID {$warehouseId}, Cantidad {$quantity}");
-        });
-    }
-    /**
-     * Registrar un movimiento de uso de aplicación en stock_movements.
-     *
-     * @param OrderApplicationUsage $usage
-     * @param string $tipoMovimiento
-     * @param int $cantidadCambio
-     * @param string $descripcion
-     * @return void
-     */
-    public function logUsageMovement(OrderApplicationUsage $usage, string $tipoMovimiento, int $cantidadCambio, string $descripcion): void
-    {
-        StockMovement::create([
-            'movement_type' => $tipoMovimiento,
-            'product_id' => $usage->product_id,
-            'warehouse_id' => $usage->order->warehouse_id,
-            'related_id' => $usage->id,
-            'related_type' => OrderApplicationUsage::class,
-            'quantity_change' => $cantidadCambio,
-            'description' => $descripcion,
-            'user_id' => $usage->user_id,
-            'field_id' => $usage->field_id,
-            'updated_by' => $usage->updated_by ?? $usage->user_id,
-        ]);
+           Log::info("Stock revertido por uso: Producto ID {$productId}, Bodega ID {$warehouseId}, Cantidad {$quantity}");
+       });
+   }
+   /**
+    * Registrar un movimiento de uso de aplicación en stock_movements.
+    *
+    * @param OrderApplicationUsage $usage
+    * @param string $tipoMovimiento
+    * @param int $cantidadCambio
+    * @param string $descripcion
+    * @return void
+    */
+    /*public function logUsageMovement(OrderApplicationUsage $usage, string $tipoMovimiento, int $cantidadCambio, string $descripcion): void
+   {
+       StockMovement::create([
+           'movement_type' => $tipoMovimiento,
+           'product_id' => $usage->product_id,
+           'warehouse_id' => $usage->order->warehouse_id,
+           'related_id' => $usage->id,
+           'related_type' => OrderApplicationUsage::class,
+           'quantity_change' => $cantidadCambio,
+           'description' => $descripcion,
+           'user_id' => $usage->user_id,
+           'field_id' => $usage->field_id,
+           'updated_by' => $usage->updated_by ?? $usage->user_id,
+       ]);
 
-        Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento}, Producto ID {$usage->product_id}, Cantidad Cambio {$cantidadCambio}");
-    }
+       Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento}, Producto ID {$usage->product_id}, Cantidad Cambio {$cantidadCambio}");
+   }*/
 }

@@ -23,7 +23,17 @@ class MovimientoProductosRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('producto_id')
-                    ->options(Product::all()->pluck('product_name', 'id')->toArray())
+                    ->options(function (callable $get) {
+                        $movimiento = $this->ownerRecord;
+
+                        if ($movimiento && $movimiento->order) {
+                            // Obtener los productos de la orden seleccionada
+                            return $movimiento->order->orderLines()->with('product')->get()->pluck('product.product_name', 'product_id');
+                        }
+
+                        // Si no hay una orden seleccionada, mostrar todos los productos
+                        return Product::all()->pluck('product_name', 'id');
+                    })
                     ->preload()
                     ->live()
                     ->searchable()
@@ -39,8 +49,8 @@ class MovimientoProductosRelationManager extends RelationManager
                             $productId = $get('producto_id');
                             $tipoMovimiento = $movimiento->tipo->value;
 
-                            // Solo obtener el stock si es tipo "salida" o "traslado"
-                            if ($tipoMovimiento === 'salida' || $tipoMovimiento === 'traslado') {
+                            // Incluir 'preparacion' en los tipos de movimiento que calculan el stock
+                            if (in_array($tipoMovimiento, ['salida', 'traslado', 'preparacion'])) {
                                 $stock = Stock::where('product_id', $productId)
                                     ->where('warehouse_id', $warehouseId)
                                     ->first();
@@ -62,7 +72,6 @@ class MovimientoProductosRelationManager extends RelationManager
 
                             if ($product) {
                                 $set('unidad_medida', $product->unit_measure);
-
                                 $set('precio_compra', $product->price);
                             } else {
                                 $set('unidad_medida', 'Sin unidad');
@@ -73,6 +82,7 @@ class MovimientoProductosRelationManager extends RelationManager
                             $set('stock_disponible', 'Sin movimiento o sin producto seleccionado');
                             $set('warehouse_id', null);
                         }
+
                     }),
 
                 Forms\Components\TextInput::make('stock_disponible')

@@ -27,8 +27,14 @@ class StockMovementResource extends Resource
     {
         return $table
             ->defaultPaginationPageOption(50)
+            ->defaultSort('created_at', 'desc')
             ->columns([
+
                 TextColumn::make('id')->sortable()->searchable(),
+                TextColumn::make('created_at')
+                    ->label('Fecha')
+                    ->dateTime('Y-m-d H:i')
+                    ->sortable(),
                 TextColumn::make('movement_type')
                     ->colors([
                         'success' => 'entrada',

@@ -123,4 +123,8 @@ class Movimiento extends Model implements Auditable
     {
         return $this->morphTo(Audit::class, 'auditable_id', 'id');
     }
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id');
+    }
 }

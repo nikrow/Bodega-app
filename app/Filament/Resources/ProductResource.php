@@ -77,7 +77,9 @@ class ProductResource extends Resource
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
                     ->placeholder('Precio')
-                    ->rules('required','numeric'),
+                    ->suffix('USD')
+                    ->rules('required','money'),
+
                 Forms\Components\Select::make('unit_measure')
                     ->label('Unidad de Medida')
                     ->options([

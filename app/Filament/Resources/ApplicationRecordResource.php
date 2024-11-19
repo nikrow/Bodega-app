@@ -23,6 +23,7 @@ class ApplicationRecordResource extends Resource
     {
         return $table
             ->defaultPaginationPageOption(50)
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 // Fecha de aplicación
                 TextColumn::make('created_at')
@@ -179,7 +180,7 @@ class ApplicationRecordResource extends Resource
                 // Acciones por registro
             ])
             ->bulkActions([
-                // Acciones en lote
+                \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
             ]);
     }
 

@@ -52,7 +52,6 @@ class OrderResource extends Resource
     {
         return $form
             ->columns('full')
-
             ->schema([
 
                 Wizard::make([

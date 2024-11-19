@@ -29,7 +29,6 @@ class BodegaPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
             ->id('campo')
             ->path('')
             ->login()
@@ -43,6 +42,7 @@ class BodegaPanelProvider extends PanelProvider
             ->brandLogo(asset('/img/logovector2.svg'))
             ->favicon(asset('/img/logovector2.svg'))
             ->font('Manrope')
+            ->default()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->navigationGroups([
