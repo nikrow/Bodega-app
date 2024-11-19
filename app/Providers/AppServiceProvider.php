@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Filament\Resources\ConsolidatedOrderResource;
+
 use App\Models\Crop;
 use App\Models\Movimiento;
 use App\Models\MovimientoProducto;

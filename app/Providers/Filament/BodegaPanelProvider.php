@@ -31,7 +31,7 @@ class BodegaPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('campo')
-            ->path('campo')
+            ->path('')
             ->login()
             ->colors([
                 'primary' => ('#568203'),
@@ -56,8 +56,6 @@ class BodegaPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
 
             ])
-
-
             ->plugins([
                 ActivitylogPlugin::make()
                     ->resource(ActivityLogResource::class)
@@ -65,7 +63,7 @@ class BodegaPanelProvider extends PanelProvider
                     ->label('Log')
                     ->pluralLabel('Logs'),
             ])
-
+            ->authGuard('web')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,

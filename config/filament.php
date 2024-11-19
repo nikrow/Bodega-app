@@ -86,4 +86,19 @@ return [
 
     'livewire_loading_delay' => 'default',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication
+    |--------------------------------------------------------------------------
+    |
+    | Aquí puedes definir la configuración de autenticación para Filament.
+    |
+    */
+
+    'auth' => [
+        'guard' => env('FILAMENT_AUTH_GUARD', 'web'),
+        'pages' => [
+            'login' => \Filament\Http\Livewire\Auth\Login::class,
+        ],
+    ],
 ];
