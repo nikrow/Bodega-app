@@ -105,7 +105,10 @@ class Movimiento extends Model implements Auditable
     {
         return $this->belongsTo(Field::class, 'field_id');
     }
-
+    public function movimiento()
+    {
+        return $this->belongsTo(Movimiento::class, 'movimiento_id');
+    }
     // Relación con Warehouse (Bodega de Origen)
     public function bodega_origen()
     {

@@ -17,6 +17,7 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
@@ -38,17 +39,21 @@ class ProductResource extends Resource
                 Forms\Components\TextInput::make('product_name')
                     ->label('Nombre')
                     ->required()
-                    ->unique()
                     ->placeholder('Nombre del producto')
-                    ->rules('required', 'max:255'),
+                    ->rules(function (Forms\Get $get) {
+                        return Rule::unique('products', 'product_name')
+                            ->ignore($get('id'));
+                    }),
                 Forms\Components\TextInput::make('active_ingredients')
                     ->placeholder('Ingredientes activos')
                     ->label('Ingredientes activos')
                     ->nullable(),
                 Forms\Components\TextInput::make('SAP_code')
                     ->label('Código SAP')
-                    ->unique()
-                    ->rules('required', 'max:255'),
+                    ->rules(function (Forms\Get $get) {
+                        return Rule::unique('products', 'SAP_code')
+                            ->ignore($get('id'));
+                    }),
 
                 Forms\Components\Select::make('SAP_family')
                     ->label('Familia SAP')

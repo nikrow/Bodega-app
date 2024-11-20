@@ -15,6 +15,7 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
@@ -44,8 +45,11 @@ class ParcelResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre')
-                    ->unique()
-                    ->rules('required', 'max:255'),
+                    ->required()
+                    ->rules(function (Forms\Get $get) {
+                        return Rule::unique('parcels', 'name')
+                            ->ignore($get('id'));
+                    }),
                 Forms\Components\Select::make('crop_id')
                     ->label('Cultivo')
                     ->options(Crop::all()->pluck('especie', 'id')->toArray())

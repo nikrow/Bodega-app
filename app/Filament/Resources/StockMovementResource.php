@@ -35,6 +35,11 @@ class StockMovementResource extends Resource
                     ->label('Fecha')
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
+                TextColumn::make('movement_number')
+                    ->label('ID Movimiento')
+                    ->sortable()
+                    ->searchable()
+                    ->tooltip(fn ($record) => $record->movement_number ? "Movimiento: {$record->movement_number}" : null),
                 TextColumn::make('movement_type')
                     ->colors([
                         'success' => 'entrada',
@@ -75,9 +80,7 @@ class StockMovementResource extends Resource
                         'entrada' => 'Entrada',
                         'salida' => 'Salida',
                         'traslado' => 'Traslado',
-                        'application_usage' => 'Uso de Aplicación',
-                        'application_usage_update' => 'Actualización de Uso de Aplicación',
-                        'application_usage_deleted' => 'Eliminación de Uso de Aplicación',
+                        'preparacion' => 'Preparacion',
                     ])
                     ->label('Tipo de Movimiento'),
                 Tables\Filters\Filter::make('fecha')

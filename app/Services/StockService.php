@@ -358,7 +358,7 @@ class StockService
     {
         $descripcion = $descripcionAdicional
             ? $descripcionAdicional
-            : "Movimiento de tipo {$tipoMovimiento} registrado.";
+            : "Movimiento {$productoMovimiento->id} de tipo {$tipoMovimiento} registrado.";
 
         StockMovement::create([
             'movement_type' => $tipoMovimiento,

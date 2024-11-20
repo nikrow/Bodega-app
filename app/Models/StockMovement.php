@@ -61,6 +61,20 @@ class StockMovement extends Model
     {
         return $this->belongsTo(Field::class, 'field_id');
     }
+    public function movimientoProducto()
+    {
+        return $this->belongsTo(MovimientoProducto::class, 'related_id');
+    }
+
+    public function movimiento()
+    {
+        return $this->movimientoProducto ? $this->movimientoProducto->movimiento : null;
+    }
+    public function getMovementNumberAttribute(): ?string
+    {
+        return $this->movimientoProducto ? $this->movimientoProducto->movimiento->movement_number : null;
+    }
+
     /**
      * Relación con el producto.
      */

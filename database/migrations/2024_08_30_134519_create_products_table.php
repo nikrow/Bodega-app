@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('product_name');
-            $table->string('active_ingredients');
+            $table->string('active_ingredients')->nullable();
             $table->enum('SAP_family', ['fertilizantes-enmiendas', 'fitosanitarios', 'fitoreguladores', 'bioestimulantes', 'otros']);
             $table->string('SAP_code')->unique();
             $table->enum('unit_measure', ['kilogramo', 'litro', 'unidad'])->nullable();

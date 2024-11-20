@@ -39,7 +39,7 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
         'password',
         'role',
         'last_login_at',
-        'active_hours',
+        'active_minutes',
     ];
     public function getActivitylogOptions(): LogOptions
     {
@@ -55,7 +55,10 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
         'password',
         'remember_token',
     ];
-
+    protected $dates = [
+        'last_login_at',
+        'last_activity_at',
+    ];
     /**
      * Get the attributes that should be cast.
      *
@@ -64,6 +67,7 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
     protected $casts = [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'active_minutes' => 'integer',
         ];
     public function fields(): BelongsToMany
     {
@@ -73,6 +77,7 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
     {
         return $this->role === 'admin';
     }
+
     public function hasRole(string $role): bool
     {
         return $this->role === $role;

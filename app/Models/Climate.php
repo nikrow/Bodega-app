@@ -33,7 +33,7 @@ class Climate extends Model
         static::creating(function ($climate) {
             $climate->created_by = auth()->id();
             $climate->field_id = Filament::getTenant()->id;
-            $climate->slug = Str::slug($climate->field->name);
+            $climate->slug = Str::slug($climate->id);
             $climate->updated_by = auth()->id();
         });
         static::updating(function ($climate) {

@@ -10,8 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class ApplicatorResource extends Resource
@@ -32,11 +31,17 @@ class ApplicatorResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre')
-                    ->unique()
+                    ->rule(function (Forms\Get $get) {
+                        return Rule::unique('applicators', 'name')
+                            ->ignore($get('id'));
+                    })
                     ->required(),
                 Forms\Components\TextInput::make('rut')
                     ->label('RUT')
-                    ->unique()
+                    ->rule(function (Forms\Get $get) {
+                        return Rule::unique('applicators', 'rut')
+                            ->ignore($get('id'));
+                    })
                     ->required(),
                 Forms\Components\TextInput::make('tractor')
                     ->label('Tractor')

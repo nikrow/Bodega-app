@@ -41,9 +41,7 @@ class ApplicatorPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
+
         ]);
     }
 
@@ -54,8 +52,6 @@ class ApplicatorPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::ASISTENTE->value,
         ]);
     }
 
