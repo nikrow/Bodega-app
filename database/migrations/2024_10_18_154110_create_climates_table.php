@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('humidity', 8, 1)->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('updated_by')->constrained('users')->onDelete('cascade')->onUpdate('cascade');
+
             $table->timestamps();
         });
     }
