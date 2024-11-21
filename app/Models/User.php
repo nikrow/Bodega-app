@@ -39,6 +39,7 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
         'password',
         'role',
         'last_login_at',
+        'last_activity_at',
         'active_minutes',
     ];
     public function getActivitylogOptions(): LogOptions
@@ -68,6 +69,8 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'active_minutes' => 'integer',
+            'last_login_at' => 'datetime',
+            'last_activity_at' => 'datetime',
         ];
     public function fields(): BelongsToMany
     {
@@ -103,4 +106,14 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
     {
         return true;
     }
+    /**
+     * Relación muchos a muchos con Warehouse.
+     */
+    public function warehouses(): BelongsToMany
+    {
+        return $this->belongsToMany(Warehouse::class, 'user_warehouse')
+            ->withTimestamps();
+    }
+
+
 }

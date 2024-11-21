@@ -34,6 +34,7 @@ class Movimiento extends Model implements Auditable
         'is_completed',
         'created_by',
         'updated_by',
+        'order_id',
     ];
     public function getActivitylogOptions(): LogOptions
     {
@@ -112,16 +113,17 @@ class Movimiento extends Model implements Auditable
     // Relación con Warehouse (Bodega de Origen)
     public function bodega_origen()
     {
-        return $this->belongsTo(Warehouse::class, 'bodega_origen_id')
-            ->where('field_id', Filament::getTenant()->id);
+        return $this->belongsTo(Warehouse::class, 'bodega_origen_id');
     }
 
-    // Relación con Warehouse (Bodega de Destino)
+    /**
+     * Relación con la bodega de destino.
+     */
     public function bodega_destino()
     {
-        return $this->belongsTo(Warehouse::class, 'bodega_destino_id')
-            ->where('field_id', Filament::getTenant()->id);
+        return $this->belongsTo(Warehouse::class, 'bodega_destino_id');
     }
+
     public function audit()
     {
         return $this->morphTo(Audit::class, 'auditable_id', 'id');

@@ -5,6 +5,7 @@ namespace App\Models;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -69,5 +70,10 @@ class Warehouse extends Model implements Auditable
     public function field()
     {
         return $this->belongsTo(Field::class, 'field_id');
+    }
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_warehouse')
+            ->withTimestamps();
     }
 }

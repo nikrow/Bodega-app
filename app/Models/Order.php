@@ -128,8 +128,11 @@ class Order extends Model
         }
     public function parcels()
     {
-        return $this->belongsToMany(Parcel::class, 'order_parcels', 'order_id', 'parcel_id');
+        return $this->belongsToMany(Parcel::class, 'order_parcels', 'order_id', 'parcel_id')
+            ->withPivot(['field_id', 'created_by', 'updated_by'])
+            ->withTimestamps();
     }
+
     public function orderApplications()
     {
         return $this->hasMany(OrderApplication::class, 'order_id', 'id');

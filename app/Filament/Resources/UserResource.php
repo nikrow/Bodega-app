@@ -8,6 +8,7 @@ use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\Field;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Warehouse;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -78,8 +79,15 @@ class UserResource extends Resource
                         RoleType::ESTANQUERO->value => 'estanquero',
                     ])
                     ->searchable()
-                    ->required()
-
+                    ->required(),
+                Forms\Components\Select::make('warehouses')
+                    ->label('Bodegas asignadas')
+                    ->multiple()
+                    ->relationship('warehouses', 'name')
+                    ->preload()
+                    ->options(function () {
+                        return Warehouse::all()->pluck('name', 'id');
+                    })
             ]);
     }
 

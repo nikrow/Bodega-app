@@ -125,8 +125,24 @@ class OrderResource extends Resource
                                     $set('TotalArea', $totalArea);
                                 })
                                 ->saveRelationshipsUsing(function (Order $record, $state) {
-                                    // ... tu código existente ...
+                                    $fieldId = $record->field_id; // Obtén el field_id de la orden actual
+                                    $userId = auth()->id(); // Obtén el ID del usuario autenticado
+
+                                    // Construye el array con los datos adicionales para la tabla pivot
+                                    $syncData = collect($state)->mapWithKeys(function ($parcelId) use ($fieldId, $userId) {
+                                        return [
+                                            $parcelId => [
+                                                'field_id' => $fieldId,
+                                                'created_by' => $userId,
+                                                'updated_by' => $userId,
+                                            ]
+                                        ];
+                                    })->toArray();
+
+                                    // Sincroniza las relaciones con los datos adicionales
+                                    $record->parcels()->sync($syncData);
                                 })
+
                                 ->afterStateHydrated(function ($state, callable $set, $record) {
                                     if ($record) {
                                         // Obtener las parcelas relacionadas con la orden

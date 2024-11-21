@@ -10,4 +10,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 //Programar tareas
-Schedule::command(UpdateActiveMinutesCommand::class)->hourly();
+Schedule::command('users:update-active-minutes')->hourly();

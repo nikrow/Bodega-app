@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\MovementType;
 use App\Models\Movimiento;
 use App\Models\User;
 use App\Enums\RoleType;
@@ -28,13 +29,23 @@ class MovimientoPolicy
      */
     public function view(User $user, Movimiento $movimiento): bool
     {
-        return in_array($user->role, [
+        if (in_array($user->role, [
             RoleType::ADMIN->value,
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
-        ]);
+        ])) {
+            return true;
+        }
+
+        if ($user->role === RoleType::ESTANQUERO->value || $user->role === RoleType::USUARIO->value) {
+            // Verificar si el movimiento está relacionado con alguna de las bodegas del usuario
+            $userWarehouseIds = $user->warehouses->pluck('id')->toArray();
+            return in_array($movimiento->bodega_origen_id, $userWarehouseIds) ||
+                in_array($movimiento->bodega_destino_id, $userWarehouseIds);
+        }
+
+        // Por defecto, no permite
+        return false;
     }
 
     /**
@@ -57,6 +68,7 @@ class MovimientoPolicy
         return in_array($user->role, [
             RoleType::ADMIN->value,
             RoleType::BODEGUERO->value,
+            RoleType::ESTANQUERO->value,
         ]);
     }
 
@@ -96,8 +108,19 @@ class MovimientoPolicy
         return $user->isAdmin();
 
     }
-    private function restoreAudit(User $user, Movimiento $movimiento): bool
+    public function canUseMovementType(User $user, MovementType $type): bool
     {
-        return $user->isAdmin();
+        if ($user->role === RoleType::ESTANQUERO->value) {
+            return in_array($type, [MovementType::PREPARACION, MovementType::TRASLADO]);
+        }
+
+        // Puedes definir reglas adicionales para otros roles si es necesario
+        return true;
+    }
+    public function before(User $user, $ability)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
     }
 }

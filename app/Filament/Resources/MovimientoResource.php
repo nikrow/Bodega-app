@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\MovementType;
+use App\Enums\RoleType;
 use App\Filament\Resources\MovimientoResource\Pages;
 use App\Filament\Resources\MovimientoResource\RelationManagers;
 use App\Filament\Resources\MovimientoResource\RelationManagers\MovimientoProductosRelationManager;
@@ -41,17 +42,35 @@ class MovimientoResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $user = Auth::user();
+        // Obtener las opciones de tipo de movimiento basadas en las políticas
+        $movementTypeOptions = [];
+
+        // Verificar si el usuario puede crear movimientos de cada tipo
+        foreach (MovementType::cases() as $type) {
+            // Crear un movimiento temporal para verificar permisos
+            $tempMovimiento = new Movimiento(['tipo' => $type->value]);
+
+            if ($user->can('create', $tempMovimiento)) {
+                // Asignar etiquetas más amigables si es necesario
+                $label = match($type) {
+                    MovementType::ENTRADA => 'Entrada',
+                    MovementType::SALIDA => 'Salida',
+                    MovementType::TRASLADO => 'Traslado',
+                    MovementType::PREPARACION => 'Preparación',
+                    default => ucfirst($type->value),
+                };
+
+                $movementTypeOptions[$type->value] = $label;
+            }
+        }
+
         return $form
             ->schema([
                 Select::make('tipo')
                     ->label('Tipo de Movimiento')
                     ->searchable()
-                    ->options([
-                        MovementType::ENTRADA->value => 'entrada',
-                        MovementType::SALIDA->value => 'salida',
-                        MovementType::TRASLADO->value => 'traslado',
-                        MovementType::PREPARACION->value => 'preparación',
-                    ])
+                    ->options($movementTypeOptions)
                     ->required()
                     ->reactive(),
 
@@ -123,6 +142,8 @@ class MovimientoResource extends Resource
 
     public static function table(Table $table): Table
     {
+
+
         return $table
             ->defaultPaginationPageOption(50)
             ->defaultSort('created_at', 'desc')

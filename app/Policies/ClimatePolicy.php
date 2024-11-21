@@ -44,7 +44,6 @@ class ClimatePolicy
         return in_array($user->role, [
             RoleType::ADMIN->value,
             RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
         ]);
     }

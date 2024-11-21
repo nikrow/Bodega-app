@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 
+
+use App\Listeners\UpdateLoginTime;
 use App\Models\Crop;
 use App\Models\Movimiento;
 use App\Models\MovimientoProducto;
@@ -14,14 +16,16 @@ use App\Models\Warehouse;
 use App\Observers\MovimientoObserver;
 use App\Observers\MovimientoProductoObserver;
 use App\Observers\OrderApplicationObserver;
-use App\Observers\OrderApplicationUsageObserver;
 use App\Policies\ActivityLogPolicy;
 use App\Services\StockService;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Spatie\Activitylog\Models\Activity;
 use App\Policies\CropPolicy;
 use App\Policies\WarehousePolicy;
+use App\Listeners\UpdateActiveMinutesOnLogout;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -42,11 +46,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Activity::class, ActivityLogPolicy::class);
     }
     protected $listen = [
-        \Illuminate\Auth\Events\Login::class => [
-            \App\Listeners\UpdateLoginTime::class,
+        Login::class => [
+            UpdateLoginTime::class,
         ],
-        \Illuminate\Auth\Events\Logout::class => [
-            \App\Listeners\UpdateActiveHoursOnLogout::class,
+        Logout::class => [
+            UpdateActiveMinutesOnLogout::class,
         ],
     ];
     /**

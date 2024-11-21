@@ -17,7 +17,7 @@ class UpdateActiveMinutesCommand extends Command
             ->get();
 
         foreach ($users as $user) {
-            // Considerar un tiempo de inactividad para determinar si el usuario se desconectó
+            // Define inactivity limit based on session lifetime
             $inactivityLimit = now()->subMinutes(config('session.lifetime'));
 
             if ($user->last_activity_at < $inactivityLimit) {
