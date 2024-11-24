@@ -89,6 +89,12 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('has')
                     ->numeric()
                     ->reactive(),
+                Forms\Components\Select::make('applicators')
+                    ->label('Aplicadores')
+                    ->multiple()
+                    ->relationship('applicators', 'name')
+                    ->searchable()
+                    ->preload(),
 
             ]);
     }
@@ -97,13 +103,6 @@ class OrderApplicationRelationManager extends RelationManager
         // Obtener los datos climáticos de la fecha de hoy
 
         return Climate::whereDate('created_at', today())->latest('created_at')->first();
-    }
-    protected function saved(Model $record): void
-    {
-        $order = $record->order;
-        if ($order->status !== StatusType::ENPROCESO->value) {
-            $order->update(['status' => StatusType::ENPROCESO->value]);
-        }
     }
     public function table(Table $table): Table
     {
@@ -156,6 +155,10 @@ class OrderApplicationRelationManager extends RelationManager
                     ->label('Humedad')
                     ->suffix('  %')
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('applicators.name')
+                ->label('Aplicadores')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
             ])

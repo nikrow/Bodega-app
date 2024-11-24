@@ -17,7 +17,6 @@ return new class extends Migration
             $table->ForeignId('field_id')->constrained('fields');
             $table->ForeignId('crop_id')->constrained('crops');
             $table->smallInteger('planting_year');
-            $table->string('planting-schema');
             $table->smallInteger('plants');
             $table->decimal('surface', 7, 2);
             $table->ForeignId('created_by')->constrained('users');

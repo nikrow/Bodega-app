@@ -83,5 +83,8 @@ class OrderApplication extends Model
     {
         return $this->belongsTo(OrderApplication::class, 'order_application_id');
     }
-
+    public function applicators()
+    {
+        return $this->belongsToMany(Applicator::class, 'order_application_applicator', 'order_application_id', 'applicator_id');
+    }
 }

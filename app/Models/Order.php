@@ -2,13 +2,11 @@
 
 namespace App\Models;
 
-use App\Enums\StatusType;
+
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -73,6 +71,16 @@ class Order extends Model
         });
 
     }
+    /**
+     * Obtener el área total de las parcelas asociadas a la orden.
+     *
+     * @return float
+     */
+    public function getTotalAreaAttribute(): float
+    {
+        return $this->parcels()->sum('surface');
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -132,8 +140,7 @@ class Order extends Model
             ->withPivot(['field_id', 'created_by', 'updated_by'])
             ->withTimestamps();
     }
-
-    public function orderApplications()
+       public function orderApplications()
     {
         return $this->hasMany(OrderApplication::class, 'order_id', 'id');
     }

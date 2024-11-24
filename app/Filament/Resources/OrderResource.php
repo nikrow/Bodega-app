@@ -128,12 +128,14 @@ class OrderResource extends Resource
                                     $fieldId = $record->field_id; // Obtén el field_id de la orden actual
                                     $userId = auth()->id(); // Obtén el ID del usuario autenticado
 
-                                    // Construye el array con los datos adicionales para la tabla pivot
-                                    $syncData = collect($state)->mapWithKeys(function ($parcelId) use ($fieldId, $userId) {
+                                    // Verificar relaciones existentes y actualizar los campos
+                                    $syncData = collect($state)->mapWithKeys(function ($parcelId) use ($fieldId, $userId, $record) {
+                                        $existingPivot = $record->parcels()->wherePivot('parcel_id', $parcelId)->first();
+
                                         return [
                                             $parcelId => [
                                                 'field_id' => $fieldId,
-                                                'created_by' => $userId,
+                                                'created_by' => $existingPivot ? $existingPivot->pivot->created_by : $userId,
                                                 'updated_by' => $userId,
                                             ]
                                         ];
@@ -198,26 +200,11 @@ class OrderResource extends Resource
                                     'antiparras' => 'Antiparras',
                                     'mascara_filtro' => 'Mascara de filtro',
                                 ])
-
                                 ->rules('required'),
 
                         ]),
-                    Wizard\Step::make('Aplicadores')
-                        ->columns(2)
-                        ->schema([
-                            Forms\Components\Select::make('applicators')
-                                ->label('Aplicadores')
-                                ->multiple()
-                                ->relationship('applicators', 'name')
-                                ->searchable()
-                                ->preload()
-                                ->required(),
-                            ])
-                        ])
-                    ->skippable(),
-
+                ])
             ]);
-
     }
 
     public static function table(Table $table): Table

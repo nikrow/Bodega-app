@@ -10,6 +10,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 
 class OrderLinesRelationManager extends RelationManager
 {
@@ -100,10 +101,11 @@ class OrderLinesRelationManager extends RelationManager
                         $dosis = $get('dosis') ?? 0;
                         if ($productId && $dosis > 0) {
                             $order = $this->getOwnerRecord();
-                            $totalArea = $order->orderApplications->sum(function ($application) {
-                                return $application->parcel->surface ?? 0;
-                            });
+                            $order->totalArea;
+                            $totalArea = $order->totalArea;
+
                             $wetting = $order->wetting ?? 0;
+                            Log::info("Total Area: {$totalArea}, Wetting: {$wetting}");
 
                             if ($totalArea > 0 && $wetting > 0) {
                                 $estimatedUsage = ($totalArea * $wetting * $dosis) / 100;
@@ -202,18 +204,22 @@ class OrderLinesRelationManager extends RelationManager
 
         if ($productId && $dosis > 0) {
             $order = $this->getOwnerRecord();
-            $totalArea = $order->orderApplications->sum(function ($application) {
-                return $application->parcel->surface ?? 0;
-            });
+            $order->totalArea;
+            $totalArea = $order->totalArea;
+
             $wetting = $order->wetting ?? 0;
+            Log::info("Total Area: {$totalArea}, Wetting: {$wetting}");
 
             if ($totalArea > 0 && $wetting > 0) {
                 $estimatedUsage = ($totalArea * $wetting * $dosis) / 100;
+                Log::info("Estimated Usage: {$estimatedUsage}");
                 $set('EstimatedProductUsage', round($estimatedUsage, 2));
             } else {
+                Log::warning("Datos insuficientes para calcular el uso estimado.");
                 $set('EstimatedProductUsage', 'Datos insuficientes para calcular');
             }
         } else {
+            Log::warning("Product ID o dosis no válidos.");
             $set('EstimatedProductUsage', null);
         }
     }

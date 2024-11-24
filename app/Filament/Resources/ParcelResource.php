@@ -59,8 +59,6 @@ class ParcelResource extends Resource
                     ->options(array_combine(range(1994, 2024), range(1994, 2024)))
                     ->searchable(true)
                     ->rules('required'),
-                Forms\Components\TextInput::make('planting-schema')
-                    ->label('Marco Plantación'),
                 Forms\Components\TextInput::make('plants')
                     ->label('Plantas')
                     ->rules('required', 'numeric'),
