@@ -94,10 +94,6 @@ class ParcelResource extends Resource
                     ->label('Año de Plantación')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('planting-schema')
-                    ->label('Marco Plantación')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('plants')
                     ->label('Plantas')
                     ->searchable()
@@ -124,7 +120,6 @@ class ParcelResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-
                     ExportBulkAction::make()
 
             ]);
@@ -133,7 +128,7 @@ class ParcelResource extends Resource
     public static function getRelations(): array
     {
         return [
-            AuditsRelationManager::class,
+
         ];
     }
 

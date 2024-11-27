@@ -18,12 +18,16 @@ class Parcel extends Model implements Auditable
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'name',
         'field_id',
         'crop_id',
         'planting_year',
-        'planting-schema',
         'plants',
         'surface',
         'created_by',

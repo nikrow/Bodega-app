@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\ParcelResource\Pages;
 
 use App\Filament\Resources\ParcelResource;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Str;
 
 class ListParcels extends ListRecords
 {
@@ -29,6 +31,13 @@ class ListParcels extends ListRecords
                         ->requiresConfirmation(),
                 )
                 ->label('Importar cuarteles')
+                ->mutateBeforeValidationUsing(function(array $data): array{
+                    if (isset($data['surface'])) {
+
+                        $data['surface'] = floatval(Str::replace(',', '.', $data['surface']));
+                    }
+                    return $data;
+                })
                 ->validateUsing([
                     'name' => ['required', 'string', 'max:255'],
                     'field_id' => ['required', 'integer'],

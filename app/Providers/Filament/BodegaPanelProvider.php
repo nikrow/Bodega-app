@@ -3,10 +3,8 @@
 namespace App\Providers\Filament;
 
 
-use App\Enums\RoleType;
 use App\Filament\Resources\ActivityLogResource;
 use App\Models\Field;
-use App\Models\User;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -22,6 +20,8 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Rmsramos\Activitylog\ActivitylogPlugin;
+use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
+use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 
 
 class BodegaPanelProvider extends PanelProvider
@@ -57,16 +57,23 @@ class BodegaPanelProvider extends PanelProvider
 
             ])
             ->plugins([
+                FilamentBackgroundsPlugin::make()
+                    ->remember(900)
+                    ->imageProvider(
+                        MyImages::make()
+                            ->directory('/img/backgrounds')
+                    ),
                 ActivitylogPlugin::make()
                     ->resource(ActivityLogResource::class)
                     ->navigationGroup('Anexos')
                     ->label('Log')
-                    ->pluralLabel('Logs'),
+                    ->pluralLabel('Logs')
             ])
             ->authGuard('web')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+
             ])
             ->middleware([
                 EncryptCookies::class,

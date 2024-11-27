@@ -27,6 +27,7 @@
         "pxlrbt/filament-excel": "^2.3",
         "rmsramos/activitylog": "^1.0",
         "spatie/laravel-pdf": "^1.5",
+        "swisnl/filament-backgrounds": "^1.1",
         "tapp/filament-auditing": "^3.0",
         "xtend-packages/rest-presenter": "^1.1"
     },

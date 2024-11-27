@@ -3,39 +3,30 @@
 namespace App\Filament\Resources;
 
 use App\Enums\FamilyType;
-use App\Enums\StatusType;
 use App\Filament\Resources\OrderResource\Pages;
-use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Filament\Resources\OrderResource\RelationManagers\ApplicationUsageRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderApplicationRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderLinesRelationManager;
-
-use App\Models\Applicator;
+use App\Filament\Widgets\LatestOrders;
 use App\Models\Crop;
 use App\Models\Field;
 use App\Models\Order;
-use App\Models\Parcel;
 use App\Models\OrderParcel;
+use App\Models\Parcel;
 use App\Models\User;
 use App\Models\Warehouse;
-use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
-use function Laravel\Prompts\multiselect;
 
 class OrderResource extends Resource
 {
@@ -272,7 +263,6 @@ class OrderResource extends Resource
 
             ]);
     }
-
     public static function getRelations(): array
     {
         return [
@@ -282,7 +272,6 @@ class OrderResource extends Resource
 
         ];
     }
-
     public static function getPages(): array
     {
         return [

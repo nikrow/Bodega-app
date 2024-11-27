@@ -40,6 +40,8 @@ class Order extends Model
         'applicators' => 'array',
         'is_completed' => 'boolean',
     ];
+
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
