@@ -2,12 +2,15 @@
 
 namespace App\Observers;
 
+use App\Exceptions\Stock\InsufficientStockException;
+use App\Exceptions\Stock\InvalidMovementTypeException;
+use App\Exceptions\Stock\ProductNotFoundException;
+use App\Exceptions\Stock\WarehouseNotFoundException;
 use App\Models\Movimiento;
-use App\Models\MovimientoProducto;
 use App\Services\StockService;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class MovimientoObserver
 {
@@ -27,7 +30,7 @@ class MovimientoObserver
 
         try {
             DB::transaction(function () use ($movimiento) {
-                // Asegurarte de que la relación esté cargada
+                // Cargar la relación 'movimientoProductos'
                 $movimiento->load('movimientoProductos');
 
                 foreach ($movimiento->movimientoProductos as $productoMovimiento) {
@@ -35,8 +38,12 @@ class MovimientoObserver
                     // El registro en stock_movements ya se maneja dentro del StockService
                 }
             });
+        } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
+            Log::error("Error específico al procesar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            // Puedes decidir cómo manejar estas excepciones, por ejemplo, revertir la transacción o notificar al usuario.
+            throw $e;
         } catch (Exception $e) {
-            Log::error("Error al procesar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            Log::error("Error general al procesar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
             throw $e;
         }
     }
@@ -59,24 +66,28 @@ class MovimientoObserver
         }
 
         // Aplicar cambios en el stock si hay cambios relevantes
-        try {
-            DB::transaction(function () use ($movimiento) {
-                // Cargar las relaciones necesarias
-                $movimiento->load('movimientoProductos');
+        if ($cambiosRelevantes->isNotEmpty()) {
+            try {
+                DB::transaction(function () use ($movimiento) {
+                    // Cargar las relaciones necesarias
+                    $movimiento->load('movimientoProductos');
 
-                foreach ($movimiento->movimientoProductos as $productoMovimiento) {
-                    $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
-                    $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
-                }
-            });
+                    foreach ($movimiento->movimientoProductos as $productoMovimiento) {
+                        $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
+                        $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
+                    }
+                });
 
-            Log::info("MovimientoObserver: Cambios de stock aplicados correctamente para Movimiento ID: {$movimiento->id}");
-        } catch (Exception $e) {
-            Log::error("MovimientoObserver: Error al actualizar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
-            throw $e;
+                Log::info("MovimientoObserver: Cambios de stock aplicados correctamente para Movimiento ID: {$movimiento->id}");
+            } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
+                Log::error("Error específico al actualizar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+                throw $e;
+            } catch (Exception $e) {
+                Log::error("Error general al actualizar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+                throw $e;
+            }
         }
     }
-
 
     /**
      * Handle the Movimiento "deleted" event.
@@ -85,7 +96,7 @@ class MovimientoObserver
     {
         try {
             DB::transaction(function () use ($movimiento) {
-                // Asegurarte de que la relación esté cargada
+                // Cargar la relación 'movimientoProductos'
                 $movimiento->load('movimientoProductos');
 
                 foreach ($movimiento->movimientoProductos as $productoMovimiento) {
@@ -93,8 +104,11 @@ class MovimientoObserver
                     // El registro en stock_movements ya se maneja dentro del StockService
                 }
             });
+        } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
+            Log::error("Error específico al eliminar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
         } catch (Exception $e) {
-            Log::error("Error al eliminar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            Log::error("Error general al eliminar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
             throw $e;
         }
     }
@@ -113,8 +127,11 @@ class MovimientoObserver
                     // El registro en stock_movements ya se maneja dentro del StockService
                 }
             });
+        } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
+            Log::error("Error específico al restaurar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
         } catch (Exception $e) {
-            Log::error("Error al restaurar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            Log::error("Error general al restaurar el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
             throw $e;
         }
     }
@@ -133,8 +150,11 @@ class MovimientoObserver
                     // El registro en stock_movements ya se maneja dentro del StockService
                 }
             });
+        } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
+            Log::error("Error específico al eliminar forzosamente el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            throw $e;
         } catch (Exception $e) {
-            Log::error("Error al eliminar forzosamente el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
+            Log::error("Error general al eliminar forzosamente el movimiento ID: {$movimiento->id}. Error: {$e->getMessage()}");
             throw $e;
         }
     }

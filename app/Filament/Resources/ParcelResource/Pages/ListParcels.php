@@ -3,50 +3,64 @@
 namespace App\Filament\Resources\ParcelResource\Pages;
 
 use App\Filament\Resources\ParcelResource;
-use Carbon\Carbon;
+use App\Models\Crop;
 use Filament\Actions;
-use Filament\Forms\Components\Actions\Action;
+use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListParcels extends ListRecords
 {
     protected static string $resource = ParcelResource::class;
 
+    /**
+     * Retrieve the tabs based on Crop models.
+     *
+     * @return array
+     */
+    public function getTabs(): array
+    {
+
+        $crops = Crop::all();
+
+        $tabs = [
+            'Todos' => Tab::make()
+                ->label('Todos')
+                ->query(function (Builder $query) {
+                    return $query;
+                }),
+
+        ];
+
+        if ($crops->isEmpty()) {
+
+            $tabs['no_crops'] = Tab::make()
+                ->label('Sin cultivo disponible')
+                ->query(function (Builder $query) {
+
+                    return $query;
+                });
+        } else {
+            foreach ($crops as $crop) {
+                $tabs[$crop->id] = Tab::make()
+                    ->label($crop->especie)
+                    ->query(function (Builder $query) use ($crop) {
+                        return $query->where('crop_id', $crop->id);
+                    });
+            }
+        }
+
+        return $tabs;
+    }
+
+    /**
+     * Define the header actions.
+     *
+     * @return array
+     */
     protected function getHeaderActions(): array
     {
         return [
-            \EightyNine\ExcelImport\ExcelImportAction::make()
-                ->slideOver()
-                ->sampleExcel(
-                    sampleData: [
-                        ['name' => 'Parcela 1', 'field_id'=> 1, 'crop_id'=> 1,'planting_year' => 2024, 'plants' => 100, 'surface' => 10.2],
-                        ['name' => 'Parcela 2', 'field_id'=> 1, 'crop_id'=> 1,'planting_year' => 2024, 'plants' => 100, 'surface' => 1.3],
-                        ['name' => 'Parcela 3', 'field_id'=> 1, 'crop_id'=> 1,'planting_year' => 2024, 'plants' => 100, 'surface' => 3.3],
-                    ],
-                    fileName: 'MuestraCuarteles.xlsx',
-                    sampleButtonLabel: 'Descargar muestra',
-                    customiseActionUsing: fn(Action $action) => $action->color('secondary')
-                        ->icon('heroicon-m-clipboard')
-                        ->requiresConfirmation(),
-                )
-                ->label('Importar cuarteles')
-                ->mutateBeforeValidationUsing(function(array $data): array{
-                    if (isset($data['surface'])) {
-
-                        $data['surface'] = floatval(Str::replace(',', '.', $data['surface']));
-                    }
-                    return $data;
-                })
-                ->validateUsing([
-                    'name' => ['required', 'string', 'max:255'],
-                    'field_id' => ['required', 'integer'],
-                    'crop_id' => ['required', 'integer'],
-                    'planting_year' => ['required', 'integer'],
-                    'plants' => ['required', 'integer'],
-                    'surface' => ['required'],
-                ])
-                ->color("primary"),
             Actions\CreateAction::make(),
         ];
     }

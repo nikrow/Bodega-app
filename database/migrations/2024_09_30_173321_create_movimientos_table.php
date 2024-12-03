@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('movement_number')->unique()->index();
-            $table->enum('tipo', ['entrada', 'salida', 'traslado']);
+            $table->enum('tipo', ['entrada', 'salida', 'traslado', 'preparacion']);
             $table->float('comprobante')->nullable();
             $table->string('encargado')->nullable();
             $table->foreignId('field_id')->constrained('fields')->cascadeOnDelete();

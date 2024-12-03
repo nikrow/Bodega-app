@@ -7,7 +7,6 @@ use App\Enums\SapFamilyType;
 use App\Enums\UnidadMedida;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
-use App\Models\Field;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -15,8 +14,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
@@ -138,6 +135,9 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('SAP_code')
                     ->label('Código SAP')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('unit_measure')
+                    ->label('Unidad de Medida')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('SAP_family')
                     ->label('Familia SAP')
                     ->toggleable(isToggledHiddenByDefault: true)

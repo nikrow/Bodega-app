@@ -31,11 +31,11 @@ class Order extends Model
         'updated_by',
         'is_completed',
         'applicators',
+        'objective',
 
     ];
     protected $casts = [
         'family' => 'array',
-        'equipment' => 'array',
         'epp' => 'array',
         'applicators' => 'array',
         'is_completed' => 'boolean',
@@ -87,6 +87,43 @@ class Order extends Model
     {
         parent::boot();
     }
+
+    public function getParcelAppliedPercentagesAttribute()
+    {
+        $percentages = [];
+
+        foreach ($this->parcels as $parcel) {
+            $parcelSurface = $parcel->surface ?? 0;
+
+            // Obtener todas las aplicaciones para este cuartel en esta orden
+            $totalSurfaceApplied = $this->orderApplications()
+                ->where('parcel_id', $parcel->id)
+                ->sum('surface');
+
+            if ($parcelSurface > 0) {
+                $percentage = ($totalSurfaceApplied / $parcelSurface) * 100;
+                $percentages[$parcel->name] = round($percentage, 2);
+            } else {
+                $percentages[$parcel->name] = 0;
+            }
+        }
+
+        return $percentages;
+    }
+
+    public function getTotalAppliedPercentageAttribute()
+    {
+        $totalParcelSurface = $this->parcels->sum('surface');
+        $totalSurfaceApplied = $this->orderApplications->sum('surface');
+
+        if ($totalParcelSurface > 0) {
+            $percentage = ($totalSurfaceApplied / $totalParcelSurface) * 100;
+            return round($percentage, 2);
+        }
+
+        return 0;
+    }
+
     public static function generateUniqueOrderNumber()
     {
         // Obtener el último movimiento creado
@@ -148,7 +185,8 @@ class Order extends Model
     }
     public function applicators()
     {
-        return $this->belongsToMany(Applicator::class, 'applicator_order', 'order_id', 'applicator_id');
+        return $this->belongsToMany(Applicator::class, 'order_application_applicator', 'order_application_id', 'applicator_id')
+            ->withTimestamps();
     }
 
 

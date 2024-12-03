@@ -28,6 +28,11 @@ class MovimientoProducto extends Model
         'expiration_date',
         'total',
     ];
+    protected $casts = [
+        'cantidad' => 'float',
+        'total' => 'float',
+        'precio_compra' => 'float',
+    ];
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

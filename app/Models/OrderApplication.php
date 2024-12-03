@@ -51,6 +51,20 @@ class OrderApplication extends Model
             $application->updated_by = auth()->id();
         });
     }
+
+    public function getApplicationPercentageAttribute()
+    {
+        $parcelSurface = $this->parcel->surface ?? 0;
+        $surfaceApplied = $this->surface ?? 0;
+
+        if ($parcelSurface > 0) {
+            $percentage = ($surfaceApplied / $parcelSurface) * 100;
+            return round($percentage, 2);
+        }
+
+        return null;
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -78,10 +92,6 @@ class OrderApplication extends Model
     public function climate()
     {
         return $this->belongsTo(Climate::class, 'climate_id');
-    }
-    public function orderApplication()
-    {
-        return $this->belongsTo(OrderApplication::class, 'order_application_id');
     }
     public function applicators()
     {

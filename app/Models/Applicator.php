@@ -22,6 +22,7 @@ class Applicator extends Model
         'created_by',
         'updated_by',
     ];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -49,9 +50,12 @@ class Applicator extends Model
     {
         return $this->belongsTo(Field::class, 'field_id');
     }
-    public function orderApplications()
+
+    public function orders()
     {
-        return $this->belongsToMany(OrderApplication::class, 'order_application_applicator', 'applicator_id', 'order_application_id');
+        return $this->belongsToMany(Order::class, 'order_application_applicator', 'applicator_id', 'order_application_id')
+            ->withTimestamps();
     }
+
 
 }

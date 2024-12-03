@@ -4,11 +4,8 @@ namespace App\Filament\Resources\OrderResource\Pages;
 
 use App\Filament\Resources\OrderResource;
 use App\Models\Order;
-use Filament\Actions;
-use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Database\Eloquent\Model;
 
 class CreateOrder extends CreateRecord
 {
@@ -25,14 +22,11 @@ class CreateOrder extends CreateRecord
         return $data;
     }
 
-
-
-    /**
-     * Método opcional para definir si el redireccionamiento es necesario o cualquier lógica extra.
-     */
-    protected function afterCreate(): void
+    protected function getRedirectUrl(): string
     {
-        CreateAction::make()
-            ->successRedirectUrl(fn(Model $record): string => route('orders.edit', $record->id));
+        return $this->getResource()::getUrl('edit', ['record' => $this->record]);
     }
+
+
+
 }

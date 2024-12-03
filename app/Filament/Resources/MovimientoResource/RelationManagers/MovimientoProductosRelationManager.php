@@ -12,7 +12,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Log;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
-use Illuminate\Validation\ValidationException;
 
 class MovimientoProductosRelationManager extends RelationManager
 {
@@ -26,13 +25,42 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->options(function (callable $get) {
                         $movimiento = $this->ownerRecord;
 
-                        if ($movimiento && $movimiento->order) {
-                            // Obtener los productos de la orden seleccionada
-                            return $movimiento->order->orderLines()->with('product')->get()->pluck('product.product_name', 'product_id');
-                        }
+                        if ($movimiento) {
+                            // Check if the movement type is 'entrada'
+                            if ($movimiento->tipo->value === 'entrada') {
+                                // Return all products
+                                return Product::pluck('product_name', 'id');
+                            } else {
+                                $warehouseId = $movimiento->bodega_origen_id;
 
-                        // Si no hay una orden seleccionada, mostrar todos los productos
-                        return Product::all()->pluck('product_name', 'id');
+                                if ($movimiento->order) {
+                                    // Obtener los IDs de productos de las líneas de la orden
+                                    $productIdsFromOrder = $movimiento->order->orderLines()->pluck('product_id');
+
+                                    // Filtrar productos que están en la orden y tienen stock > 0 en la bodega
+                                    $productsWithStock = Stock::where('warehouse_id', $warehouseId)
+                                        ->where('quantity', '>', 0)
+                                        ->whereIn('product_id', $productIdsFromOrder)
+                                        ->pluck('product_id');
+
+                                    // Obtener los productos filtrados
+                                    $products = Product::whereIn('id', $productsWithStock)->pluck('product_name', 'id');
+
+                                    return $products;
+                                } else {
+                                    // Obtener productos que tienen stock > 0 en la bodega
+                                    $productsWithStock = Stock::where('warehouse_id', $warehouseId)
+                                        ->where('quantity', '>', 0)
+                                        ->pluck('product_id');
+
+                                    $products = Product::whereIn('id', $productsWithStock)->pluck('product_name', 'id');
+
+                                    return $products;
+                                }
+                            }
+                        }
+                        // Si no hay movimiento, retornar un array vacío o todos los productos
+                        return [];
                     })
                     ->preload()
                     ->live()
@@ -43,29 +71,16 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->afterStateUpdated(function (callable $get, callable $set) {
                         $movimiento = $this->ownerRecord;
 
-                        // Verificar si el movimiento y el producto existen antes de continuar
-                        if ($movimiento && $movimiento->tipo && $get('producto_id')) {
+                        if ($movimiento && $get('producto_id')) {
                             $warehouseId = $movimiento->bodega_origen_id;
                             $productId = $get('producto_id');
-                            $tipoMovimiento = $movimiento->tipo->value;
 
-                            // Incluir 'preparacion' en los tipos de movimiento que calculan el stock
-                            if (in_array($tipoMovimiento, ['salida', 'traslado', 'preparacion'])) {
-                                $stock = Stock::where('product_id', $productId)
-                                    ->where('warehouse_id', $warehouseId)
-                                    ->first();
+                            $stock = Stock::where('product_id', $productId)
+                                ->where('warehouse_id', $warehouseId)
+                                ->first();
 
-                                $stockDisponible = $stock ? $stock->quantity : 'Sin stock';
-                                $set('stock_disponible', $stockDisponible);
-
-                                // Log para depuración
-                                Log::info('Stock disponible: ' . $stockDisponible);
-                            } else {
-                                $set('stock_disponible', 'N/A');
-                            }
-
-                            // Asignar el warehouse_id directamente en el formulario
-                            $set('warehouse_id', $warehouseId);
+                            $stockDisponible = $stock ? $stock->quantity : 0;
+                            $set('stock_disponible', $stockDisponible);
 
                             // Obtener el producto y su unidad de medida
                             $product = Product::find($productId);
@@ -78,11 +93,9 @@ class MovimientoProductosRelationManager extends RelationManager
                                 $set('precio_compra', null);
                             }
                         } else {
-                            // Manejar el caso donde el movimiento o su tipo es null
                             $set('stock_disponible', 'Sin movimiento o sin producto seleccionado');
                             $set('warehouse_id', null);
                         }
-
                     }),
 
                 Forms\Components\TextInput::make('stock_disponible')
@@ -101,14 +114,14 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->required()
                     ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo && $this->ownerRecord->tipo->value == 'entrada')
                     ->label('Cantidad')
-                    ->numeric()
+                    ->numeric(2)
                     ->live()
                     ->reactive(),
                 Forms\Components\TextInput::make('cantidad')
                     ->required()
                     ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo && $this->ownerRecord->tipo->value !== 'entrada')
                     ->label('Cantidad')
-                    ->numeric()
+                    ->numeric(2)
                     ->live()
                     ->lte('stock_disponible')
                     ->validationMessages([
@@ -124,6 +137,7 @@ class MovimientoProductosRelationManager extends RelationManager
 
                 Forms\Components\TextInput::make('lot_number')
                     ->label('Número de Lote')
+                    ->string()
                     ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo->value === 'entrada'),
 
                 Forms\Components\DatePicker::make('expiration_date')
@@ -161,7 +175,8 @@ class MovimientoProductosRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Agregar producto')
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),

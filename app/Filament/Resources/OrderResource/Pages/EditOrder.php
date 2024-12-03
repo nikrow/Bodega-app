@@ -3,9 +3,13 @@
 namespace App\Filament\Resources\OrderResource\Pages;
 
 use App\Filament\Resources\OrderResource;
-use Filament\Actions;
+use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
+use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EditOrder extends EditRecord
 {
@@ -19,7 +23,26 @@ class EditOrder extends EditRecord
                 ->label('Descargar PDF')
                 ->icon('fas-download')
                 ->action('downloadPdf'),
+            Actions\Action::make('complete')
+                ->label('Cerrar')
+                ->color('success')
+                ->icon('heroicon-o-check-circle')
+                ->requiresConfirmation()
+                ->action(function (Order $record) {
+                    // Lógica para marcar como completado
+                    $record->is_completed = true;
+                    $record->save();
+
+                    // Opcional: Registrar una entrada en los logs
+                    Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
+                })
+                ->hidden(fn(Order $record) => $record->is_completed),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
     public function downloadPdf()
     {

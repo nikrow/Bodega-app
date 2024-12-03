@@ -54,13 +54,8 @@
 <div class="box">
     <div class="header">
         <!-- SVG Logo -->
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 987">
-            <!-- Asegúrate de incluir todos los paths completos de tu SVG aquí -->
-            <path fill="#B7DC36" d="M942 0h168l86 6..."/>
-            <path fill="#431080" d="M942 0h168l86 6..."/>
-            <path fill="#431080" d="M1056 408h7l8 4..."/>
-            <path fill="#B7DC36" d="M1058 434h2l1 2..."/>
-        </svg>
+        ImageSVG($file='img/lgovector2.svg', $x=15, $y=30, $w='', $h='', $link='http://www.tcpdf.org', $align='',
+        $palign='', $border=1, $fitonpage=false);
         <h2>Orden de Aplicación N° {{ $order->orderNumber }}</h2>
     </div>
     <div class="details">
@@ -71,8 +66,8 @@
             <li><strong>Encargado:</strong> {{ $order->updatedBy->name ?? 'N/A' }}</li>
             <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
             <li><strong>Mojamiento:</strong> {{ number_format($order->wetting, 2) }} l/ha</li>
-            <li><strong>Superficie total:</strong> {{ number_format($order->total_area, 2) }} ha</li>
-            <li><strong>Equipamiento:</strong> {{ $order->equipment->name ?? 'N/A' }} l</li>
+            <li><strong>Objetivo:</strong> {{ $order->objective ?? 'N/A' }}</li>
+            <li><strong>Equipamiento:</strong> {{ $order->equipment ?? 'N/A' }}</li>
         </ul>
     </div>
 </div>
@@ -95,6 +90,7 @@
             @endforeach
             </tbody>
         </table>
+        <li><strong>Superficie total:</strong> {{ number_format($order->total_area, 2) }} ha</li>
     @else
         <p>No hay cuarteles aplicados.</p>
     @endif
@@ -141,7 +137,6 @@
                     <td>{{ $line->product->product_name }}</td>
                     <td>{{ $line->product->active_ingredients ?? 'N/A' }}</td>
                     <td>{{ $line->dosis }} l/100l</td>
-                    <td>{{ $line->reasons ?? 'N/A' }}</td>
                     <td>{{ $line->waiting_time ?? 'N/A' }}</td>
                     <td>{{ $line->reentry ?? 'N/A' }}</td>
                 </tr>

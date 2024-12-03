@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-            $table->string('reasons')->nullable();
             $table->decimal('dosis', 13, 4);
             $table->smallInteger('waiting_time')->nullable();
             $table->smallInteger('reentry');

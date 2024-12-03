@@ -7,7 +7,7 @@ use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\RelationManagers\ApplicationUsageRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderApplicationRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderLinesRelationManager;
-use App\Filament\Widgets\LatestOrders;
+use App\Filament\Resources\OrderResource\RelationManagers\OrderParcelRelationManager;
 use App\Models\Crop;
 use App\Models\Field;
 use App\Models\Order;
@@ -17,12 +17,11 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Filament\Facades\Filament;
 use Filament\Forms;
-use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
-use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -42,62 +41,74 @@ class OrderResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->columns('full')
             ->schema([
+                Section::make('General')
+                    ->description('Información general de la orden')
+                    ->schema([
+                        Forms\Components\TextInput::make('orderNumber')
+                            ->label('Número de orden')
+                            ->readonly(),
+                        Forms\Components\Select::make('field_id')
+                            ->label('Campo')
+                            ->options(function () {
+                                return Field::all()->pluck('name', 'id')->toArray();
+                            })
+                            ->default(fn() => Filament::GetTenant()->id)
+                            ->disabled()
+                            ->reactive(),
 
-                Wizard::make([
-                    Wizard\Step::make('Orden')
+                        Forms\Components\Select::make('user_id')
+                            ->label('Responsable técnico')
+                            ->options(function () {
+                                return User::all()->pluck('name', 'id')->toArray();
+                            })
+                            ->default(fn() => Auth::id())
+                            ->disabled()
+                            ->reactive(),
+                        Forms\Components\TextInput::make('objective')
+                            ->label('Objetivo')
+                            ->string()
+                            ->required(),
+                        Forms\Components\Select::make('crops_id')
+                            ->label('Cultivo')
+                            ->required()
+                            ->options(Crop::all()->pluck('especie', 'id')->toArray()),
+                        Forms\Components\Select::make('warehouse_id')
+                            ->label('Bodega preparación')
+                            ->required()
+                            ->options(function () {
+                                $tenantId = Filament::getTenant()->id;
+                                return Warehouse::where('field_id', $tenantId)->pluck('name', 'id');
+                            }),
 
-                        ->schema([
-                            Forms\Components\TextInput::make('orderNumber')
-                                ->label('Número de orden')
-                                ->readonly(),
-                            Forms\Components\Select::make('field_id')
-                                ->label('Campo')
-                                ->options(function () {
-                                    return Field::all()->pluck('name', 'id')->toArray();
-                                })
-                                ->default(fn () => Filament::GetTenant()->id)
-                                ->disabled()
-                                ->reactive(),
-
-                            Forms\Components\Select::make('user_id')
-                                ->label('Responsable técnico')
-                                ->options(function () {
-                                    return User::all()->pluck('name', 'id')->toArray();
-                                })
-                                ->default(fn () => Auth::id())
-                                ->disabled()
-                                ->reactive(),
-
-                            Forms\Components\Select::make('crops_id')
-                                ->label('Cultivo')
-                                ->options(Crop::all()->pluck('especie', 'id')->toArray()),
-                            Forms\Components\Select::make('warehouse_id')
-                                ->label('Bodega preparación')
-                                ->required()
-                                ->options(function () {
-                                    $tenantId = Filament::getTenant()->id;
-                                    return Warehouse::where('field_id', $tenantId)->pluck('name', 'id');
-                                }),
-
-                            Forms\Components\Select::make('family')
-                                ->options(collect(FamilyType::cases())
-                                    ->mapWithKeys(fn(FamilyType $type) => [$type->value => $type->getLabel()])
-                                    ->toArray())
-                                ->label('Grupo')
-                                ->multiple(),
-                            Forms\Components\TextInput::make('wetting')
-                                ->label('Mojamiento')
-                                ->rules('required'),
-
+                        Forms\Components\Select::make('family')
+                            ->options(collect(FamilyType::cases())
+                                ->mapWithKeys(fn(FamilyType $type) => [$type->value => $type->getLabel()])
+                                ->toArray())
+                            ->label('Grupo')
+                            ->required()
+                            ->multiple(),
+                        Forms\Components\TextInput::make('wetting')
+                            ->label('Mojamiento')
+                            ->numeric()
+                            ->required(),
                         ]),
-                    Wizard\Step::make('Cuarteles')
-                        ->columns(2)
-                        ->schema([
+
+                Section::make('Cuarteles')
+                    ->description('Seleccionar cuarteles a aplicar')
+                    ->schema([
+                        Forms\Components\TextInput::make('TotalArea')
+                            ->label('Superficie total a aplicar')
+                            ->readonly()
+                            ->suffix('ha')
+                            ->reactive()
+                            ->numeric(),
+                        Section::make('Listado de cuarteles')
+                            ->collapsed()
+                            ->schema([
                             Forms\Components\CheckboxList::make('parcels')
                                 ->label('Cuarteles')
-                                ->columns(2)
+                                ->columns(4)
                                 ->searchable()
                                 ->reactive()
                                 ->gridDirection('row')
@@ -150,17 +161,12 @@ class OrderResource extends Resource
                                         $set('TotalArea', $totalArea);
                                     }
                                 }),
-                            Forms\Components\TextInput::make('TotalArea')
-                                ->label('Superficie total (ha)')
-                                ->readonly()
-                                ->reactive()
-                                ->numeric(),
-
-                        ]),
-                    Wizard\Step::make('Equipamientos')
-                        ->columns(2)
+                            ])
+                    ]),
+                Section::make('Equipamiento')
+                    ->description('Equipamiento y elementos de protección a utilizar')
+                    ->collapsed()
                         ->schema([
-
                             Forms\Components\CheckboxList::make('equipment')
                                 ->label('Equipamiento')
                                 ->columns(2)
@@ -192,22 +198,18 @@ class OrderResource extends Resource
                                     'mascara_filtro' => 'Mascara de filtro',
                                 ])
                                 ->rules('required'),
-
-                        ]),
-                ])
+                        ])
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultGroup('crop.especie')
-            ->groups([
-                Group::make('crop.especie')
-                    ->collapsible()
-                    ->label('Cultivo'),
-            ])
             ->columns([
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Fecha')
+                    ->date('d/m/Y')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('orderNumber')
                     ->label('Número de orden')
                     ->searchable()
@@ -220,11 +222,19 @@ class OrderResource extends Resource
                     ->label('Responsable')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('total_applied_percentage')
+                    ->label('Porcentaje total aplicado')
+                    ->suffix('%')
+                    ->getStateUsing(function ($record) {
+                        return $record->total_applied_percentage;
+                    })
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_completed')
                     ->boolean()
                     ->label('Completado'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Fecha de actualización')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->date('d/m/Y')
             ])
             ->filters([
@@ -269,9 +279,10 @@ class OrderResource extends Resource
             OrderLinesRelationManager::class,
             OrderApplicationRelationManager::class,
             ApplicationUsageRelationManager::class,
-
+            OrderParcelRelationManager::class,
         ];
     }
+
     public static function getPages(): array
     {
         return [

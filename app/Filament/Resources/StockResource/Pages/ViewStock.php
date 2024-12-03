@@ -3,11 +3,9 @@
 namespace App\Filament\Resources\StockResource\Pages;
 
 use App\Filament\Resources\StockResource;
-use Filament\Actions;
-use Filament\Infolists;
 use Filament\Infolists\Components\Section;
-use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\FontWeight;
 
@@ -23,7 +21,7 @@ class ViewStock extends ViewRecord
                 ->schema([
                     TextEntry::make('quantity')
                         ->label('Cantidad Disponible')
-                        ->numeric(decimalPlaces: 0,thousandsSeparator: '.')
+                        ->numeric(decimalPlaces: 1, thousandsSeparator: '.')
                         ->size(TextEntry\TextEntrySize::Large)
                         ->weight(FontWeight::Bold)
                         ->color("primary"),

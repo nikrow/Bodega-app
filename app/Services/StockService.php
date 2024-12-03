@@ -2,16 +2,19 @@
 
 namespace App\Services;
 
+use App\Enums\MovementType;
+use App\Exceptions\Stock\InsufficientStockException;
+use App\Exceptions\Stock\InvalidMovementTypeException;
+use App\Exceptions\Stock\ProductNotFoundException;
+use App\Exceptions\Stock\WarehouseNotFoundException;
 use App\Models\Movimiento;
 use App\Models\MovimientoProducto;
-use App\Models\OrderApplicationUsage;
 use App\Models\Stock;
 use App\Models\StockMovement;
-use Filament\Facades\Filament;
+use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Exception;
 
 class StockService
 {
@@ -19,14 +22,14 @@ class StockService
      * Aplicar cambios de stock basados en un movimiento de producto.
      *
      * @param MovimientoProducto $productoMovimiento
-     * @param int|null $cantidadAnterior
+     * @param float|null $cantidadAnterior
      * @return void
      * @throws Exception
      */
-    public function applyStockChanges(MovimientoProducto $productoMovimiento, ?int $cantidadAnterior = null): void
+    public function applyStockChanges(MovimientoProducto $productoMovimiento, ?float $cantidadAnterior = null): void
     {
         $movimiento = $productoMovimiento->movimiento;
-        $tipo = strtolower($movimiento->tipo->value);
+        $tipo = MovementType::from(strtolower($movimiento->tipo->value));
         $cantidadNueva = $productoMovimiento->cantidad;
 
         $userId = Auth::id();
@@ -34,8 +37,8 @@ class StockService
         // Obtener el producto asociado al movimiento
         $producto = $productoMovimiento->producto;
         if (!$producto) {
-            Log::error('Producto no encontrado para el movimientoProducto ID: ' . $productoMovimiento->id);
-            throw new Exception('Producto no encontrado.');
+            Log::error('Producto no encontrado para el MovimientoProducto ID: ' . $productoMovimiento->id);
+            throw new ProductNotFoundException('Producto no encontrado.');
         }
 
         // Revertir el impacto anterior del stock (si la cantidad anterior existe)
@@ -47,20 +50,20 @@ class StockService
         $this->applyNewImpact($tipo, $movimiento, $productoMovimiento, $cantidadNueva, $producto, $userId);
     }
 
-
     /**
      * Revertir el impacto anterior en el stock.
      *
-     * @param string $tipo
+     * @param MovementType $tipo
      * @param Movimiento $movimiento
      * @param MovimientoProducto $productoMovimiento
-     * @param int $cantidadAnterior
+     * @param float $cantidadAnterior
      * @return void
+     * @throws Exception
      */
-    private function revertPreviousImpact(string $tipo, Movimiento $movimiento, MovimientoProducto $productoMovimiento, int $cantidadAnterior): void
+    private function revertPreviousImpact(MovementType $tipo, Movimiento $movimiento, MovimientoProducto $productoMovimiento, float $cantidadAnterior): void
     {
         switch ($tipo) {
-            case 'entrada':
+            case MovementType::ENTRADA:
                 $stockDestino = $this->getOrCreateStock(
                     $productoMovimiento->producto_id,
                     $movimiento->bodega_destino_id,
@@ -71,7 +74,7 @@ class StockService
                 $this->updateStock($stockDestino, -$cantidadAnterior, null, $movimiento->user_id);
                 break;
 
-            case 'salida':
+            case MovementType::SALIDA:
                 if ($movimiento->bodega_origen_id) {
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -82,7 +85,8 @@ class StockService
                 }
                 break;
 
-            case 'traslado':
+            case MovementType::TRASLADO:
+                $stockOrigen = null;
                 if ($movimiento->bodega_origen_id) {
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -98,7 +102,7 @@ class StockService
                 $this->handleRevertTraslado($stockOrigen, $stockDestino, $cantidadAnterior, $movimiento->user_id);
                 break;
 
-            case 'preparacion':
+            case MovementType::PREPARACION:
                 if ($movimiento->bodega_origen_id) {
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -106,29 +110,31 @@ class StockService
                         $movimiento->field_id
                     );
                     $this->updateStock($stockOrigen, $cantidadAnterior, $productoMovimiento->producto->price, $movimiento->user_id);
-                    break;
                 }
+                break;
+
             default:
-                Log::warning("Tipo de movimiento no reconocido para revertir: {$tipo}");
+                Log::warning("Tipo de movimiento no reconocido para revertir: {$tipo->value}");
+                throw new InvalidMovementTypeException("Tipo de movimiento no válido: {$tipo->value}");
         }
     }
 
     /**
      * Aplicar el nuevo impacto en el stock y registrar en stock_movements.
      *
-     * @param string $tipo
+     * @param MovementType $tipo
      * @param Movimiento $movimiento
      * @param MovimientoProducto $productoMovimiento
-     * @param int $cantidadNueva
+     * @param float $cantidadNueva
      * @param \App\Models\Product $producto
      * @param int $userId
      * @return void
      * @throws Exception
      */
-    private function applyNewImpact(string $tipo, Movimiento $movimiento, MovimientoProducto $productoMovimiento, int $cantidadNueva, $producto, int $userId): void
+    private function applyNewImpact(MovementType $tipo, Movimiento $movimiento, MovimientoProducto $productoMovimiento, float $cantidadNueva, $producto, int $userId): void
     {
         switch ($tipo) {
-            case 'entrada':
+            case MovementType::ENTRADA:
                 $stockDestino = $this->getOrCreateStock(
                     $productoMovimiento->producto_id,
                     $movimiento->bodega_destino_id,
@@ -139,10 +145,10 @@ class StockService
                 $this->updateStock($stockDestino, $cantidadNueva, $producto->price, $userId);
 
                 // Registrar en stock_movements
-                $this->logStockMovement($movimiento, $productoMovimiento, 'entrada', $cantidadNueva);
+                $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'entrada');
                 break;
 
-            case 'salida':
+            case MovementType::SALIDA:
                 if ($movimiento->bodega_origen_id) {
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -152,11 +158,11 @@ class StockService
                     $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
 
                     // Registrar en stock_movements
-                    $this->logStockMovement($movimiento, $productoMovimiento, 'salida', -$cantidadNueva);
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, -$cantidadNueva, 'salida');
                 }
                 break;
 
-            case 'traslado':
+            case MovementType::TRASLADO:
                 if ($movimiento->bodega_origen_id) {
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -173,12 +179,12 @@ class StockService
                 );
                 $this->handleTraslado($stockOrigen, $stockDestino, $cantidadNueva, $producto->price, $userId);
 
-                // Registrar en stock_movements
-                $this->logStockMovement($movimiento, $productoMovimiento, 'traslado', -$cantidadNueva);
-                $this->logStockMovement($movimiento, $productoMovimiento, 'traslado', $cantidadNueva, 'entrada');
+                // Registrar en stock_movements para salida y entrada
+                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, -$cantidadNueva, 'traslado - salida');
+                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'traslado - entrada');
                 break;
 
-            case 'preparacion':
+            case MovementType::PREPARACION:
                 if ($movimiento->bodega_origen_id) {
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -188,12 +194,13 @@ class StockService
                     $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
 
                     // Registrar en stock_movements
-                    $this->logStockMovement($movimiento, $productoMovimiento, 'preparacion', -$cantidadNueva);
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, -$cantidadNueva, 'preparacion - salida');
                 }
                 break;
 
             default:
-                throw new Exception('Tipo de movimiento no válido.');
+                Log::warning("Tipo de movimiento no reconocido para aplicar: {$tipo->value}");
+                throw new InvalidMovementTypeException('Tipo de movimiento no válido.');
         }
     }
 
@@ -204,11 +211,11 @@ class StockService
      * @param int $warehouseId
      * @param int $fieldId
      * @return Stock
-     * @throws Exception
+     * @throws WarehouseNotFoundException
      */
     private function getStock(int $productoId, int $warehouseId, int $fieldId): Stock
     {
-        Log::info("Buscando stock para producto ID: $productoId, bodega ID: $warehouseId, campo ID: $fieldId");
+        Log::info("Buscando stock para producto ID: {$productoId}, bodega ID: {$warehouseId}, campo ID: {$fieldId}");
 
         $stock = Stock::where([
             'product_id' => $productoId,
@@ -217,8 +224,8 @@ class StockService
         ])->first();
 
         if (!$stock) {
-            Log::error("Stock no encontrado para el producto ID: $productoId en bodega ID: $warehouseId.");
-            throw new Exception("Stock no encontrado en la bodega especificada.");
+            Log::error("Stock no encontrado para el producto ID: {$productoId} en bodega ID: {$warehouseId}.");
+            throw new WarehouseNotFoundException("Stock no encontrado en la bodega especificada (ID: {$warehouseId}).");
         }
 
         return $stock;
@@ -233,68 +240,74 @@ class StockService
      * @param float $precioCompra
      * @param int $userId
      * @return Stock
-     * @throws Exception
+     * @throws WarehouseNotFoundException
      */
     private function getOrCreateStock(int $productoId, int $warehouseId, int $fieldId, float $precioCompra, int $userId): Stock
     {
         if (is_null($warehouseId)) {
-            throw new Exception('La bodega de destino no puede ser nula.');
+            Log::error('La bodega de destino no puede ser nula.');
+            throw new WarehouseNotFoundException('La bodega de destino no puede ser nula.');
         }
 
-        Log::info("Obteniendo o creando stock para producto ID: $productoId, bodega ID: $warehouseId, campo ID: $fieldId");
+        Log::info("Obteniendo o creando stock para producto ID: {$productoId}, bodega ID: {$warehouseId}, campo ID: {$fieldId}");
 
-        return Stock::firstOrCreate([
-            'product_id' => $productoId,
-            'warehouse_id' => $warehouseId,
-            'field_id' => $fieldId,
-        ], [
-            'quantity' => 0,
-            'price' => $precioCompra,
-            'created_by' => $userId,
-            'updated_by' => $userId,
-        ]);
+        return Stock::firstOrCreate(
+            [
+                'product_id' => $productoId,
+                'warehouse_id' => $warehouseId,
+                'field_id' => $fieldId,
+            ],
+            [
+                'quantity' => 0,
+                'price' => $precioCompra,
+                'created_by' => $userId,
+                'updated_by' => $userId,
+            ]
+        );
     }
 
     /**
      * Actualizar la cantidad de stock.
      *
      * @param Stock $stock
-     * @param int $cantidadCambio
+     * @param float $cantidadCambio
      * @param float|null $nuevoPrecio
      * @param int $userId
      * @return void
-     * @throws Exception
+     * @throws InsufficientStockException
      */
-    private function updateStock(Stock $stock, int $cantidadCambio, ?float $nuevoPrecio, int $userId): void
+    private function updateStock(Stock $stock, float $cantidadCambio, ?float $nuevoPrecio, int $userId): void
     {
-        // Verificar que no se exceda el stock mínimo
-        if ($stock->quantity + $cantidadCambio < 0) {
-            Log::error("Stock insuficiente para realizar la operación. Producto ID: {$stock->product_id}, Bodega ID: {$stock->warehouse_id}");
-            throw new Exception("Stock insuficiente para realizar la operación.");
-        }
+        DB::transaction(function () use ($stock, $cantidadCambio, $nuevoPrecio, $userId) {
+            // Verificar que no se exceda el stock mínimo
+            if ($stock->quantity + $cantidadCambio < 0) {
+                Log::error("Stock insuficiente para realizar la operación. Producto ID: {$stock->product_id}, Bodega ID: {$stock->warehouse_id}");
+                throw new InsufficientStockException("Stock insuficiente para realizar la operación.");
+            }
 
-        // Actualizar la cantidad del stock
-        $stock->quantity += $cantidadCambio;
-        if ($nuevoPrecio !== null) {
-            $stock->price = $nuevoPrecio;
-        }
-        $stock->updated_by = $userId;
-        $stock->save();
+            // Actualizar la cantidad del stock
+            $stock->quantity += $cantidadCambio;
+            if ($nuevoPrecio !== null) {
+                $stock->price = $nuevoPrecio;
+            }
+            $stock->updated_by = $userId;
+            $stock->save();
 
-        Log::info("Stock actualizado: Producto ID {$stock->product_id}, Bodega ID {$stock->warehouse_id}, Cambio: {$cantidadCambio}");
+            Log::info("Stock actualizado: Producto ID {$stock->product_id}, Bodega ID {$stock->warehouse_id}, Cambio: {$cantidadCambio}");
+        });
     }
 
     /**
      * Manejar la salida de stock.
      *
      * @param Stock $stockOrigen
-     * @param int $cantidad
+     * @param float $cantidad
      * @param float $precioCompra
      * @param int $userId
      * @return void
-     * @throws Exception
+     * @throws InsufficientStockException
      */
-    private function handleSalida(Stock $stockOrigen, int $cantidad, float $precioCompra, int $userId): void
+    private function handleSalida(Stock $stockOrigen, float $cantidad, float $precioCompra, int $userId): void
     {
         $this->updateStock($stockOrigen, -$cantidad, $precioCompra, $userId);
     }
@@ -304,13 +317,13 @@ class StockService
      *
      * @param Stock|null $stockOrigen
      * @param Stock $stockDestino
-     * @param int $cantidad
+     * @param float $cantidad
      * @param float $precioCompra
      * @param int $userId
      * @return void
-     * @throws Exception
+     * @throws InsufficientStockException
      */
-    private function handleTraslado(?Stock $stockOrigen, Stock $stockDestino, int $cantidad, float $precioCompra, int $userId): void
+    private function handleTraslado(?Stock $stockOrigen, Stock $stockDestino, float $cantidad, float $precioCompra, int $userId): void
     {
         DB::transaction(function () use ($stockOrigen, $stockDestino, $cantidad, $precioCompra, $userId) {
             if ($stockOrigen && $stockOrigen->quantity >= $cantidad) {
@@ -318,7 +331,7 @@ class StockService
                 $this->updateStock($stockDestino, $cantidad, $precioCompra, $userId); // Sumar cantidad en destino
             } else {
                 Log::error("Stock insuficiente para traslado: Producto ID {$stockOrigen->product_id}, Bodega Origen ID {$stockOrigen->warehouse_id}");
-                throw new Exception("Stock insuficiente para traslado.");
+                throw new InsufficientStockException("Stock insuficiente para traslado.");
             }
         });
     }
@@ -328,11 +341,11 @@ class StockService
      *
      * @param Stock|null $stockOrigen
      * @param Stock|null $stockDestino
-     * @param int $cantidad
+     * @param float $cantidad
      * @param int $userId
      * @return void
      */
-    private function handleRevertTraslado(?Stock $stockOrigen, ?Stock $stockDestino, int $cantidad, int $userId): void
+    private function handleRevertTraslado(?Stock $stockOrigen, ?Stock $stockDestino, float $cantidad, int $userId): void
     {
         DB::transaction(function () use ($stockOrigen, $stockDestino, $cantidad, $userId) {
             if ($stockOrigen) {
@@ -349,21 +362,27 @@ class StockService
      *
      * @param Movimiento $movimiento
      * @param MovimientoProducto $productoMovimiento
-     * @param string $tipoMovimiento
-     * @param int $cantidadCambio
+     * @param MovementType $tipoMovimiento
+     * @param float $cantidadCambio
      * @param string|null $descripcionAdicional
      * @return void
      */
-    private function logStockMovement(Movimiento $movimiento, MovimientoProducto $productoMovimiento, string $tipoMovimiento, int $cantidadCambio, string $descripcionAdicional = null): void
+    private function logStockMovement(Movimiento $movimiento, MovimientoProducto $productoMovimiento, MovementType $tipoMovimiento, float $cantidadCambio, ?string $descripcionAdicional = null): void
     {
         $descripcion = $descripcionAdicional
             ? $descripcionAdicional
-            : "Movimiento {$productoMovimiento->id} de tipo {$tipoMovimiento} registrado.";
+            : "Movimiento {$productoMovimiento->id} de tipo {$tipoMovimiento->value} registrado.";
+
+        // Determinar la bodega relevante basada en el tipo de movimiento
+        $warehouseId = match ($tipoMovimiento) {
+            MovementType::SALIDA, MovementType::PREPARACION, MovementType::TRASLADO => $movimiento->bodega_origen_id,
+            MovementType::ENTRADA => $movimiento->bodega_destino_id,
+        };
 
         StockMovement::create([
-            'movement_type' => $tipoMovimiento,
+            'movement_type' => $tipoMovimiento->value,
             'product_id' => $productoMovimiento->producto_id,
-            'warehouse_id' => $tipoMovimiento === 'salida' ? $movimiento->bodega_origen_id : $movimiento->bodega_destino_id,
+            'warehouse_id' => $warehouseId,
             'related_id' => $productoMovimiento->id,
             'related_type' => MovimientoProducto::class,
             'quantity_change' => $cantidadCambio,
@@ -373,18 +392,11 @@ class StockService
             'updated_by' => $movimiento->updated_by ?? $movimiento->user_id,
         ]);
 
-        Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento}, Producto ID {$productoMovimiento->producto_id}, Cantidad Cambio {$cantidadCambio}");
+        Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento->value}, Producto ID {$productoMovimiento->producto_id}, Cantidad Cambio {$cantidadCambio}, Bodega ID {$warehouseId}");
     }
 
     /**
      * Revertir el impacto de un movimiento de producto.
-     *
-     * @param MovimientoProducto $productoMovimiento
-     * @return void
-     * @throws Exception
-     */
-    /**
-     * Revertir el impacto de un MovimientoProducto en el stock.
      *
      * @param MovimientoProducto $productoMovimiento
      * @return void
@@ -395,13 +407,13 @@ class StockService
         Log::info("StockService: Revirtiendo impacto para MovimientoProducto ID: {$productoMovimiento->id}");
 
         $movimiento = $productoMovimiento->movimiento;
-        $tipo = strtolower($movimiento->tipo->value);
+        $tipo = MovementType::from(strtolower($movimiento->tipo->value));
         $cantidad = $productoMovimiento->cantidad;
         $userId = Auth::id() ?? 1; // Asume un usuario por defecto si no está autenticado
 
         try {
             switch ($tipo) {
-                case 'entrada':
+                case MovementType::ENTRADA:
                     // Para una entrada, restamos la cantidad al stock de destino
                     $stockDestino = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -410,10 +422,11 @@ class StockService
                     );
                     $this->updateStock($stockDestino, -$cantidad, null, $userId);
 
-                    // Opcional: Eliminar los StockMovements asociados (ya se maneja en el Observer)
+                    // Registrar en stock_movements
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, -$cantidad, 'reversión entrada');
                     break;
 
-                case 'salida':
+                case MovementType::SALIDA:
                     // Para una salida, sumamos la cantidad al stock de origen
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -421,9 +434,12 @@ class StockService
                         $movimiento->field_id
                     );
                     $this->updateStock($stockOrigen, $cantidad, null, $userId);
+
+                    // Registrar en stock_movements
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidad, 'reversión salida');
                     break;
 
-                case 'traslado':
+                case MovementType::TRASLADO:
                     // Para un traslado, sumamos al stock de origen y restamos del destino
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
@@ -437,10 +453,28 @@ class StockService
                     );
                     $this->updateStock($stockOrigen, $cantidad, null, $userId);
                     $this->updateStock($stockDestino, -$cantidad, null, $userId);
+
+                    // Registrar en stock_movements para reversión de traslado
+                    $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidad, 'reversión traslado - salida');
+                    $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, -$cantidad, 'reversión traslado - entrada');
+                    break;
+
+                case MovementType::PREPARACION:
+                    // Para una preparación, sumamos la cantidad al stock de origen
+                    $stockOrigen = $this->getStock(
+                        $productoMovimiento->producto_id,
+                        $movimiento->bodega_origen_id,
+                        $movimiento->field_id
+                    );
+                    $this->updateStock($stockOrigen, $cantidad, null, $userId);
+
+                    // Registrar en stock_movements
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidad, 'reversión preparación - salida');
                     break;
 
                 default:
-                    Log::warning("StockService: Tipo de movimiento no reconocido para revertir: {$tipo}");
+                    Log::warning("StockService: Tipo de movimiento no reconocido para revertir: {$tipo->value}");
+                    throw new InvalidMovementTypeException("Tipo de movimiento no válido: {$tipo->value}");
             }
 
             Log::info("StockService: Impacto revertido correctamente para MovimientoProducto ID: {$productoMovimiento->id}");
@@ -455,15 +489,15 @@ class StockService
      *
      * @param MovimientoProducto $productoMovimiento
      * @return void
-     * @throws Exception
+     * @throws InsufficientStockException
      */
     public function validateStockBeforeCreating(MovimientoProducto $productoMovimiento): void
     {
         $movimiento = $productoMovimiento->movimiento;
-        $tipo = strtolower($movimiento->tipo->value);
+        $tipo = MovementType::from(strtolower($movimiento->tipo->value));
         $cantidad = $productoMovimiento->cantidad;
 
-        if (in_array($tipo, ['salida', 'preparacion'])) {
+        if (in_array($tipo, [MovementType::SALIDA, MovementType::PREPARACION])) {
             $stockOrigen = $this->getStock(
                 $productoMovimiento->producto_id,
                 $movimiento->bodega_origen_id,
@@ -471,107 +505,10 @@ class StockService
             );
 
             if ($stockOrigen->quantity < $cantidad) {
-                Log::error("Stock insuficiente para {$tipo}: Producto ID {$productoMovimiento->producto_id}, Bodega Origen ID {$movimiento->bodega_origen_id}");
-                throw new Exception("Stock insuficiente para {$tipo}.");
+                Log::error("Stock insuficiente para {$tipo->value}: Producto ID {$productoMovimiento->producto_id}, Bodega Origen ID {$movimiento->bodega_origen_id}");
+                throw new InsufficientStockException("Stock insuficiente para {$tipo->value}.");
             }
         }
     }
 
-
-    /**
-     * Deduce stock basado en el uso de una aplicación.
-     *
-     * @param int $productId
-     * @param int $warehouseId
-     * @param float $quantity
-     * @return void
-     * @throws Exception
-     */
-    /*public function deductUsageStock(int $productId, int $warehouseId, float $quantity): void
-    {
-        DB::transaction(function () use ($productId, $warehouseId, $quantity) {
-            $stock = Stock::where([
-                'product_id' => $productId,
-                'warehouse_id' => $warehouseId,
-            ])->lockForUpdate()->first();
-
-            if (!$stock) {
-                Log::error("Stock no encontrado para el producto ID: {$productId} en la bodega ID: {$warehouseId}");
-                throw new Exception("Stock no disponible para el producto ID: {$productId} en la bodega ID: {$warehouseId}");
-            }
-
-            if ($stock->quantity < $quantity) {
-                Log::error("Stock insuficiente para el producto ID: {$productId} en la bodega ID: {$warehouseId}. Disponible: {$stock->quantity}, Requerido: {$quantity}");
-                throw new Exception("Stock insuficiente para el producto ID: {$productId} en la bodega ID: {$warehouseId}");
-            }
-
-            $stock->quantity -= $quantity;
-            $stock->save();
-
-            Log::info("Stock descontado por uso: Producto ID {$productId}, Bodega ID {$warehouseId}, Cantidad {$quantity}");
-        });
-    }
-
-    /**
-     * Revertir stock basado en el uso de una aplicación.
-     *
-     * @param int $productId
-     * @param int $warehouseId
-     * @param float $quantity
-     * @return void
-     */
-    /*public function revertUsageStock(int $productId, int $warehouseId, float $quantity): void
-   {
-       DB::transaction(function () use ($productId, $warehouseId, $quantity) {
-           $stock = Stock::where([
-               'product_id' => $productId,
-               'warehouse_id' => $warehouseId,
-           ])->first();
-
-           if (!$stock) {
-               // Si el stock no existe, lo creamos
-               $stock = Stock::create([
-                   'product_id' => $productId,
-                   'warehouse_id' => $warehouseId,
-                   'quantity' => 0,
-                   'price' => 0, // Ajustar según necesidades
-                   'total_price' => 0, // Ajustar según necesidades
-                   'field_id' => Filament::getTenant()->id,
-                   'created_by' => Auth::id(),
-                   'updated_by' => Auth::id(),
-               ]);
-           }
-
-           $stock->quantity += $quantity;
-           $stock->save();
-
-           Log::info("Stock revertido por uso: Producto ID {$productId}, Bodega ID {$warehouseId}, Cantidad {$quantity}");
-       });
-   }
-   /**
-    * Registrar un movimiento de uso de aplicación en stock_movements.
-    *
-    * @param OrderApplicationUsage $usage
-    * @param string $tipoMovimiento
-    * @param int $cantidadCambio
-    * @param string $descripcion
-    * @return void
-    */
-    /*public function logUsageMovement(OrderApplicationUsage $usage, string $tipoMovimiento, int $cantidadCambio, string $descripcion): void
-   {
-       StockMovement::create([
-           'movement_type' => $tipoMovimiento,
-           'product_id' => $usage->product_id,
-           'warehouse_id' => $usage->order->warehouse_id,
-           'related_id' => $usage->id,
-           'related_type' => OrderApplicationUsage::class,
-           'quantity_change' => $cantidadCambio,
-           'description' => $descripcion,
-           'user_id' => $usage->user_id,
-           'field_id' => $usage->field_id,
-           'updated_by' => $usage->updated_by ?? $usage->user_id,
-       ]);
-
-       Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento}, Producto ID {$usage->product_id}, Cantidad Cambio {$cantidadCambio}");
-   }*/
 }

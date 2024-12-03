@@ -2,21 +2,20 @@
 
 namespace App\Filament\Resources\OrderResource\RelationManagers;
 
-use App\Enums\StatusType;
 use App\Models\Climate;
 use App\Models\OrderParcel;
+use App\Models\Parcel;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 
 class OrderApplicationRelationManager extends RelationManager
 {
     protected static string $relationship = 'orderApplications';
 
-    protected static ?string $title = 'Aplicaciones';
+    protected static ?string $title = 'Aplicaciones en terreno';
     protected static ?string $modelLabel = 'Aplicación';
 
     public function form(Form $form): Form
@@ -32,19 +31,30 @@ class OrderApplicationRelationManager extends RelationManager
                         ->pluck('parcel.name', 'parcel_id')
                         ->toArray()
                     )
+                    ->afterStateUpdated(function (callable $get, callable $set) {
+                        // Obtener la superficie del cuartel seleccionado
+                        $parcelId = $get('parcel_id');
+                        if ($parcelId) {
+                            $parcel = Parcel::find($parcelId);
+                            $set('parcel_surface', $parcel->surface);
+                        } else {
+                            $set('parcel_surface', null);
+                        }
+
+                        // Recalcular superficie y porcentaje
+                        $this->calculateSurfaceAndValidate($get, $set);
+                    })
+
                     ->searchable(),
 
+                Forms\Components\Hidden::make('parcel_surface'),
                 Forms\Components\TextInput::make('liter')
                     ->label('Litros aplicados')
                     ->required()
                     ->numeric()
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (callable $get, callable $set) {
-                        // Recalcular el valor de 'surface' cuando cambie 'liter'
-                        $wetting = $get('wetting');
-                        $liter = $get('liter');
-
-                        $set('surface', ($wetting > 0) ? ($liter / $wetting) : 0);
+                        $this->calculateSurfaceAndValidate($get, $set);
                     }),
 
                 Forms\Components\TextInput::make('wetting')
@@ -55,11 +65,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->live(onBlur: true)
                     ->required()
                     ->afterStateUpdated(function (callable $get, callable $set) {
-                        // Recalcular el valor de 'surface' cuando cambie 'wetting'
-                        $wetting = $get('wetting');
-                        $liter = $get('liter');
-
-                        $set('surface', ($wetting > 0) ? ($liter / $wetting) : 0);
+                        $this->calculateSurfaceAndValidate($get, $set);
                     }),
 
                 Forms\Components\TextInput::make('wind_speed')
@@ -89,6 +95,13 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('has')
                     ->numeric()
                     ->reactive(),
+
+                Tables\Columns\TextColumn::make('application_percentage')
+                    ->label('Porcentaje del cuartel aplicado')
+                    ->suffix('%')
+                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->searchable(),
+
                 Forms\Components\Select::make('applicators')
                     ->label('Aplicadores')
                     ->multiple()
@@ -98,6 +111,33 @@ class OrderApplicationRelationManager extends RelationManager
 
             ]);
     }
+
+    private function calculateSurfaceAndValidate(callable $get, callable $set)
+    {
+        $wetting = $get('wetting');
+        $liter = $get('liter');
+
+        $surfaceApplied = ($wetting > 0) ? ($liter / $wetting) : 0;
+        $set('surface', $surfaceApplied);
+
+        // Validar la superficie aplicada contra la superficie del cuartel
+        $parcelSurface = $get('parcel_surface') ?? 0;
+        if ($surfaceApplied > $parcelSurface) {
+            $set('surface_warning', 'La superficie aplicada excede la superficie del cuartel.');
+        } else {
+            $set('surface_warning', null);
+        }
+
+        // Calcular el porcentaje de aplicación
+        if ($parcelSurface > 0) {
+            $percentage = ($surfaceApplied / $parcelSurface) * 100;
+            $set('application_percentage', round($percentage, 2));
+        } else {
+            $set('application_percentage', null);
+        }
+    }
+
+
     protected function getTodayClimateData()
     {
         // Obtener los datos climáticos de la fecha de hoy
@@ -132,6 +172,11 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('  ha')
                     ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('application_percentage')
+                    ->label('Porcentaje del cuartel aplicado')
+                    ->suffix('%')
+                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -157,7 +202,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('applicators.name')
+                Tables\Columns\TextColumn::make('applicators_name')
                 ->label('Aplicadores')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
@@ -166,16 +211,18 @@ class OrderApplicationRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Agregar aplicación'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\ExportBulkAction::make()
+                    ->label('Exportar')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('primary'),
             ]);
     }
 }

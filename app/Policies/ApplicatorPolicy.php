@@ -2,9 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleType;
 use App\Models\Applicator;
 use App\Models\User;
-use App\Enums\RoleType;
 
 class ApplicatorPolicy
 {
@@ -24,7 +24,7 @@ class ApplicatorPolicy
     /**
      * Determinar si el usuario puede ver un registro específico.
      */
-    public function view(User $user, Applicator $aplicator): bool
+    public function view(User $user, Applicator $applicator): bool
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
@@ -41,24 +41,27 @@ class ApplicatorPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
-
+            RoleType::AGRONOMO->value,
+            RoleType::ASISTENTE->value,
         ]);
     }
 
     /**
      * Determinar si el usuario puede actualizar un registro.
      */
-    public function update(User $user, Applicator $aplicator): bool
+    public function update(User $user, Applicator $applicator): bool
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
+            RoleType::AGRONOMO->value,
+            RoleType::ASISTENTE->value,
         ]);
     }
 
     /**
      * Determinar si el usuario puede eliminar un registro.
      */
-    public function delete(User $user, Applicator $aplicator): bool
+    public function delete(User $user, Applicator $applicator): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }
@@ -66,7 +69,7 @@ class ApplicatorPolicy
     /**
      * Determinar si el usuario puede restaurar un registro.
      */
-    public function restore(User $user, Applicator $aplicator): bool
+    public function restore(User $user, Applicator $applicator): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }

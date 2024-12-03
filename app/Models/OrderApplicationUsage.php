@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use DateTimeInterface;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -65,19 +64,9 @@ class OrderApplicationUsage extends Model
         $this->total_cost = $price * $this->product_usage;
     }
 
-    // Relación con OrderApplication
-    public function orderApplication()
-    {
-        return $this->belongsTo(OrderApplication::class, 'application_id');
-    }
-
     public function field()
     {
         return $this->belongsTo(Field::class, 'field_id');
-    }
-    public function order()
-    {
-        return $this->belongsTo(Order::class, 'order_id');
     }
 
     public function parcel()
@@ -92,4 +81,49 @@ class OrderApplicationUsage extends Model
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
+
+    public function orderApplication()
+    {
+        return $this->belongsTo(OrderApplication::class, 'order_application_id');
+    }
+
+    // Relación con Order a través de OrderApplication
+    public function order()
+    {
+        return $this->hasOneThrough(Order::class, OrderApplication::class, 'id', 'id', 'order_application_id', 'order_id');
+    }
+
+    public function getApplicatorsDetailsAttribute()
+    {
+        if ($this->orderApplication && $this->orderApplication->applicators) {
+            return $this->orderApplication->applicators->map(function ($applicator) {
+                $details = [];
+
+                // Nombre del aplicador
+                $details[] = $applicator->name ?? 'Nombre desconocido';
+
+                // Tractor del aplicador
+                if (!empty($applicator->tractor)) {
+                    $details[] = $applicator->tractor;
+                } else {
+                    $details[] = 'Sin tractor';
+                }
+
+                // Equipamiento del aplicador
+                if (!empty($applicator->equipment)) {
+                    // Si 'equipment' es un array, lo convertimos a cadena
+                    $equipment = is_array($applicator->equipment) ? implode(', ', $applicator->equipment) : $applicator->equipment;
+                    $details[] = $equipment;
+                } else {
+                    $details[] = 'Sin equipamiento';
+                }
+
+                // Unir los detalles del aplicador con comas
+                return implode(', ', $details);
+            })->implode(' - ');
+        }
+        return null;
+    }
+
+
 }

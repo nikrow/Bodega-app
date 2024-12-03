@@ -23,17 +23,32 @@ class Warehouse extends Model implements Auditable
         'name',
         'status',
         'field_id',
+        'is_especial',
         'slug',
+        'is_central',
         'created_by',
         'updated_by',
     ];
+
+    public function scopeRegular($query)
+    {
+        return $query->where('is_special', false);
+    }
+
+    public function scopeSpecial($query)
+    {
+        return $query->where('is_special', true);
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logFillable();
     }
 
-
+    public static function centralWarehouse()
+    {
+        return self::where('is_central', true)->first();
+    }
     protected static function booted()
     {
         static::creating(function ($field) {

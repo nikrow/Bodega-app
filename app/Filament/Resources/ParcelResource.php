@@ -4,20 +4,16 @@ namespace App\Filament\Resources;
 
 
 use App\Filament\Resources\ParcelResource\Pages;
-use App\Filament\Resources\ParcelResource\RelationManagers;
 use App\Models\Crop;
 use App\Models\Parcel;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Grouping\Group;
+use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Validation\Rule;
-use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
-use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+
 
 class ParcelResource extends Resource
 {
@@ -56,18 +52,17 @@ class ParcelResource extends Resource
                     ->rules('required'),
                 Forms\Components\Select::make('planting_year')
                     ->label('Año Plantación')
-                    ->options(array_combine(range(1994, 2024), range(1994, 2024)))
+                    ->integer()
                     ->searchable(true)
                     ->rules('required'),
                 Forms\Components\TextInput::make('plants')
                     ->label('Plantas')
-                    ->rules('required', 'numeric'),
+                    ->integer()
+                    ->required(),
                 Forms\Components\TextInput::make('surface')
                     ->label('Superficie')
                     ->suffix('ha')
-                    ->rules('required', 'numeric'),
-
-
+                    ->numeric(2),
             ]);
     }
 
@@ -75,12 +70,6 @@ class ParcelResource extends Resource
     {
         return $table
             ->defaultPaginationPageOption(50)
-            ->defaultGroup('crop.especie')
-            ->groups([
-                Group::make('crop.especie')
-                    ->collapsible()
-                    ->label('Cultivo'),
-            ])
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
@@ -101,6 +90,7 @@ class ParcelResource extends Resource
                 Tables\Columns\TextColumn::make('surface')
                     ->label('Superficie')
                     ->searchable()
+                    ->numeric(2)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -15,7 +14,6 @@ class order_line extends Model
     protected $fillable = [
         'order_id',
         'product_id',
-        'reasons',
         'dosis',
         'waiting_time',
         'reentry',

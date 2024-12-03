@@ -5,15 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\WarehouseResource\Pages;
 use App\Filament\Resources\WarehouseResource\RelationManagers;
 use App\Models\Category;
-use App\Models\Field;
 use App\Models\Warehouse;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class WarehouseResource extends Resource
@@ -32,6 +32,7 @@ class WarehouseResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $user = Auth::user();
         return $form
             ->schema([
                 forms\Components\TextInput::make('name')
@@ -40,12 +41,25 @@ class WarehouseResource extends Resource
                     ->unique(Warehouse::class, 'name', ignoreRecord: true)
                     ->rules('required', 'max:255'),
 
+                Forms\Components\Toggle::make('is_central')
+                    ->label('Es Bodega central?')
+                    ->rules('required'),
+                Tables\Columns\TextColumn::make('is_special')
+                    ->label('Especial')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->hidden(function () use ($user) {
+
+                        return !$user->can('viewSpecialWarehouses');
+                    }),
             ]);
     }
 
     public static function table(Table $table): Table
     {
+        $user = Auth::user();
         return $table
+
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                 ->label('Nombre')
@@ -55,12 +69,8 @@ class WarehouseResource extends Resource
                     ->label('Campo')
                     ->searchable()
                     ->sortable(),
-                TableS\Columns\TextColumn::make('status')
-                    ->label('Estado')
-                    ->searchable()
-                    ->badge()
-                    ->color('success')
-                    ->sortable(),
+                ToggleColumn::make('is_central')
+                    ->label('Bodega central'),
                 Tables\Columns\TextColumn::make('slug')
                     ->label('Slug')
                     ->searchable()
@@ -91,6 +101,10 @@ class WarehouseResource extends Resource
             ]);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('is_special', false);
+    }
     public static function getRelations(): array
     {
         return [

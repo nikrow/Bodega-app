@@ -7,15 +7,10 @@ use App\Filament\Resources\StockResource\RelationManagers;
 use App\Filament\Resources\StockResource\RelationManagers\MovimientoProductosRelationManager;
 use App\Models\Stock;
 use App\Models\Warehouse;
-use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
-use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class StockResource extends Resource
 {
@@ -46,7 +41,7 @@ class StockResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cantidad Disponible')
-                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.')
+                    ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at', 'Última Actualización')
                     ->label('Última Actualización')

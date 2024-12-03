@@ -31,7 +31,10 @@ class ApplicationRecordResource extends Resource
                     ->date('d/m/Y')
                     ->sortable()
                     ->searchable(),
-
+                TextColumn::make('id')
+                    ->label('ID Aplicación')
+                    ->sortable()
+                    ->searchable(),
                 // Cuartel
                 TextColumn::make('parcel.name')
                     ->label('Cuartel')
@@ -124,12 +127,8 @@ class ApplicationRecordResource extends Resource
                     })
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('order.applicators.name')
+                Tables\Columns\TextColumn::make('applicators_details')
                     ->label('Aplicadores')
-                    ->formatStateUsing(function ($state) {
-                        return is_array($state) ? implode(', ', $state) : $state;
-                    })
-                    ->sortable()
                     ->searchable(),
                 // Encargado
                 TextColumn::make('order.user.name')
@@ -138,7 +137,7 @@ class ApplicationRecordResource extends Resource
                     ->searchable(),
 
                 // Objetivo (razón)
-                TextColumn::make('order.orderLines.reasons')
+                TextColumn::make('order.objective')
                     ->label('Objetivo')
                     ->formatStateUsing(function ($state) {
                         if (is_array($state)) {

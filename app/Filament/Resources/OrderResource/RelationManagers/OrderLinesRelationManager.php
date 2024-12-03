@@ -8,8 +8,6 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Log;
 
 class OrderLinesRelationManager extends RelationManager
@@ -117,8 +115,6 @@ class OrderLinesRelationManager extends RelationManager
                             $set('EstimatedProductUsage', null);
                         }
                     }),
-                Forms\Components\Textarea::make('reasons')
-                    ->label('Razón'),
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia')
                     ->numeric(),
@@ -167,10 +163,6 @@ class OrderLinesRelationManager extends RelationManager
                     ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('reasons')
-                    ->label('Razón')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('waiting_time')
                     ->label('Carencia')
                     ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
@@ -185,16 +177,17 @@ class OrderLinesRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Agregar producto')
+                    ->icon('heroicon-o-plus')
+                    ->color('primary'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
     private function recalculateEstimatedUsage(callable $get, callable $set)

@@ -18,7 +18,7 @@
         "eightynine/filament-excel-import": "^3.1",
         "filament/filament": "^3.2.0",
         "joaopaulolndev/filament-pdf-viewer": "^1.0",
-        "laravel/framework": "^11.9",
+        "laravel/framework": "11.31.0.0",
         "laravel/octane": "^2.5",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
@@ -29,7 +29,7 @@
         "spatie/laravel-pdf": "^1.5",
         "swisnl/filament-backgrounds": "^1.1",
         "tapp/filament-auditing": "^3.0",
-        "xtend-packages/rest-presenter": "^1.1"
+        "xtend-packages/rest-presenter": "^0.1.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",

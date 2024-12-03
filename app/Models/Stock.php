@@ -25,6 +25,11 @@ class Stock extends Model implements Auditable
         'field_id',
         'warehouse_id',
     ];
+    protected $casts = [
+        'quantity' => 'float',
+        'price' => 'float',
+        'total_price' => 'float',
+    ];
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
