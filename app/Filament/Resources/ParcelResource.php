@@ -51,14 +51,13 @@ class ParcelResource extends Resource
                     ->label('Cultivo')
                     ->options(Crop::all()->pluck('especie', 'id')->toArray())
                     ->required(),
-                Forms\Components\Select::make('planting_year')
+                Forms\Components\TextInput::make('planting_year')
                     ->label('Año Plantación')
-                    ->integer()
-                    ->searchable(true)
+                    ->numeric()
                     ->required(),
                 Forms\Components\TextInput::make('plants')
                     ->label('Plantas')
-                    ->integer()
+                    ->numeric()
                     ->required(),
                 Forms\Components\TextInput::make('surface')
                     ->label('Superficie')
