@@ -10,7 +10,6 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -69,8 +68,6 @@ class WarehouseResource extends Resource
                     ->label('Campo')
                     ->searchable()
                     ->sortable(),
-                ToggleColumn::make('is_central')
-                    ->label('Bodega central'),
                 Tables\Columns\TextColumn::make('slug')
                     ->label('Slug')
                     ->searchable()

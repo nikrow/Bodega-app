@@ -3,11 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StockMovementResource\Pages;
-
 use App\Models\StockMovement;
 use Filament\Forms;
-use Filament\Tables;
 use Filament\Resources\Resource;
+use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
@@ -41,6 +40,7 @@ class StockMovementResource extends Resource
                     ->searchable()
                     ->tooltip(fn ($record) => $record->movement_number ? "Movimiento: {$record->movement_number}" : null),
                 TextColumn::make('movement_type')
+                    ->label('Tipo de movimiento')
                     ->colors([
                         'success' => 'entrada',
                         'danger' => 'salida',

@@ -25,10 +25,7 @@ class ListProducts extends ListRecords
         $families = FamilyType::cases();
         $tabs = [
             'Todos' => Tab::make()
-                ->label('Todos')
-                ->query(function (Builder $query) use ($families) {
-                    return $query->where('family', $families);
-                }),
+                ->label('Todos'),
         ];
 
         foreach ($families as $family) {
@@ -40,4 +37,5 @@ class ListProducts extends ListRecords
         }
         return $tabs;
     }
+
 }

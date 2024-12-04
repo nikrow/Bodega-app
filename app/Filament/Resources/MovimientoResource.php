@@ -100,6 +100,7 @@ class MovimientoResource extends Resource
 
                 Select::make('bodega_destino_id')
                     ->label('Destino')
+                    ->different('bodega_origen_id')
                     ->disabled(fn($record) => $record !== null)
                     ->options(function (callable $get) {
                         $tenantId = Filament::getTenant()->id;
