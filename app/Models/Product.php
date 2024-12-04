@@ -16,6 +16,7 @@ class Product extends Model implements Auditable
     use HasFactory;
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'product_name',
         'active_ingredients',

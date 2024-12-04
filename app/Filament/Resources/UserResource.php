@@ -5,8 +5,6 @@ namespace App\Filament\Resources;
 use App\Enums\RoleType;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
-use App\Models\Field;
-use App\Models\Role;
 use App\Models\User;
 use App\Models\Warehouse;
 use Filament\Forms;
@@ -14,9 +12,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Rmsramos\Activitylog\Actions\ActivityLogTimelineTableAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
@@ -47,24 +42,26 @@ class UserResource extends Resource
                     ->required()
                     ->unique(user::class, 'name', ignoreRecord: true)
                     ->placeholder('Nombre del usuario')
-                    ->rules('required', 'max:255'),
+                    ->required(),
                 Forms\Components\TextInput::make('email')
                     ->label('Email')
                     ->required()
                     ->unique(user::class, 'email', ignoreRecord: true)
                     ->placeholder('Email del usuario')
-                    ->rules('required', 'email', 'max:255'),
+                    ->email(),
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
                     ->password()
                     ->revealable()
+                    ->minLength(8)
                     ->hiddenOn('edit')
                     ->placeholder('Contraseña del usuario')
-                    ->rules('required', 'min:8'),
+                    ->required(),
                 forms\Components\Select::make('fields')
                     ->label('Campos')
                     ->searchable()
                     ->multiple()
+                    ->required()
                     ->relationship('fields', 'name')
                     ->preload(),
                 Forms\Components\Select::make('role')

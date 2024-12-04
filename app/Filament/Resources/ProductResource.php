@@ -6,7 +6,6 @@ use App\Enums\FamilyType;
 use App\Enums\SapFamilyType;
 use App\Enums\UnidadMedida;
 use App\Filament\Resources\ProductResource\Pages;
-use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -16,7 +15,6 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
-use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ProductResource extends Resource
 {
@@ -61,7 +59,7 @@ class ProductResource extends Resource
                         SapFamilyType::BIOESTIMULANTES->value => 'bioestimulantes',
                         SapFamilyType::OTROS->value => 'otros',
                     ])
-                    ->rules('required'),
+                    ->required(),
                 Forms\Components\Select::make('family')
                     ->label('Grupo')
                     ->options([
@@ -75,12 +73,12 @@ class ProductResource extends Resource
                         FamilyType::REGULADOR->value => 'regulador',
 
                     ])
-                    ->rules('required'),
+                    ->required(),
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
                     ->placeholder('Precio')
                     ->suffix('USD')
-                    ->rules('required','money'),
+                    ->numeric(3),
 
                 Forms\Components\Select::make('unit_measure')
                     ->label('Unidad de Medida')
@@ -89,20 +87,24 @@ class ProductResource extends Resource
                         UnidadMedida::LITRO->value => 'litro',
                         UnidadMedida::UNIDAD->value => 'unidad',
                     ])
-                    ->rules('required'),
+                    ->required(),
                 Forms\Components\TextInput::make('dosis_min')
                     ->label('Dosis Min')
                     ->helperText ('Lt-Kg/100l')
-                    ->rules('required', 'decimal'),
+                    ->numeric()
+                    ->required(),
                 Forms\Components\TextInput::make('dosis_max')
                     ->label('Dosis Max')
                     ->helperText ('Lt-Kg/100l')
-                    ->rules('required', 'decimal'),
+                    ->numeric()
+                    ->required(),
                 Forms\Components\TextInput::make('waiting_time')
-                    ->label('Carencia'),
+                    ->label('Carencia')
+                    ->numeric(),
 
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
+                    ->numeric()
                     ->reactive(),
 
 
@@ -164,17 +166,14 @@ class ProductResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-
                     ExportBulkAction::make()
-
-
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            AuditsRelationManager::class,
+
         ];
     }
 

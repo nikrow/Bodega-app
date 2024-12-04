@@ -39,11 +39,11 @@ class WarehouseResource extends Resource
                     ->required()
                     ->label('Nombre')
                     ->unique(Warehouse::class, 'name', ignoreRecord: true)
-                    ->rules('required', 'max:255'),
+                    ->maxLength(255),
 
                 Forms\Components\Toggle::make('is_central')
                     ->label('Es Bodega central?')
-                    ->rules('required'),
+                    ->required(),
                 Tables\Columns\TextColumn::make('is_special')
                     ->label('Especial')
                     ->sortable()

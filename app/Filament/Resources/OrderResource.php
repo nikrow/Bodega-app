@@ -182,7 +182,7 @@ class OrderResource extends Resource
                                     'azufrador' => 'Azufrador',
 
                                 ])
-                                ->rules('required'),
+                                ->required(),
                             Forms\Components\CheckboxList::make('epp')
                                 ->label('EPP')
                                 ->columns(2)
@@ -197,7 +197,7 @@ class OrderResource extends Resource
                                     'antiparras' => 'Antiparras',
                                     'mascara_filtro' => 'Mascara de filtro',
                                 ])
-                                ->rules('required'),
+                                ->required(),
                         ])
             ]);
     }

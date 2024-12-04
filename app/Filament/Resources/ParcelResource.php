@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 
+
 use App\Filament\Resources\ParcelResource\Pages;
 use App\Models\Crop;
 use App\Models\Parcel;
@@ -10,9 +11,9 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 
 class ParcelResource extends Resource
@@ -49,12 +50,12 @@ class ParcelResource extends Resource
                 Forms\Components\Select::make('crop_id')
                     ->label('Cultivo')
                     ->options(Crop::all()->pluck('especie', 'id')->toArray())
-                    ->rules('required'),
+                    ->required(),
                 Forms\Components\Select::make('planting_year')
                     ->label('Año Plantación')
                     ->integer()
                     ->searchable(true)
-                    ->rules('required'),
+                    ->required(),
                 Forms\Components\TextInput::make('plants')
                     ->label('Plantas')
                     ->integer()
@@ -62,6 +63,7 @@ class ParcelResource extends Resource
                 Forms\Components\TextInput::make('surface')
                     ->label('Superficie')
                     ->suffix('ha')
+                    ->required()
                     ->numeric(2),
             ]);
     }
@@ -110,8 +112,7 @@ class ParcelResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                    ExportBulkAction::make()
-
+                ExportBulkAction::make()
             ]);
     }
 

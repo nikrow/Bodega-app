@@ -95,12 +95,10 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('has')
                     ->numeric()
                     ->reactive(),
-
-                Tables\Columns\TextColumn::make('application_percentage')
+                Forms\Components\TextInput::make('application_percentage')
                     ->label('Porcentaje del cuartel aplicado')
                     ->suffix('%')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->searchable(),
+                    ->numeric(),
 
                 Forms\Components\Select::make('applicators')
                     ->label('Aplicadores')
