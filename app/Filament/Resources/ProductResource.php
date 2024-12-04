@@ -11,7 +11,6 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
@@ -114,12 +113,6 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultGroup('family')
-            ->groups([
-                Group::make('family')
-                    ->collapsible()
-                    ->label('Grupo'),
-            ])
             ->columns([
                 Tables\Columns\TextColumn::make('product_name')
                     ->label('Nombre')
