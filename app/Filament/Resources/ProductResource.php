@@ -105,8 +105,6 @@ class ProductResource extends Resource
                     ->label('Reingreso')
                     ->numeric()
                     ->reactive(),
-
-
                 ]);
     }
 

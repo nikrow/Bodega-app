@@ -34,7 +34,7 @@ class WarehouseResource extends Resource
         $user = Auth::user();
         return $form
             ->schema([
-                forms\Components\TextInput::make('name')
+                Forms\Components\TextInput::make('name')
                     ->required()
                     ->label('Nombre')
                     ->unique(Warehouse::class, 'name', ignoreRecord: true)
@@ -43,14 +43,6 @@ class WarehouseResource extends Resource
                 Forms\Components\Toggle::make('is_central')
                     ->label('Es Bodega central?')
                     ->required(),
-                Tables\Columns\TextColumn::make('is_special')
-                    ->label('Especial')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->hidden(function () use ($user) {
-
-                        return !$user->can('viewSpecialWarehouses');
-                    }),
             ]);
     }
 
