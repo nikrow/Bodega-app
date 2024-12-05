@@ -75,6 +75,7 @@ class ProductResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
+                    ->required()
                     ->placeholder('Precio')
                     ->suffix('USD')
                     ->numeric(3),

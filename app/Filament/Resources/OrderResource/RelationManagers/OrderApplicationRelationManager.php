@@ -71,6 +71,7 @@ class OrderApplicationRelationManager extends RelationManager
                 Forms\Components\TextInput::make('wind_speed')
                     ->label('Viento')
                     ->suffix('km/h')
+                    ->required()
                     ->numeric()
                     ->default(fn () => optional($this->getTodayClimateData())->wind),
 
@@ -103,6 +104,7 @@ class OrderApplicationRelationManager extends RelationManager
                 Forms\Components\Select::make('applicators')
                     ->label('Aplicadores')
                     ->multiple()
+                    ->required()
                     ->relationship('applicators', 'name')
                     ->searchable()
                     ->preload(),

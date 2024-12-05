@@ -72,6 +72,7 @@ class OrderResource extends Resource
                         Forms\Components\Select::make('crops_id')
                             ->label('Cultivo')
                             ->required()
+                            ->reactive()
                             ->options(Crop::all()->pluck('especie', 'id')->toArray()),
                         Forms\Components\Select::make('warehouse_id')
                             ->label('Bodega preparación')
@@ -117,7 +118,9 @@ class OrderResource extends Resource
                                     $tenantId = Filament::getTenant()->id;
                                     $cropId = $get('crops_id');
                                     if ($cropId) {
-                                        return Parcel::where('crop_id', $cropId)->pluck('name', 'id')->toArray();
+                                        return Parcel::where('crop_id', $cropId)
+                                            ->where('field_id', $tenantId)
+                                            ->pluck('name', 'id')->toArray();
                                     }
                                     return [];
                                 })

@@ -37,6 +37,7 @@ class Order extends Model
     protected $casts = [
         'family' => 'array',
         'epp' => 'array',
+        'equipment' => 'array',
         'applicators' => 'array',
         'is_completed' => 'boolean',
     ];

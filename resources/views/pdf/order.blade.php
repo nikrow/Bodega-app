@@ -54,8 +54,6 @@
 <div class="box">
     <div class="header">
         <!-- SVG Logo -->
-        ImageSVG($file='img/lgovector2.svg', $x=15, $y=30, $w='', $h='', $link='http://www.tcpdf.org', $align='',
-        $palign='', $border=1, $fitonpage=false);
         <h2>Orden de Aplicación N° {{ $order->orderNumber }}</h2>
     </div>
     <div class="details">
@@ -67,7 +65,6 @@
             <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
             <li><strong>Mojamiento:</strong> {{ number_format($order->wetting, 2) }} l/ha</li>
             <li><strong>Objetivo:</strong> {{ $order->objective ?? 'N/A' }}</li>
-            <li><strong>Equipamiento:</strong> {{ $order->equipment ?? 'N/A' }}</li>
         </ul>
     </div>
 </div>
@@ -94,27 +91,6 @@
     @else
         <p>No hay cuarteles aplicados.</p>
     @endif
-</div>
-<div class="box">
-    <h2>Elementos de protección personal</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>EPP</th>
-        </tr>
-        </thead>
-        <tbody>
-        @php
-            $maxCount = count($order->epp);
-        @endphp
-
-        @for ($i = 0; $i < $maxCount; $i++)
-            <tr>
-                <td>{{ $order->epp[$i] ?? '' }}</td>
-            </tr>
-        @endfor
-        </tbody>
-    </table>
 </div>
 
 <div class="box">
@@ -147,5 +123,48 @@
         <p>No hay productos registrados.</p>
     @endif
 </div>
+<div class="box">
+    <h2>Equpamiento</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Equipamiento</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php
+            $maxCount = count($order->equipment);
+        @endphp
+
+        @for ($i = 0; $i < $maxCount; $i++)
+            <tr>
+                <td>{{ $order->equipment[$i] ?? '' }}</td>
+            </tr>
+        @endfor
+        </tbody>
+    </table>
+</div>
+<div class="box">
+    <h2>Elementos de protección personal</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>EPP</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php
+            $maxCount = count($order->epp);
+        @endphp
+
+        @for ($i = 0; $i < $maxCount; $i++)
+            <tr>
+                <td>{{ $order->epp[$i] ?? '' }}</td>
+            </tr>
+        @endfor
+        </tbody>
+    </table>
+</div>
+
 </body>
 </html>

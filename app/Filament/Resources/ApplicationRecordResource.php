@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\FamilyType;
 use App\Filament\Resources\ApplicationRecordResource\Pages;
 use App\Models\OrderApplicationUsage;
+use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 
 class ApplicationRecordResource extends Resource
 {
@@ -40,7 +43,10 @@ class ApplicationRecordResource extends Resource
                     ->label('Cuartel')
                     ->sortable()
                     ->searchable(),
-
+                TextColumn::make('parcel.crop.especie')
+                    ->label('Cultivo')
+                    ->sortable()
+                    ->searchable(),
                 // Número de orden
                 TextColumn::make('order.orderNumber')
                     ->label('Número de orden')
@@ -173,8 +179,37 @@ class ApplicationRecordResource extends Resource
                     ->searchable(),
             ])
             ->filters([
-                // Puedes agregar filtros si lo deseas
-            ])
+                Tables\Filters\SelectFilter::make('family')
+                    ->label('Grupo')
+                    ->options([
+                        FamilyType::INSECTICIDA->value => 'insecticida',
+                        FamilyType::HERBICIDA->value => 'herbicida',
+                        FamilyType::FERTILIZANTE->value => 'fertilizante',
+                        FamilyType::ACARICIDA->value => 'acaricida',
+                        FamilyType::FUNGICIDA->value => 'fungicida',
+                        FamilyType::BIOESTIMULANTE->value => 'bioestimulante',
+                        FamilyType::REGULADOR->value => 'regulador',
+                        FamilyType::BLOQUEADOR->value => 'bloqueador',
+                    ]),
+                Tables\Filters\SelectFilter::make('parcel.crop_id')
+                    ->relationship('parcel.crop', 'especie')
+                    ->label('Cultivo'),
+                Tables\Filters\Filter::make('fecha')
+                    ->columns(2)
+                    ->form([
+                        DatePicker::make('start_date')->label('Fecha Inicio'),
+                        DatePicker::make('end_date')
+                            ->default(now())
+                            ->label('Fecha Fin'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['start_date'], fn($q) => $q->whereDate('created_at', '>=', $data['start_date']))
+                            ->when($data['end_date'], fn($q) => $q->whereDate('created_at', '<=', $data['end_date']));
+                    }),
+
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->actions([
                 // Acciones por registro
             ])

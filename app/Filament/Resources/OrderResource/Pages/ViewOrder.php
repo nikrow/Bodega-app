@@ -15,6 +15,7 @@ class ViewOrder extends ViewRecord
         return [
             Actions\EditAction::make()
                 ->label('Editar')
+                ->color('warning')
                 ->hidden(fn (Order $record) => $record->is_completed)
                 ->icon('heroicon-o-pencil'),
             Actions\Action::make('downloadPdf')

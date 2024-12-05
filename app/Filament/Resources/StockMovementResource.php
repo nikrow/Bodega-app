@@ -4,10 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StockMovementResource\Pages;
 use App\Models\StockMovement;
-use Filament\Forms;
+use App\Models\Warehouse;
+use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 
@@ -62,6 +64,7 @@ class StockMovementResource extends Resource
                     ->searchable(),
                 TextColumn::make('quantity_change')
                     ->label('Cantidad')
+                    ->numeric(2)
                     ->sortable(),
                 TextColumn::make('description')
                     ->limit(50),
@@ -84,16 +87,23 @@ class StockMovementResource extends Resource
                     ])
                     ->label('Tipo de Movimiento'),
                 Tables\Filters\Filter::make('fecha')
+                    ->columns(2)
                     ->form([
-                        Forms\Components\DatePicker::make('start_date')->label('Fecha Inicio'),
-                        Forms\Components\DatePicker::make('end_date')->label('Fecha Fin'),
+                        DatePicker::make('start_date')->label('Fecha Inicio'),
+                        DatePicker::make('end_date')
+                            ->default(now())
+                            ->label('Fecha Fin'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query
                             ->when($data['start_date'], fn ($q) => $q->whereDate('created_at', '>=', $data['start_date']))
                             ->when($data['end_date'], fn ($q) => $q->whereDate('created_at', '<=', $data['end_date']));
                     }),
-            ])
+                Tables\Filters\SelectFilter::make('warehouse_id')
+                    ->label('Bodega')
+                    ->options(Warehouse::regular()->pluck('name', 'id')->toArray()),
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->actions([
 
             ])
