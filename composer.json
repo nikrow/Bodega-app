@@ -20,6 +20,7 @@
         "joaopaulolndev/filament-pdf-viewer": "^1.0",
         "laravel/framework": "11.31.0.0",
         "laravel/octane": "^2.5",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
         "owen-it/laravel-auditing": "^13.6",
@@ -28,8 +29,7 @@
         "rmsramos/activitylog": "^1.0",
         "spatie/laravel-pdf": "^1.5",
         "swisnl/filament-backgrounds": "^1.1",
-        "tapp/filament-auditing": "^3.0",
-        "xtend-packages/rest-presenter": "^0.1.0"
+        "tapp/filament-auditing": "^3.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",
