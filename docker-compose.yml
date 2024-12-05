@@ -101,8 +101,8 @@ services:
         environment:
             PMA_HOST: mysql
             PMA_PORT: 3306
-            PMA_USER: nikrow
-            PMA_PASSWORD: Nikrow16990668
+            PMA_USER: ${DB_USERNAME}
+            PMA_PASSWORD: ${DB_PASSWORD}
         ports:
             - "8080:80"
         networks:
