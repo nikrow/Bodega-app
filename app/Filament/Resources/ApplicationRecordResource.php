@@ -179,18 +179,19 @@ class ApplicationRecordResource extends Resource
                     ->searchable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('family')
+                Tables\Filters\SelectFilter::make('product_family')
                     ->label('Grupo')
                     ->options([
-                        FamilyType::INSECTICIDA->value => 'insecticida',
-                        FamilyType::HERBICIDA->value => 'herbicida',
-                        FamilyType::FERTILIZANTE->value => 'fertilizante',
-                        FamilyType::ACARICIDA->value => 'acaricida',
-                        FamilyType::FUNGICIDA->value => 'fungicida',
-                        FamilyType::BIOESTIMULANTE->value => 'bioestimulante',
-                        FamilyType::REGULADOR->value => 'regulador',
-                        FamilyType::BLOQUEADOR->value => 'bloqueador',
-                    ]),
+                        FamilyType::INSECTICIDA->value => 'Insecticida',
+                        FamilyType::HERBICIDA->value => 'Herbicida',
+                        FamilyType::FERTILIZANTE->value => 'Fertilizante',
+                        FamilyType::ACARICIDA->value => 'Acaricida',
+                        FamilyType::FUNGICIDA->value => 'Fungicida',
+                        FamilyType::BIOESTIMULANTE->value => 'Bioestimulante',
+                        FamilyType::REGULADOR->value => 'Regulador',
+                        FamilyType::BLOQUEADOR->value => 'Bloqueador',
+                    ])
+                    ->relationship('product', 'family'),
                 Tables\Filters\SelectFilter::make('parcel.crop_id')
                     ->relationship('parcel.crop', 'especie')
                     ->label('Cultivo'),

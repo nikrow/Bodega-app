@@ -31,7 +31,9 @@ class StockMovementResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
 
-                TextColumn::make('id')->sortable()->searchable(),
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Fecha')
                     ->dateTime('Y-m-d H:i')
@@ -39,7 +41,6 @@ class StockMovementResource extends Resource
                 TextColumn::make('movement_number')
                     ->label('ID Movimiento')
                     ->sortable()
-                    ->searchable()
                     ->tooltip(fn ($record) => $record->movement_number ? "Movimiento: {$record->movement_number}" : null),
                 TextColumn::make('movement_type')
                     ->label('Tipo de movimiento')
@@ -104,6 +105,7 @@ class StockMovementResource extends Resource
                     ->options(Warehouse::regular()->pluck('name', 'id')->toArray()),
             ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(3)
+            ->persistFiltersInSession()
             ->actions([
 
             ])

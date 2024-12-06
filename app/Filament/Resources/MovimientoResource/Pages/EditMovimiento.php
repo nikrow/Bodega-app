@@ -21,7 +21,8 @@ class EditMovimiento extends EditRecord
             Actions\CreateAction::make()
                 ->icon('heroicon-o-plus')
                 ->label('Crear movimiento nuevo')
-                ->color('primary'),
+                ->color('primary')
+                ->url(fn() => MovimientoResource::getUrl('create', ['tenant' => Filament::getTenant()->slug])),
             Actions\Action::make('complete')
                 ->label('Cerrar')
                 ->color('success')
