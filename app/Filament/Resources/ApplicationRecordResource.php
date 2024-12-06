@@ -32,12 +32,10 @@ class ApplicationRecordResource extends Resource
                 TextColumn::make('created_at')
                     ->label('Fecha aplicación')
                     ->date('d/m/Y')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
                 TextColumn::make('id')
                     ->label('ID Aplicación')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
                 // Cuartel
                 TextColumn::make('parcel.name')
                     ->label('Cuartel')
@@ -50,8 +48,7 @@ class ApplicationRecordResource extends Resource
                 // Número de orden
                 TextColumn::make('order.orderNumber')
                     ->label('Número de orden')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Producto
                 TextColumn::make('product.product_name')
@@ -62,14 +59,12 @@ class ApplicationRecordResource extends Resource
                 // Ingrediente activo
                 TextColumn::make('product.active_ingredients')
                     ->label('Ingrediente activo')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Carencia
                 TextColumn::make('product.waiting_time')
                     ->label('Carencia')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Fecha de reingreso
                 TextColumn::make('reentry_date')
@@ -98,32 +93,28 @@ class ApplicationRecordResource extends Resource
                     ->label('Dosis l/100lt')
                     ->numeric(decimalPlaces: 2)
                     ->suffix(' l/100l')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Mojamiento
                 TextColumn::make('order.wetting')
                     ->label('Mojamiento')
                     ->numeric(decimalPlaces: 0)
                     ->suffix(' l/ha')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Litros aplicados
                 TextColumn::make('liters_applied')
                     ->label('Litros aplicados')
                     ->numeric(decimalPlaces: 0)
                     ->suffix(' l')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Cantidad de producto utilizado
                 TextColumn::make('product_usage')
                     ->label('Producto utilizado')
                     ->numeric(decimalPlaces: 2)
                     ->suffix(' l')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Equipamiento usado
                 TextColumn::make('order.equipment')
@@ -134,8 +125,7 @@ class ApplicationRecordResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('applicators_details')
-                    ->label('Aplicadores')
-                    ->searchable(),
+                    ->label('Aplicadores'),
                 // Encargado
                 TextColumn::make('order.user.name')
                     ->label('Encargado')
@@ -159,24 +149,21 @@ class ApplicationRecordResource extends Resource
                     ->label('Temperatura')
                     ->suffix(' °C')
                     ->numeric()
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Velocidad del viento
                 TextColumn::make('orderApplication.wind_speed')
                     ->label('Velocidad del viento')
                     ->suffix(' km/h')
                     ->numeric()
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 // Humedad
                 TextColumn::make('orderApplication.moisture')
                     ->label('Humedad')
                     ->suffix(' %')
                     ->numeric()
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('product_family')
