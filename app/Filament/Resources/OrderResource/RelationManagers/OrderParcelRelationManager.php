@@ -19,6 +19,7 @@ class OrderParcelRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(50)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Cuartel')
@@ -33,7 +34,6 @@ class OrderParcelRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('applied_percentage')
                     ->label('Porcentaje aplicado')
                     ->suffix('%')
-                    ->sortable()
                     ->getStateUsing(function ($record) {
                         $order = $this->ownerRecord; // La orden actual
                         $parcelSurface = $record->surface ?? 0;

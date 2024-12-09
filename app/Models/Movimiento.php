@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\MovementType;
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -71,20 +70,18 @@ class Movimiento extends Model implements Auditable
         });
 
         static::updating(function ($movimiento) {
-            // Permitir solo la actualización de 'is_completed'
-            if ($movimiento->is_completed && $movimiento->isDirty()) {
+            // Si el movimiento ya fue completado, no se permiten modificaciones excepto cambiar 'is_completed'.
+            if ($movimiento->is_completed) {
                 $cambiosRelevantes = collect($movimiento->getDirty())->except(['is_completed']);
 
-                if ($cambiosRelevantes->isEmpty()) {
-                    // Solo se está actualizando 'is_completed', permitir la operación
-                    return;
+                if ($cambiosRelevantes->isNotEmpty()) {
+                    // Se intenta modificar otros campos distintos a 'is_completed', lanzar excepción
+                    throw ValidationException::withMessages([
+                        'is_completed' => 'No puedes modificar un movimiento que ya ha sido completado.',
+                    ]);
                 }
-
-                // Si se intenta modificar otros campos, lanzar excepción
-                throw ValidationException::withMessages([
-                    'is_completed' => 'No puedes modificar un movimiento que ya ha sido completado.',
-                ]);
             }
+            $movimiento->updated_by = Auth::id();
         });
 
     }
