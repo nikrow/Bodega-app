@@ -13,16 +13,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\Contracts\HasApiTokens;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 
-class User extends Authenticatable implements Auditable, HasTenants, FilamentUser
+class User extends Authenticatable implements Auditable, HasTenants, FilamentUser, HasApiTokens
 {
 
     use HasFactory, Notifiable;
+    use \Laravel\Sanctum\HasApiTokens;
     use \OwenIt\Auditing\Auditable;
     use LogsActivity;
 

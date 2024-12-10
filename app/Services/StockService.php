@@ -144,8 +144,8 @@ class StockService
                 );
                 $this->updateStock($stockDestino, $cantidadNueva, $producto->price, $userId);
 
-                // Registrar en stock_movements
-                $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'entrada');
+                // Registrar en stock_movements (sin signos negativos)
+                $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'entrada', $movimiento->bodega_destino_id);
                 break;
 
             case MovementType::SALIDA:
@@ -157,8 +157,8 @@ class StockService
                     );
                     $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
 
-                    // Registrar en stock_movements
-                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, -$cantidadNueva, 'salida');
+                    // Registrar en stock_movements (sin signos negativos)
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'salida', $movimiento->bodega_origen_id);
                 }
                 break;
 
@@ -179,9 +179,10 @@ class StockService
                 );
                 $this->handleTraslado($stockOrigen, $stockDestino, $cantidadNueva, $producto->price, $userId);
 
-                // Registrar en stock_movements para salida y entrada
-                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, -$cantidadNueva, 'traslado - salida');
-                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'traslado - entrada');
+                // Registrar en stock_movements para traslado:
+                // salida -> bodega origen, entrada -> bodega destino, sin signos negativos
+                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'traslado - salida', $movimiento->bodega_origen_id);
+                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'traslado - entrada', $movimiento->bodega_destino_id);
                 break;
 
             case MovementType::PREPARACION:
@@ -191,12 +192,18 @@ class StockService
                         $movimiento->bodega_origen_id,
                         $movimiento->field_id
                     );
+
                     $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
 
-                    // Registrar en stock_movements
-                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, -$cantidadNueva, 'preparacion - salida');
+                    $descripcion = 'preparacion orden';
+                    if ($movimiento->order && $movimiento->order->orderNumber) {
+                        $descripcion .= ' ' . $movimiento->orderNumber;
+                    }
+
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, $descripcion, $movimiento->bodega_origen_id);
                 }
                 break;
+
 
             default:
                 Log::warning("Tipo de movimiento no reconocido para aplicar: {$tipo->value}");
@@ -367,19 +374,21 @@ class StockService
      * @param string|null $descripcionAdicional
      * @return void
      */
-    private function logStockMovement(Movimiento $movimiento, MovimientoProducto $productoMovimiento, MovementType $tipoMovimiento, float $cantidadCambio, ?string $descripcionAdicional = null): void
+    private function logStockMovement(Movimiento $movimiento, MovimientoProducto $productoMovimiento, MovementType $tipoMovimiento, float $cantidadCambio, ?string $descripcionAdicional = null, ?int $warehouseId = null): void
     {
         $descripcion = $descripcionAdicional
             ? $descripcionAdicional
             : "Movimiento {$productoMovimiento->id} de tipo {$tipoMovimiento->value} registrado.";
 
-        // Determinar la bodega relevante basada en el tipo de movimiento
-        $warehouseId = match ($tipoMovimiento) {
-            MovementType::SALIDA, MovementType::PREPARACION, MovementType::TRASLADO => $movimiento->bodega_origen_id,
-            MovementType::ENTRADA => $movimiento->bodega_destino_id,
-        };
+        // Determinar la bodega si no se ha pasado una
+        if ($warehouseId === null) {
+            $warehouseId = match ($tipoMovimiento) {
+                MovementType::SALIDA, MovementType::PREPARACION, MovementType::TRASLADO => $movimiento->bodega_origen_id,
+                MovementType::ENTRADA => $movimiento->bodega_destino_id,
+            };
+        }
 
-        StockMovement::create([
+        $data = [
             'movement_type' => $tipoMovimiento->value,
             'product_id' => $productoMovimiento->producto_id,
             'warehouse_id' => $warehouseId,
@@ -390,10 +399,18 @@ class StockService
             'user_id' => $movimiento->user_id,
             'field_id' => $movimiento->field_id,
             'updated_by' => $movimiento->updated_by ?? $movimiento->user_id,
-        ]);
+        ];
 
-        Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento->value}, Producto ID {$productoMovimiento->producto_id}, Cantidad Cambio {$cantidadCambio}, Bodega ID {$warehouseId}");
+        $descripcion = 'preparacion orden';
+        if ($movimiento->order && $movimiento->order->orderNumber) {
+            $descripcion .= ' ' . $movimiento->orderNumber;
+        }
+
+        StockMovement::create($data);
+
+        Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento->value}, Producto ID {$productoMovimiento->producto_id}, Cantidad {$cantidadCambio}, Bodega ID {$warehouseId}");
     }
+
 
     /**
      * Revertir el impacto de un movimiento de producto.
@@ -414,7 +431,7 @@ class StockService
         try {
             switch ($tipo) {
                 case MovementType::ENTRADA:
-                    // Para una entrada, restamos la cantidad al stock de destino
+                    // Revertir entrada: restamos en destino
                     $stockDestino = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_destino_id,
@@ -422,12 +439,12 @@ class StockService
                     );
                     $this->updateStock($stockDestino, -$cantidad, null, $userId);
 
-                    // Registrar en stock_movements
-                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, -$cantidad, 'reversión entrada');
+                    // Registrar movimiento sin signo negativo (aunque internamente se resta del stock)
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidad, 'reversión entrada', $movimiento->bodega_destino_id);
                     break;
 
                 case MovementType::SALIDA:
-                    // Para una salida, sumamos la cantidad al stock de origen
+                    // Revertir salida: sumamos en origen
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_origen_id,
@@ -435,12 +452,12 @@ class StockService
                     );
                     $this->updateStock($stockOrigen, $cantidad, null, $userId);
 
-                    // Registrar en stock_movements
-                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidad, 'reversión salida');
+                    // Registrar movimiento sin signo negativo
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidad, 'reversión salida', $movimiento->bodega_origen_id);
                     break;
 
                 case MovementType::TRASLADO:
-                    // Para un traslado, sumamos al stock de origen y restamos del destino
+                    // Revertir traslado: sumamos en origen y restamos en destino
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_origen_id,
@@ -454,13 +471,13 @@ class StockService
                     $this->updateStock($stockOrigen, $cantidad, null, $userId);
                     $this->updateStock($stockDestino, -$cantidad, null, $userId);
 
-                    // Registrar en stock_movements para reversión de traslado
-                    $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidad, 'reversión traslado - salida');
-                    $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, -$cantidad, 'reversión traslado - entrada');
+                    // Registrar sin signo negativo pero diferenciando la bodega
+                    $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidad, 'reversión traslado - salida', $movimiento->bodega_origen_id);
+                    $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidad, 'reversión traslado - entrada', $movimiento->bodega_destino_id);
                     break;
 
                 case MovementType::PREPARACION:
-                    // Para una preparación, sumamos la cantidad al stock de origen
+                    // Revertir preparación: sumamos al origen
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_origen_id,
@@ -468,9 +485,15 @@ class StockService
                     );
                     $this->updateStock($stockOrigen, $cantidad, null, $userId);
 
-                    // Registrar en stock_movements
-                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidad, 'reversión preparación - salida');
+                    // Construir la descripción para la reversión
+                    $descripcion = 'preparacion orden';
+                    if ($movimiento->order && $movimiento->order->orderNumber) {
+                        $descripcion .= ' ' . $movimiento->orderNumber;
+                    }
+
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidad, $descripcion, $movimiento->bodega_origen_id);
                     break;
+
 
                 default:
                     Log::warning("StockService: Tipo de movimiento no reconocido para revertir: {$tipo->value}");
@@ -483,6 +506,7 @@ class StockService
             throw $e;
         }
     }
+
 
     /**
      * Validar que haya stock suficiente antes de crear un movimiento.

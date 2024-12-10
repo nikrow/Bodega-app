@@ -17,8 +17,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
@@ -232,28 +233,24 @@ class MovimientoResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('updatedBy.name')
                     ->label('Modificado por')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('bodega')
-                    ->label('Bodega')
-                    ->options(
-                        Warehouse::regular()
-                            ->pluck('name', 'id')
-                    )
-                    ->query(function (Builder $query, array $data) {
-                        if (!empty($data['value'])) {
-                            $query->where(function ($q) use ($data) {
-                                $q->where('bodega_origen_id', $data['value'])
-                                    ->orWhere('bodega_destino_id', $data['value']);
-                            });
-                        }
-                    })
-
-            ])
-
+                Tables\Filters\SelectFilter::make('tipo')
+                    ->label('Tipo de Movimiento')
+                    ->options([
+                        'entrada' => 'Entrada',
+                        'salida' => 'Salida',
+                        'traslado' => 'Traslado',
+                        'preparacion' => 'Preparación',
+                    ]),
+                TernaryFilter::make('is_completed')
+                    ->label('Estado')
+                    ->trueLabel('Completados')
+                    ->falseLabel('Pendientes'),
+            ], layout: FiltersLayout::AboveContent)
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()

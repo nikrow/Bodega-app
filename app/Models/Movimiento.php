@@ -59,6 +59,7 @@ class Movimiento extends Model implements Auditable
     // Casting de Enum
     protected $casts = [
         'tipo' => MovementType::class,
+        'is_completed' => 'boolean',
     ];
     protected static function booted()
     {

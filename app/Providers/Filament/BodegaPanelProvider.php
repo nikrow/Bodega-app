@@ -20,6 +20,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Rmsramos\Activitylog\ActivitylogPlugin;
+use Rupadana\ApiService\ApiServicePlugin;
 use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Swis\Filament\Backgrounds\ImageProviders\MyImages;
 
@@ -67,7 +68,8 @@ class BodegaPanelProvider extends PanelProvider
                     ->resource(ActivityLogResource::class)
                     ->navigationGroup('Anexos')
                     ->label('Log')
-                    ->pluralLabel('Logs')
+                    ->pluralLabel('Logs'),
+                ApiServicePlugin::make()
             ])
             ->authGuard('web')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
