@@ -22,6 +22,7 @@ class CreateOrder extends CreateRecord
         return $data;
     }
 
+    protected static bool $canCreateAnother = false;
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('edit', ['record' => $this->record]);

@@ -8,6 +8,7 @@ use App\Models\Field;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -33,12 +34,18 @@ class BodegaPanelProvider extends PanelProvider
             ->id('campo')
             ->path('')
             ->login()
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Editar')
+                    ->icon('heroicon-o-cog-6-tooth'),
+            ])
             ->colors([
                 'primary' => ('#568203'),
                 'secondary' => ('#2F0381'),
             ])
             ->spa()
             ->databaseTransactions()
+            ->sidebarCollapsibleOnDesktop()
             ->tenant(field::class, slugAttribute: 'slug')
             ->brandLogo(asset('/img/logovector2.svg'))
             ->favicon(asset('/img/logovector2.svg'))
@@ -51,6 +58,7 @@ class BodegaPanelProvider extends PanelProvider
                 'Informes',
                 'Bodega',
                 'Anexos',
+                'Admin',
             ])
             ->unsavedChangesAlerts()
             ->pages([
@@ -66,7 +74,7 @@ class BodegaPanelProvider extends PanelProvider
                     ),
                 ActivitylogPlugin::make()
                     ->resource(ActivityLogResource::class)
-                    ->navigationGroup('Anexos')
+                    ->navigationGroup('Admin')
                     ->label('Log')
                     ->pluralLabel('Logs'),
                 ApiServicePlugin::make()

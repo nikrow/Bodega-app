@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MovimientoResource\Pages;
 
+use App\Enums\RoleType;
 use App\Filament\Resources\MovimientoResource;
 use App\Models\Movimiento;
 use Filament\Actions;
@@ -18,11 +19,6 @@ class EditMovimiento extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
-            Actions\CreateAction::make()
-                ->icon('heroicon-o-plus')
-                ->label('Crear movimiento nuevo')
-                ->color('primary')
-                ->url(fn() => MovimientoResource::getUrl('create', ['tenant' => Filament::getTenant()->slug])),
             Actions\Action::make('complete')
                 ->label('Cerrar')
                 ->color('success')
@@ -40,6 +36,13 @@ class EditMovimiento extends EditRecord
 
                     return redirect()->route('filament.campo.resources.movimientos.index', ['tenant' => $tenant->slug]);
 
+                })
+                ->visible(function () {
+                    $user = Auth::user();
+                    return in_array($user->role, [
+                        RoleType::ADMIN->value,
+                        RoleType::AGRONOMO->value,
+                    ]);
                 })
                 ->hidden(fn(Movimiento $record) => $record->is_completed),
         ];

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\StatusType;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -66,13 +65,21 @@ class StockMovement extends Model
         return $this->belongsTo(MovimientoProducto::class, 'related_id');
     }
 
-    public function movimiento()
+    public function getMovimientoAttribute()
     {
         return $this->movimientoProducto ? $this->movimientoProducto->movimiento : null;
     }
+
     public function getMovementNumberAttribute(): ?string
     {
         return $this->movimientoProducto ? $this->movimientoProducto->movimiento->movement_number : null;
+    }
+
+    public function getOrderNumberAttribute(): ?string
+    {
+        return $this->movimiento && $this->movimiento->order
+            ? $this->movimiento->order->orderNumber
+            : null;
     }
 
     /**

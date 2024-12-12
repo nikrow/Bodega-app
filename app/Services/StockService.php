@@ -127,6 +127,8 @@ class StockService
      * @param MovimientoProducto $productoMovimiento
      * @param float $cantidadNueva
      * @param \App\Models\Product $producto
+     * @param Movimiento $orden_compra
+     * @param Movimiento $guia_despacho
      * @param int $userId
      * @return void
      * @throws Exception
@@ -145,7 +147,7 @@ class StockService
                 $this->updateStock($stockDestino, $cantidadNueva, $producto->price, $userId);
 
                 // Registrar en stock_movements (sin signos negativos)
-                $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'entrada', $movimiento->bodega_destino_id);
+                $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'Entrada: OC: ' . $movimiento->orden_compra . ', GD: ' . $movimiento->guia_despacho . ', Proveedor: ' . $movimiento->nombre_proveedor, $movimiento->bodega_destino_id);
                 break;
 
             case MovementType::SALIDA:
@@ -158,7 +160,7 @@ class StockService
                     $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
 
                     // Registrar en stock_movements (sin signos negativos)
-                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'salida', $movimiento->bodega_origen_id);
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'Salida', $movimiento->bodega_origen_id);
                 }
                 break;
 
@@ -181,8 +183,8 @@ class StockService
 
                 // Registrar en stock_movements para traslado:
                 // salida -> bodega origen, entrada -> bodega destino, sin signos negativos
-                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'traslado - salida', $movimiento->bodega_origen_id);
-                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'traslado - entrada', $movimiento->bodega_destino_id);
+                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'Traslado - Salida', $movimiento->bodega_origen_id);
+                $this->logStockMovement($movimiento, $productoMovimiento, MovementType::TRASLADO, $cantidadNueva, 'Traslado - Entrada', $movimiento->bodega_destino_id);
                 break;
 
             case MovementType::PREPARACION:
@@ -195,10 +197,7 @@ class StockService
 
                     $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
 
-                    $descripcion = 'preparacion orden';
-                    if ($movimiento->order && $movimiento->order->orderNumber) {
-                        $descripcion .= ' ' . $movimiento->orderNumber;
-                    }
+                    $descripcion = 'preparacion';
 
                     $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, $descripcion, $movimiento->bodega_origen_id);
                 }

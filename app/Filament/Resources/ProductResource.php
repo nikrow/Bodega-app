@@ -128,6 +128,8 @@ class ProductResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('SAP_code')
                     ->label('Código SAP')
+                    ->copyable()
+                    ->icon('heroicon-o-clipboard-document-list')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('unit_measure')
                     ->label('Unidad de Medida')

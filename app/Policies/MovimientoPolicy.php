@@ -3,10 +3,9 @@
 namespace App\Policies;
 
 use App\Enums\MovementType;
+use App\Enums\RoleType;
 use App\Models\Movimiento;
 use App\Models\User;
-use App\Enums\RoleType;
-use Illuminate\Auth\Access\Response;
 
 class MovimientoPolicy
 {
@@ -18,6 +17,7 @@ class MovimientoPolicy
         return in_array($user->role, [
             RoleType::ADMIN->value,
             RoleType::AGRONOMO->value,
+            RoleType::ASISTENTE->value,
             RoleType::BODEGUERO->value,
             RoleType::ESTANQUERO->value,
             RoleType::USUARIO->value,
@@ -31,6 +31,7 @@ class MovimientoPolicy
     {
         if (in_array($user->role, [
             RoleType::ADMIN->value,
+            RoleType::ESTANQUERO->value,
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
         ])) {
@@ -69,6 +70,7 @@ class MovimientoPolicy
             RoleType::ADMIN->value,
             RoleType::BODEGUERO->value,
             RoleType::ESTANQUERO->value,
+            RoleType::ASISTENTE->value,
         ]);
     }
 
@@ -122,5 +124,14 @@ class MovimientoPolicy
         if ($user->isAdmin()) {
             return true;
         }
+    }
+
+    public function complete(User $user, Movimiento $movimiento): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN->value,
+            RoleType::AGRONOMO->value,
+            RoleType::ASISTENTE->value,
+        ]);
     }
 }

@@ -53,7 +53,8 @@
 <body>
 <div class="box">
     <div class="header">
-        <!-- SVG Logo -->
+        <h3>Jorge Schmidt y cia Ltda</h3>
+        <h4>Llay Llay, Chile</h4>
         <h2>Orden de Aplicación N° {{ $order->orderNumber }}</h2>
     </div>
     <div class="details">
@@ -102,7 +103,6 @@
                 <th>Producto</th>
                 <th>Ingrediente activo</th>
                 <th>Dosis</th>
-                <th>Razón</th>
                 <th>Carencia</th>
                 <th>Reingreso</th>
             </tr>
@@ -124,7 +124,6 @@
     @endif
 </div>
 <div class="box">
-    <h2>Equpamiento</h2>
     <table>
         <thead>
         <tr>

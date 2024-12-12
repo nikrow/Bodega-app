@@ -18,6 +18,7 @@ class ApplicatorPolicy
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
+            RoleType::USUARIO->value,
         ]);
     }
 
@@ -31,6 +32,7 @@ class ApplicatorPolicy
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
+            RoleType::USUARIO->value,
         ]);
     }
 

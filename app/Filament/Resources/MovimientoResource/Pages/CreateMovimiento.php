@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\MovimientoResource\Pages;
 
 use App\Filament\Resources\MovimientoResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateMovimiento extends CreateRecord
@@ -14,6 +13,6 @@ class CreateMovimiento extends CreateRecord
         return $this->getResource()::getUrl('edit', ['record' => $this->record]);
     }
 
-
+    protected static bool $canCreateAnother = false;
 }
 

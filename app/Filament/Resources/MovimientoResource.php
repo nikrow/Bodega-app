@@ -17,6 +17,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -35,6 +36,10 @@ class MovimientoResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()->withCount('movimientoProductos');
+    }
     public static function form(Form $form): Form
     {
         $user = Auth::user();
@@ -43,8 +48,12 @@ class MovimientoResource extends Resource
         $esEstanquero = $user->role === RoleType::ESTANQUERO->value;
 
         return $form
+
             ->schema([
                 // Mover el campo 'tipo' al inicio
+                TextInput::make('id')
+                    ->label('ID')
+                    ->readonly(),
                 Select::make('tipo')
                     ->label('Tipo de Movimiento')
                     ->searchable()
@@ -178,14 +187,18 @@ class MovimientoResource extends Resource
             ->defaultPaginationPageOption(50)
             ->defaultSort('created_at', 'desc')
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Fecha de Aplicación')
+                    ->label('Fecha')
                     ->date('d/m/Y')
                     ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('tipo')
-                    ->label('Tipo de Movimiento')
+                    ->label('Tipo')
                     ->badge()
                     ->formatStateUsing(function ($state) {
                         return match($state) {
@@ -202,10 +215,6 @@ class MovimientoResource extends Resource
                         'traslado' => 'warning',
                         'preparacion' => 'danger',
                     ]),
-                Tables\Columns\TextColumn::make('movement_number')
-                    ->label('ID Movimiento')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('bodega_origen.name')
                     ->label('Origen')
                     ->Placeholder('Proveedor')
@@ -215,9 +224,13 @@ class MovimientoResource extends Resource
                     ->label('Destino')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('movimiento_productos_count')
+                    ->label('Productos')
+                    ->badge()
+                    ->numeric(),
                 Tables\Columns\IconColumn::make('is_completed')
                     ->boolean()
-                    ->label('Completado'),
+                    ->label('Estado'),
                 Tables\Columns\TextColumn::make('comprobante')
                     ->label('Comprobante')
                     ->searchable()
@@ -229,7 +242,7 @@ class MovimientoResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('Responsable')
+                    ->label('Creador')
                     ->searchable()
                     ->sortable(),
 
@@ -248,28 +261,38 @@ class MovimientoResource extends Resource
                     ]),
                 TernaryFilter::make('is_completed')
                     ->label('Estado')
+                    ->default(false)
                     ->trueLabel('Completados')
                     ->falseLabel('Pendientes'),
             ], layout: FiltersLayout::AboveContent)
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                    ->hidden(fn (Movimiento $record) => $record->is_completed),
+                ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make()
+                        ->hidden(fn(Movimiento $record) => $record->is_completed),
+                    Tables\Actions\DeleteAction::make(),
+                    Action::make('complete')
+                        ->label('Cerrar')
+                        ->color('success')
+                        ->icon('heroicon-o-check')
+                        ->requiresConfirmation()
+                        ->action(function (Movimiento $record) {
+                            // Lógica para marcar como completado
+                            $record->is_completed = true;
+                            $record->save();
 
-                Action::make('complete')
-                    ->label('Cerrar')
-                    ->color('success')
-                    ->icon('heroicon-o-check')
-                    ->requiresConfirmation()
-                    ->action(function (Movimiento $record) {
-                        // Lógica para marcar como completado
-                        $record->is_completed = true;
-                        $record->save();
-
-                        // Opcional: Registrar una entrada en los logs
-                        Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
-                    })
-                    ->hidden(fn (Movimiento $record) => $record->is_completed),
+                            // Opcional: Registrar una entrada en los logs
+                            Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
+                        })
+                        ->visible(function () {
+                            $user = Auth::user();
+                            return in_array($user->role, [
+                                RoleType::ADMIN->value,
+                                RoleType::AGRONOMO->value,
+                            ]);
+                        })
+                        ->hidden(fn(Movimiento $record) => $record->is_completed),
+                ])
             ])
             ->bulkActions([
                 ExportBulkAction::make(),

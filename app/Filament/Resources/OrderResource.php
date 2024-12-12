@@ -15,6 +15,7 @@ use App\Models\OrderParcel;
 use App\Models\Parcel;
 use App\Models\User;
 use App\Models\Warehouse;
+use Filament\Actions;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -22,6 +23,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -183,6 +185,8 @@ class OrderResource extends Resource
                                     'bomba_espalda' => 'Bomba espalda',
                                     'barra_levera_parada' => 'Barra levera parada',
                                     'azufrador' => 'Azufrador',
+                                    'piton' => 'Piton',
+                                    'barra_pulverizacion' => 'Barra pulverización',
 
                                 ])
                                 ->required(),
@@ -226,7 +230,7 @@ class OrderResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_applied_percentage')
-                    ->label('Porcentaje total aplicado')
+                    ->label('% aplicado')
                     ->suffix('%')
                     ->getStateUsing(function ($record) {
                         return $record->total_applied_percentage;
@@ -243,6 +247,7 @@ class OrderResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('is_completed')
                     ->label('Completado')
+                    ->default(false)
                     ->options([
                         'true' => 'Completado',
                         'false' => 'Pendiente',
@@ -250,25 +255,31 @@ class OrderResource extends Resource
 
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                    ->hidden(fn (Order $record) => $record->is_completed),
+                ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make()
+                        ->hidden(fn(Order $record) => $record->is_completed),
+                    Action::make('complete')
+                        ->label('Cerrar')
+                        ->color('success')
+                        ->icon('heroicon-o-check-circle')
+                        ->requiresConfirmation()
+                        ->action(function (Order $record) {
+                            // Lógica para marcar como completado
+                            $record->is_completed = true;
+                            $record->save();
 
-                Action::make('complete')
-                    ->label('Cerrar')
-                    ->color('success')
-                    ->icon('heroicon-o-check-circle')
-                    ->requiresConfirmation()
-                    ->action(function (Order $record) {
-                        // Lógica para marcar como completado
-                        $record->is_completed = true;
-                        $record->save();
-
-                        // Opcional: Registrar una entrada en los logs
-                        Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
-                    })
-                    ->hidden(fn (Order $record) => $record->is_completed),
-
+                            // Opcional: Registrar una entrada en los logs
+                            Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
+                        })
+                        ->hidden(fn(Order $record) => $record->is_completed),
+                    Actions\Action::make('downloadPdf')
+                        ->label('Descargar PDF')
+                        ->color('danger')
+                        ->icon('heroicon-s-document-arrow-down')
+                        ->url(fn(Order $record) => route('orders.downloadPdf', $record->id))
+                        ->openUrlInNewTab(),
+                ])
             ])
             ->bulkActions([
 

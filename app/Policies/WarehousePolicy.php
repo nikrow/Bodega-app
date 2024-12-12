@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\Warehouse;
-use App\Models\User;
 use App\Enums\RoleType;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
+use App\Models\Warehouse;
 
 class WarehousePolicy
 {
@@ -19,19 +18,21 @@ class WarehousePolicy
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
+            RoleType::USUARIO->value,
         ]);
     }
 
     /**
      * Determinar si el usuario puede ver un registro específico.
      */
-    public function view(User $user, Warehouse $wharehouse): bool
+    public function view(User $user, Warehouse $warehouse): bool
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
+            RoleType::USUARIO->value,
         ]);
     }
 
@@ -46,7 +47,7 @@ class WarehousePolicy
     /**
      * Determinar si el usuario puede actualizar un registro.
      */
-    public function update(User $user, Warehouse $wharehouse): bool
+    public function update(User $user, Warehouse $warehouse): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }
@@ -54,7 +55,7 @@ class WarehousePolicy
     /**
      * Determinar si el usuario puede eliminar un registro.
      */
-    public function delete(User $user, Warehouse $wharehouse): bool
+    public function delete(User $user, Warehouse $warehouse): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }
@@ -62,7 +63,7 @@ class WarehousePolicy
     /**
      * Determinar si el usuario puede restaurar un registro.
      */
-    public function restore(User $user, Warehouse $wharehouse): bool
+    public function restore(User $user, Warehouse $warehouse): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }
@@ -70,7 +71,7 @@ class WarehousePolicy
     /**
      * Determinar si el usuario puede forzar la eliminación de un registro.
      */
-    public function forceDelete(User $user, Warehouse $wharehouse): bool
+    public function forceDelete(User $user, Warehouse $whrehouse): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }

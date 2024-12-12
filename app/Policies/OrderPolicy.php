@@ -2,9 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleType;
 use App\Models\Order;
 use App\Models\User;
-use App\Enums\RoleType;
 
 class OrderPolicy
 {
@@ -18,6 +18,7 @@ class OrderPolicy
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
+            RoleType::USUARIO->value,
         ]);
     }
 
@@ -31,6 +32,7 @@ class OrderPolicy
             RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
+            RoleType::USUARIO->value,
         ]);
     }
 

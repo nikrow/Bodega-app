@@ -22,7 +22,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Anexos';
+    protected static ?string $navigationGroup = 'Admin';
     protected static bool $isScopedToTenant = false;
     protected static ?string $navigationLabel = 'Usuarios';
 
@@ -80,11 +80,33 @@ class UserResource extends Resource
                 Forms\Components\Select::make('warehouses')
                     ->label('Bodegas asignadas')
                     ->multiple()
-                    ->relationship('warehouses', 'name')
-                    ->preload()
-                    ->options(function () {
-                        return Warehouse::all()->pluck('name', 'id');
+                    ->searchable()
+                    ->options(function (callable $get) {
+                        // Obtenemos el array de field_ids seleccionados
+                        $fieldIds = $get('fields') ?? [];
+
+
+                        if (empty($fieldIds)) {
+                            return [];
+                        }
+
+                        // Obtenemos las bodegas que pertenecen a los campos seleccionados
+                        $warehouses = Warehouse::whereIn('field_id', $fieldIds)
+                            ->where('is_special', false)
+                            ->with('field')
+                            ->get();
+
+                        // Agrupamos las bodegas por el nombre del campo
+                        $grouped = $warehouses->groupBy(fn($warehouse) => $warehouse->field->name);
+
+                        // Convertimos la colección en el array esperado para las opciones agrupadas
+                        $options = $grouped->mapWithKeys(function ($group, $fieldName) {
+                            return [$fieldName => $group->pluck('name', 'id')->toArray()];
+                        })->toArray();
+
+                        return $options;
                     })
+
             ]);
     }
 
@@ -94,9 +116,11 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->sortable()
+                    ->searchable()
                     ->label('Nombre'),
                 Tables\Columns\TextColumn::make('email')
                     ->sortable()
+                    ->searchable()
                     ->label('Email'),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
@@ -111,30 +135,35 @@ class UserResource extends Resource
                     ->sortable()
                     ->date('d/m/Y H:i')
                     ->label('Modificado el'),
-                Tables\Columns\TextColumn::make('role')
-                    ->badge()
+                Tables\Columns\SelectColumn::make('role')
                     ->label('Rol')
-                    ->formatStateUsing(function ($state) {
-                        return match($state){
-                            RoleType::ADMIN->value => 'admin',
-                            RoleType::AGRONOMO->value => 'agronomo',
-                            RoleType::USUARIO->value => 'usuario',
-                            RoleType::BODEGUERO->value => 'bodeguero',
-                            RoleType::ASISTENTE->value => 'asistente',
-                            RoleType::ESTANQUERO->value => 'estanquero',
-                            default => 'Ninguno',
-                        };
-
-                    })
-                    ->colors([
-                        RoleType::ADMIN->value => 'danger',
-                        RoleType::AGRONOMO->value => 'warning',
-                        RoleType::USUARIO->value => 'warning',
-                        RoleType::BODEGUERO->value => 'warning',
-                        RoleType::ASISTENTE->value => 'warning',
-                        RoleType::ESTANQUERO->value => 'warning',
-                        ])
+                    ->options([
+                        RoleType::ADMIN->value => 'admin',
+                        RoleType::AGRONOMO->value => 'agronomo',
+                        RoleType::USUARIO->value => 'usuario',
+                        RoleType::BODEGUERO->value => 'bodeguero',
+                        RoleType::ASISTENTE->value => 'asistente',
+                        RoleType::ESTANQUERO->value => 'estanquero',
+                    ])
                     ->sortable(),
+                Tables\Columns\TextColumn::make('fields.name')
+                    ->label('Campos')
+                    ->badge()
+                    ->separator(',')
+                    ->sortable()
+                    ->colors([
+                        1 => 'success',
+                        2 => 'danger',
+                    ])
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('warehouses.name')
+                    ->label('Bodegas asignadas')
+                    ->badge()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->limitList(10)
+                    ->expandableLimitedList()
+                    ->sortable()
+                    ->searchable(),
             ])
             ->filters([
 

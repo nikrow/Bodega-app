@@ -2,10 +2,6 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasIcon;
-use Filament\Support\Contracts\HasLabel;
-
 enum EquipmentType: string
 {
     case TURBONEBULIZADOR = 'turbonebulizador';
@@ -16,5 +12,8 @@ enum EquipmentType: string
     case BOMBAESPALDA = 'bomba_espalda';
     case BARRA = 'barra_levera_parada';
     case AZUFRADOR = 'azufrador';
+    case PITON = 'piton';
+    case BARRA_PULVERIZACION = 'barra_pulverizacion';
+
 
 }

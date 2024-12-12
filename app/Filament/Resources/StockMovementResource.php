@@ -30,20 +30,14 @@ class StockMovementResource extends Resource
             ->defaultPaginationPageOption(50)
             ->defaultSort('created_at', 'desc')
             ->columns([
-
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Fecha')
-                    ->dateTime('Y-m-d H:i')
+                    ->dateTime('d-m-Y')
                     ->sortable(),
-                TextColumn::make('movement_number')
-                    ->label('ID Movimiento')
-                    ->sortable()
-                    ->tooltip(fn ($record) => $record->movement_number ? "Movimiento: {$record->movement_number}" : null),
+                TextColumn::make('movimiento.id')
+                    ->label('ID'),
                 TextColumn::make('movement_type')
-                    ->label('Tipo de movimiento')
+                    ->label('Tipo')
                     ->colors([
                         'success' => 'entrada',
                         'danger' => 'salida',
@@ -67,16 +61,19 @@ class StockMovementResource extends Resource
                     ->label('Cantidad')
                     ->numeric(2)
                     ->sortable(),
-                TextColumn::make('description')
-                    ->limit(50),
-                TextColumn::make('user.name')
-                    ->label('Usuario')
+                TextColumn::make('order_number')
+                    ->label('Orden')
                     ->sortable()
+                    ->searchable()
+                    ->default('-')
+                    ->tooltip(fn($record) => $record->order_number ? "Orden: {$record->order_number}" : null),
+                TextColumn::make('description')
+                    ->label('Descripción'),
+                TextColumn::make('user.name')
+                    ->label('Creado por')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
-                TextColumn::make('created_at')
-                    ->label('Fecha')
-                    ->dateTime('Y-m-d H:i')
-                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('movement_type')
