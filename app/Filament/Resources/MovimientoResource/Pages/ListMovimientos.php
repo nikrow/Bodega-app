@@ -20,7 +20,7 @@ class ListMovimientos extends ListRecords
         $currentFieldId = Filament::getTenant()->id;
 
         // Obtener todas las bodegas que pertenecen al campo actual
-        $wharehouses = Warehouse::where('field_id', $currentFieldId)->get();
+        $warehouses = Warehouse::where('field_id', $currentFieldId)->get();
 
         // Crear una pestaña para todas las bodegas que pertenecen al campo actual
         $tabs = [
@@ -33,15 +33,15 @@ class ListMovimientos extends ListRecords
         ];
 
         // Crear pestañas para cada bodega del campo actual
-        foreach ($wharehouses as $wharehouse) {
-            $tabs[$wharehouse->id] = Tab::make()
-                ->label($wharehouse->name)
-                ->modifyQueryUsing(function ($query) use ($wharehouse, $currentFieldId) {
+        foreach ($warehouses as $warehouse) {
+            $tabs[$warehouse->id] = Tab::make()
+                ->label($warehouse->name)
+                ->modifyQueryUsing(function ($query) use ($warehouse, $currentFieldId) {
                     // Filtrar los registros por bodega de origen o destino y field actual
                     return $query->where('field_id', $currentFieldId)
-                        ->where(function ($q) use ($wharehouse) {
-                            $q->where('bodega_origen_id', $wharehouse->id)
-                                ->orWhere('bodega_destino_id', $wharehouse->id);
+                        ->where(function ($q) use ($warehouse) {
+                            $q->where('bodega_origen_id', $warehouse->id)
+                                ->orWhere('bodega_destino_id', $warehouse->id);
                         });
                 });
         }

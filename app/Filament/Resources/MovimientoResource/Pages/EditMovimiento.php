@@ -18,7 +18,8 @@ class EditMovimiento extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->visible(fn(Movimiento $record) => $record->movimiento_productos_count === 0),
             Actions\Action::make('complete')
                 ->label('Cerrar')
                 ->color('success')

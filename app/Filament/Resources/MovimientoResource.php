@@ -15,9 +15,12 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\ActionSize;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -38,7 +41,18 @@ class MovimientoResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()->withCount('movimientoProductos');
+        $user = Auth::user();
+        $warehouseIds = $user->warehouses()
+            ->select('warehouses.id')
+            ->pluck('warehouses.id')
+            ->toArray();
+
+        return parent::getEloquentQuery()
+            ->where(function ($query) use ($warehouseIds) {
+                $query->whereIn('bodega_origen_id', $warehouseIds)
+                    ->orWhereIn('bodega_destino_id', $warehouseIds);
+            })
+            ->withCount('movimientoProductos');
     }
     public static function form(Form $form): Form
     {
@@ -270,7 +284,8 @@ class MovimientoResource extends Resource
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make()
                         ->hidden(fn(Movimiento $record) => $record->is_completed),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn(Movimiento $record) => $record->movimiento_productos_count === 0),
                     Action::make('complete')
                         ->label('Cerrar')
                         ->color('success')
@@ -288,14 +303,22 @@ class MovimientoResource extends Resource
                             $user = Auth::user();
                             return in_array($user->role, [
                                 RoleType::ADMIN->value,
-                                RoleType::AGRONOMO->value,
+                                RoleType::BODEGUERO->value
                             ]);
                         })
                         ->hidden(fn(Movimiento $record) => $record->is_completed),
-                ])
-            ])
+                ])->button()->size(ActionSize::Small)
+            ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
                 ExportBulkAction::make(),
+                DeleteBulkAction::make()
+                    ->requiresConfirmation()
+                    ->visible(function () {
+                        $user = Auth::user();
+                        return in_array($user->role, [
+                            RoleType::ADMIN->value,
+                        ]);
+                    }),
             ]);
     }
 

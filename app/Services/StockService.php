@@ -160,7 +160,7 @@ class StockService
                     $this->handleSalida($stockOrigen, $cantidadNueva, $producto->price, $userId);
 
                     // Registrar en stock_movements (sin signos negativos)
-                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'Salida', $movimiento->bodega_origen_id);
+                    $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, 'Salida: GD: ' . $movimiento->guia_despacho . '', $movimiento->bodega_origen_id);
                 }
                 break;
 

@@ -273,6 +273,8 @@ class OrderResource extends Resource
                             Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
                         })
                         ->hidden(fn(Order $record) => $record->is_completed),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn(Order $record) => $record->orderLines()->count() === 0),
                     Actions\Action::make('downloadPdf')
                         ->label('Descargar PDF')
                         ->color('danger')

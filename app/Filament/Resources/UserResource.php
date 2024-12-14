@@ -80,7 +80,9 @@ class UserResource extends Resource
                 Forms\Components\Select::make('warehouses')
                     ->label('Bodegas asignadas')
                     ->multiple()
+                    ->preload()
                     ->searchable()
+                    ->relationship('warehouses', 'name')
                     ->options(function (callable $get) {
                         // Obtenemos el array de field_ids seleccionados
                         $fieldIds = $get('fields') ?? [];

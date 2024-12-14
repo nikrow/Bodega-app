@@ -45,7 +45,7 @@ class ViewMovimiento extends ViewRecord
                     $user = Auth::user();
                     return in_array($user->role, [
                         RoleType::ADMIN->value,
-                        RoleType::AGRONOMO->value,
+                        RoleType::BODEGUERO->value,
                     ]);
                 })
                 ->hidden(fn(Movimiento $record) => $record->is_completed),

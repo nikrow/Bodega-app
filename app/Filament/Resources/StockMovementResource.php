@@ -59,7 +59,7 @@ class StockMovementResource extends Resource
                     ->searchable(),
                 TextColumn::make('quantity_change')
                     ->label('Cantidad')
-                    ->numeric(2)
+                    ->numeric()
                     ->sortable(),
                 TextColumn::make('order_number')
                     ->label('Orden')

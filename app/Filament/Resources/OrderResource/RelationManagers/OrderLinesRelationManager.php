@@ -117,9 +117,13 @@ class OrderLinesRelationManager extends RelationManager
                     }),
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia')
+                    ->required()
+                    ->default(0)
                     ->numeric(),
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
+                    ->required()
+                    ->default(0)
                     ->numeric(),
                 Forms\Components\TextInput::make('EstimatedProductUsage')
                     ->label('Cantidad estimada de uso de producto')
@@ -183,8 +187,10 @@ class OrderLinesRelationManager extends RelationManager
                     ->color('primary'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn($record) => $this->getOwnerRecord()->orderApplications()->count() === 0),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn($record) => $this->getOwnerRecord()->orderApplications()->count() === 0),
             ])
             ->bulkActions([
 

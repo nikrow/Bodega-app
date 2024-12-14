@@ -18,6 +18,8 @@ class ViewOrder extends ViewRecord
                 ->color('warning')
                 ->hidden(fn (Order $record) => $record->is_completed)
                 ->icon('heroicon-o-pencil'),
+            Actions\DeleteAction::make()
+                ->visible(fn(Order $record) => $record->orderLines()->count() === 0),
             Actions\Action::make('downloadPdf')
                 ->label('Descargar PDF')
                 ->color('danger')

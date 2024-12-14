@@ -14,14 +14,7 @@ class MovimientoPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
-        ]);
+        return $user->warehouses()->exists();
     }
 
     /**
@@ -29,24 +22,11 @@ class MovimientoPolicy
      */
     public function view(User $user, Movimiento $movimiento): bool
     {
-        if (in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-        ])) {
-            return true;
-        }
+        // Verificar si el movimiento está relacionado con alguna de las bodegas del usuario
+        $userWarehouseIds = $user->warehouses->pluck('id')->toArray();
 
-        if ($user->role === RoleType::ESTANQUERO->value || $user->role === RoleType::USUARIO->value) {
-            // Verificar si el movimiento está relacionado con alguna de las bodegas del usuario
-            $userWarehouseIds = $user->warehouses->pluck('id')->toArray();
-            return in_array($movimiento->bodega_origen_id, $userWarehouseIds) ||
-                in_array($movimiento->bodega_destino_id, $userWarehouseIds);
-        }
-
-        // Por defecto, no permite
-        return false;
+        return in_array($movimiento->bodega_origen_id, $userWarehouseIds) ||
+            in_array($movimiento->bodega_destino_id, $userWarehouseIds);
     }
 
     /**
@@ -131,6 +111,7 @@ class MovimientoPolicy
         return in_array($user->role, [
             RoleType::ADMIN->value,
             RoleType::AGRONOMO->value,
+            RoleType::BODEGUERO->value,
             RoleType::ASISTENTE->value,
         ]);
     }
