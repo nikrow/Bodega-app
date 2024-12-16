@@ -19,7 +19,6 @@ use Filament\Support\Enums\ActionSize;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\TernaryFilter;
@@ -303,6 +302,7 @@ class MovimientoResource extends Resource
                             $user = Auth::user();
                             return in_array($user->role, [
                                 RoleType::ADMIN->value,
+                                RoleType::AGRONOMO->value,
                                 RoleType::BODEGUERO->value
                             ]);
                         })
@@ -311,14 +311,7 @@ class MovimientoResource extends Resource
             ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
                 ExportBulkAction::make(),
-                DeleteBulkAction::make()
-                    ->requiresConfirmation()
-                    ->visible(function () {
-                        $user = Auth::user();
-                        return in_array($user->role, [
-                            RoleType::ADMIN->value,
-                        ]);
-                    }),
+
             ]);
     }
 

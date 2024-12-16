@@ -48,6 +48,7 @@ class MovimientoPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN->value,
+            RoleType::AGRONOMO->value,
             RoleType::BODEGUERO->value,
             RoleType::ESTANQUERO->value,
             RoleType::ASISTENTE->value,
