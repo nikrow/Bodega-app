@@ -16,6 +16,7 @@ enum FamilyType: string implements HasLabel, HasColor, HasIcon
     case BIOESTIMULANTE = 'bioestimulante';
     case REGULADOR = 'regulador';
     case BLOQUEADOR = 'bloqueador';
+    case OTROS = 'otros';
 
     public function getLabel(): string
     {
@@ -28,6 +29,7 @@ enum FamilyType: string implements HasLabel, HasColor, HasIcon
             self::BIOESTIMULANTE => 'Bioestimulante',
             self::REGULADOR => 'Regulador',
             self::BLOQUEADOR => 'Bloqueador',
+            self::OTROS => 'Otros',
         };
     }
 
@@ -42,6 +44,7 @@ enum FamilyType: string implements HasLabel, HasColor, HasIcon
             self::BIOESTIMULANTE => 'secondary',
             self::REGULADOR => 'success',
             self::BLOQUEADOR => 'dark',
+            self::OTROS => 'danger',
         };
     }
 
@@ -56,6 +59,7 @@ enum FamilyType: string implements HasLabel, HasColor, HasIcon
             self::BIOESTIMULANTE => 'heroicon-o-leaf',
             self::REGULADOR => 'heroicon-o-arrow-circle-up',
             self::BLOQUEADOR => 'heroicon-o-lock-closed',
+            self::OTROS => 'heroicon-o-heart',
         };
     }
 }

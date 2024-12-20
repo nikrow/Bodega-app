@@ -135,13 +135,17 @@ class MovimientoResource extends Resource
                                 ->where('is_special', false)
                                 ->pluck('name', 'id');
                         }
-
+                        if ($tipoMovimiento === MovementType::SALIDA->value) {
+                            return Warehouse::where('field_id', $tenantId)
+                                ->where('is_special', true)
+                                ->pluck('name', 'id');
+                        }
                         // Para otros tipos, mostrar todas las bodegas del tenant
                         return Warehouse::where('field_id', $tenantId)
                             ->pluck('name', 'id');
                     })
                     ->required()
-                    ->visible(fn($get) => in_array($get('tipo'), [MovementType::ENTRADA->value, MovementType::TRASLADO->value]))
+                    ->visible(fn($get) => in_array($get('tipo'), [MovementType::ENTRADA->value, MovementType::TRASLADO->value, MovementType::SALIDA->value]))
                     ->searchable(),
 
                 Select::make('order_id')
@@ -172,11 +176,11 @@ class MovimientoResource extends Resource
                 TextInput::make('guia_despacho')
                     ->label('Guía de despacho')
                     ->numeric()
-                    ->visible(fn ($get) => $get('tipo') == MovementType::ENTRADA->value),
+                    ->visible(fn ($get) => in_array($get('tipo'), [MovementType::ENTRADA->value, MovementType::SALIDA->value])),
 
                 TextInput::make('comprobante')
                     ->label('Comprobante')
-                    ->visible(fn ($get) => in_array($get('tipo'), [MovementType::SALIDA->value, MovementType::TRASLADO->value]))
+                    ->visible(fn ($get) => $get('tipo') == MovementType::TRASLADO->value)
                     ->numeric(),
 
                 TextInput::make('encargado')
@@ -278,6 +282,7 @@ class MovimientoResource extends Resource
                     ->trueLabel('Completados')
                     ->falseLabel('Pendientes'),
             ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make(),

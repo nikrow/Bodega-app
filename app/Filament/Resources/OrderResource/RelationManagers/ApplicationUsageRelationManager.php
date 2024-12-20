@@ -44,26 +44,31 @@ class ApplicationUsageRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('liters_applied')
                     ->label('Litros aplicados')
-                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.')
+                    ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dose_per_100l')
                     ->label('Dosis')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->numeric()
                     ->suffix('l/100l')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('product_usage')
                     ->label('Producto utilizado')
-                    ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('total_cost')
+                    ->label('Costo aplicación')
+                    ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ,
                 Tables\Columns\TextColumn::make('order.wetting')
                     ->label('Mojamiento')
-                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.')
+                    ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('product.waiting_time')
                     ->label('Carencia'),
                 Tables\Columns\TextColumn::make('product.reentry')
                     ->label('Reingreso')
-                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('harvest_reentry')
                     ->label('Reingreso Cosecha')

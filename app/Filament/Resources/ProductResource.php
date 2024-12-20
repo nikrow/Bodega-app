@@ -70,6 +70,7 @@ class ProductResource extends Resource
                         FamilyType::FERTILIZANTE->value => 'fertilizante',
                         FamilyType::FUNGICIDA->value => 'fungicida',
                         FamilyType::REGULADOR->value => 'regulador',
+                        FamilyType::OTROS->value => 'otros',
 
                     ])
                     ->required(),
@@ -154,6 +155,7 @@ class ProductResource extends Resource
                         FamilyType::BIOESTIMULANTE->value => 'bioestimulante',
                         FamilyType::REGULADOR->value => 'regulador',
                         FamilyType::BLOQUEADOR->value => 'bloqueador',
+                        FamilyType::OTROS->value => 'otros',
                         ])
                 ])
             ->actions([

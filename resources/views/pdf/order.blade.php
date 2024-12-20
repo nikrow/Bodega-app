@@ -5,98 +5,238 @@
     <title>Orden de Aplicación</title>
 
     <style>
+        @page {
+            margin: 15mm;
+            @bottom-center {
+                content: "Orden N° {{ $order->orderNumber }} - Página " counter(page) " de " counter(pages);
+                font-size: 10px;
+                color: #555;
+            }
+        }
+
         body {
             font-family: 'Arial', sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
+            font-size: 12px; /* Fuente más pequeña */
+            line-height: 1.2; /* Espaciado reducido */
             color: #333;
+            margin: 0;
+            padding: 0;
+            position: relative;
         }
-        h1, h2 {
-            color: #333;
-        }
-        table {
+
+        .container {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        div {
-            width: 100%;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 5px;
+            padding: 10px; /* Padding reducido */
+            position: relative;
+            background: #fff;
         }
+
+        /* HEADER */
         .header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 15px; /* Espaciado más pequeño */
+            margin-bottom: 10px;
         }
+
         .header img {
-            max-width: 150px;
+            max-width: 70px; /* Imagen más pequeña */
+            height: auto;
         }
-        .header h1 {
-            margin-left: 20px;
+
+        .header-info {
+            line-height: 1.1;
+        }
+
+        .header-info h3 {
+            margin: 0;
+            font-size: 12px;
+        }
+
+        .header-info h4 {
+            margin: 0;
+            font-size: 10px;
+            font-weight: normal;
+            color: #555;
+        }
+
+        /* TITULO PRINCIPAL */
+        .main-title {
+            text-align: center;
+            font-size: 20px; /* Fuente más pequeña */
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        /* SECCIONES */
+        .box {
+            background-color: #fff;
+            margin-bottom: 10px; /* Espaciado reducido */
+            padding: 15px; /* Padding reducido */
+            border-radius: 5px;
+        }
+
+        /* TÍTULO CON BARRA */
+        .section-title-bar {
+            background-color: #f5f5f5;
+            padding: 8px 10px; /* Padding reducido */
+            font-size: 14px; /* Fuente más pequeña */
+            font-weight: bold;
+            margin-bottom: 10px; /* Espaciado reducido */
+            border-radius: 5px;
+        }
+
+        /* DETALLES */
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 15px; /* Espaciado reducido */
+            margin-bottom: 15px;
+        }
+
+        .details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .details li {
+            margin-bottom: 3px; /* Espaciado reducido */
+        }
+
+        /* TABLAS Y LISTADOS */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px; /* Espaciado reducido */
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 6px; /* Padding reducido */
+            text-align: left;
+            font-size: 11px; /* Fuente más pequeña */
+        }
+
+        th {
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+
+        /* GRID DE ELEMENTOS */
+        .grid-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1.5fr)); /* Columnas más compactas */
+            gap: 5px;
+            margin-top: 5px; /* Espaciado reducido */
+        }
+
+        .grid-item {
+            border: 1px solid #ddd;
+            padding: 6px; /* Padding reducido */
+            font-size: 11px; /* Fuente más pequeña */
+            background: #fafafa;
+            border-radius: 3px;
+            text-align: center;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+
+        /* IMPLEMENTOS */
+        .implementos-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* Más compacto */
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .implementos-item {
+            border: 1px solid #ddd;
+            padding: 4px 6px; /* Padding reducido */
+            font-size: 11px; /* Fuente más pequeña */
+            background: #fafafa;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        /* FIRMA */
+        .signature {
+            margin-top: 30px; /* Espaciado reducido */
+            text-align: center;
+            font-size: 12px; /* Fuente más pequeña */
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 150px; /* Más compacto */
+            margin: 30px auto 10px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+        }
+
+        /* Salto de página */
+        .page-break {
+            page-break-before: always;
         }
     </style>
 </head>
 <body>
-<div class="box">
+
+<div class="container">
     <div class="header">
-        <h3>Jorge Schmidt y cia Ltda</h3>
-        <h4>Llay Llay, Chile</h4>
-        <h2>Orden de Aplicación N° {{ $order->orderNumber }}</h2>
+        <img src="{{ base_path('public/img/logogjs.webp') }}" alt="Logo">
+        <div class="header-info">
+            <h3>Jorge Schmidt y Cia Ltda</h3>
+            <h4>Llay Llay, Chile</h4>
+        </div>
     </div>
-    <div class="details">
-        <ul>
-            <li><strong>Responsable técnico:</strong> {{ $order->user->name ?? 'N/A' }}</li>
-            <li><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}</li>
-            <li><strong>Campo:</strong> {{ $order->field->name ?? 'N/A' }}</li>
-            <li><strong>Encargado:</strong> {{ $order->updatedBy->name ?? 'N/A' }}</li>
-            <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
-            <li><strong>Mojamiento:</strong> {{ number_format($order->wetting, 2) }} l/ha</li>
-            <li><strong>Objetivo:</strong> {{ $order->objective ?? 'N/A' }}</li>
-        </ul>
-    </div>
-</div>
 
-<!-- Sección de Cuarteles -->
-<div class="box">
-    <h2>Cuarteles</h2>
-    @if ($order->parcels->isNotEmpty())
-        <table>
-            <thead>
-            <tr>
-                <th>Cuartel</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach ($order->parcels as $parcel)
-                <tr>
-                    <td>{{ $parcel->name }}</td>
-                </tr>
+    <!-- TITULO PRINCIPAL -->
+    <h1 class="main-title">Orden de Aplicación N° {{ $order->orderNumber }}</h1>
+
+    <!-- CAMPO -->
+    <div class="box">
+        <div class="section-title-bar">Campo</div>
+        <h3>{{ $order->field->name ?? 'N/A' }}</h3>
+    </div>
+
+    <!-- DETALLES -->
+    <div class="box">
+        <div class="section-title-bar">Detalles</div>
+        <div class="details">
+            <ul>
+                <li><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y') }}</li>
+                <li><strong>Responsable técnico:</strong> {{ $order->user->name ?? 'N/A' }}</li>
+            </ul>
+            <ul>
+                <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
+                <li><strong>Objetivo:</strong> {{ $order->objective ?? 'N/A' }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- GRUPOS -->
+    <div class="box">
+        <div class="section-title-bar">Grupos</div>
+        <div class="grid-list">
+            @foreach ($order->family as $family)
+                <div class="grid-item">{{ $family }}</div>
             @endforeach
-            </tbody>
-        </table>
-        <li><strong>Superficie total:</strong> {{ number_format($order->total_area, 2) }} ha</li>
-    @else
-        <p>No hay cuarteles aplicados.</p>
-    @endif
-</div>
+        </div>
+    </div>
 
-<div class="box">
-    <h2>Productos</h2>
-    @if ($order->orderLines->isNotEmpty())
+    <!-- PRODUCTOS -->
+    <div class="box">
+        <div class="section-title-bar">Productos</div>
+        <p><strong>Mojamiento:</strong> {{ number_format($order->wetting, 2) }} l/ha</p>
         <table>
             <thead>
             <tr>
@@ -119,51 +259,44 @@
             @endforeach
             </tbody>
         </table>
-    @else
-        <p>No hay productos registrados.</p>
-    @endif
-</div>
-<div class="box">
-    <table>
-        <thead>
-        <tr>
-            <th>Equipamiento</th>
-        </tr>
-        </thead>
-        <tbody>
-        @php
-            $maxCount = count($order->equipment);
-        @endphp
+    </div>
 
-        @for ($i = 0; $i < $maxCount; $i++)
-            <tr>
-                <td>{{ $order->equipment[$i] ?? '' }}</td>
-            </tr>
-        @endfor
-        </tbody>
-    </table>
-</div>
-<div class="box">
-    <h2>Elementos de protección personal</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>EPP</th>
-        </tr>
-        </thead>
-        <tbody>
-        @php
-            $maxCount = count($order->epp);
-        @endphp
+    <!-- SALTO DE PÁGINA Y CUARTELES -->
+    <div class="page-break"></div>
+    <div class="box">
+        <div class="section-title-bar">Cuarteles</div>
+        <div class="grid-list">
+            @foreach ($order->parcels as $parcel)
+                <div class="grid-item">{{ $parcel->name }}</div>
+            @endforeach
+        </div>
+        <p><strong>Superficie total:</strong> {{ number_format($order->total_area, 2) }} ha</p>
+    </div>
 
-        @for ($i = 0; $i < $maxCount; $i++)
-            <tr>
-                <td>{{ $order->epp[$i] ?? '' }}</td>
-            </tr>
-        @endfor
-        </tbody>
-    </table>
-</div>
+    <!-- IMPLEMENTOS -->
+    <div class="box">
+        <div class="section-title-bar">Implementos</div>
+        <h3>EPP</h3>
+        <div class="implementos-list">
+            @foreach ($order->epp as $item)
+                <div class="implementos-item">{{ $item }}</div>
+            @endforeach
+        </div>
 
+        <h3 style="margin-top: 10px;">Equipamiento</h3>
+        <div class="implementos-list">
+            @foreach ($order->equipment as $equip)
+                <div class="implementos-item">{{ $equip }}</div>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- FIRMA -->
+    <div class="signature">
+        <div class="signature-line"></div>
+        <div class="signature-name">{{ $order->updatedBy->name ?? '________________' }}</div>
+        <div>Responsable técnico</div>
+    </div>
+</div>
 </body>
 </html>

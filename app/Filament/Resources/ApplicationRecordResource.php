@@ -164,6 +164,13 @@ class ApplicationRecordResource extends Resource
                     ->suffix(' %')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('orderApplication.moisture'),
+
+                TextColumn::make('total_cost')
+                    ->label('Costo aplicación')
+                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->prefix('USD')
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('product_family')
@@ -177,6 +184,7 @@ class ApplicationRecordResource extends Resource
                         FamilyType::BIOESTIMULANTE->value => 'Bioestimulante',
                         FamilyType::REGULADOR->value => 'Regulador',
                         FamilyType::BLOQUEADOR->value => 'Bloqueador',
+                        FamilyType::OTROS->value => 'Otros',
                     ])
                     ->relationship('product', 'family'),
                 Tables\Filters\SelectFilter::make('parcel.crop_id')

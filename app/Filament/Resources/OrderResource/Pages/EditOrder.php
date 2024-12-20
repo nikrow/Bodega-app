@@ -20,8 +20,10 @@ class EditOrder extends EditRecord
         return [
             Actions\Action::make('downloadPdf')
                 ->label('Descargar PDF')
-                ->icon('fas-download')
-                ->action('downloadPdf'),
+                ->color('danger')
+                ->icon('heroicon-s-document-arrow-down')
+                ->url(fn () => route('orders.downloadPdf', $this->record))
+                ->openUrlInNewTab(),
             Actions\Action::make('complete')
                 ->label('Cerrar')
                 ->color('success')

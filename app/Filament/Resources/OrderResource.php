@@ -221,6 +221,10 @@ class OrderResource extends Resource
                     ->label('Número de orden')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('objective')
+                    ->label('Objetivo')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('crop.especie')
                     ->label('Cultivo')
                     ->searchable()

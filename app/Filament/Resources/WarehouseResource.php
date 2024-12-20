@@ -43,6 +43,7 @@ class WarehouseResource extends Resource
                 Forms\Components\Toggle::make('is_central')
                     ->label('Es Bodega central?')
                     ->required(),
+
             ]);
     }
 
@@ -60,6 +61,7 @@ class WarehouseResource extends Resource
                     ->label('Campo')
                     ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
