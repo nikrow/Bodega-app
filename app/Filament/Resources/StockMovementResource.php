@@ -130,8 +130,7 @@ class StockMovementResource extends Resource
                             Column::make('order_number')->heading('Orden'),
                             Column::make('description')->heading('Descripción'),
 
-                        ])
-                    ,
+                        ]),
                 ]),
             ]);
     }

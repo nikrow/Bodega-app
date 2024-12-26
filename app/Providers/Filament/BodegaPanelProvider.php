@@ -35,11 +35,7 @@ class BodegaPanelProvider extends PanelProvider
             ->id('campo')
             ->path('')
             ->login()
-            ->userMenuItems([
-                MenuItem::make()
-                    ->label('Editar')
-                    ->icon('heroicon-o-cog-6-tooth'),
-            ])
+            ->profile()
             ->colors([
                 'primary' => ('#568203'),
                 'secondary' => ('#2F0381'),

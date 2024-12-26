@@ -280,10 +280,16 @@ class OrderResource extends Resource
                     Tables\Actions\DeleteAction::make()
                         ->visible(fn(Order $record) => $record->orderLines()->count() === 0),
                     Actions\Action::make('downloadPdf')
-                        ->label('Descargar PDF')
+                        ->label('Orden')
                         ->color('danger')
-                        ->icon('heroicon-s-document-arrow-down')
+                        ->icon('phosphor-file-pdf-fill')
                         ->url(fn(Order $record) => route('orders.downloadPdf', $record->id))
+                        ->openUrlInNewTab(),
+                    Actions\Action::make('bodegaPdf')
+                        ->label('Bodega')
+                        ->color('warning')
+                        ->icon('phosphor-file-pdf-duotone')
+                        ->url(fn(Order $record) => route('orders.bodegaPdf', $record->id))
                         ->openUrlInNewTab(),
                 ])
             ])

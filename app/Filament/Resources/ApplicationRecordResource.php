@@ -10,6 +10,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Columns\Column;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ApplicationRecordResource extends Resource
 {
@@ -36,6 +39,17 @@ class ApplicationRecordResource extends Resource
                 TextColumn::make('id')
                     ->label('ID Aplicación')
                     ->sortable(),
+                // Objetivo (razón)
+                TextColumn::make('order.objective')
+                    ->label('Objetivo')
+                    ->formatStateUsing(function ($state) {
+                        if (is_array($state)) {
+                            return implode(', ', array_filter($state));
+                        }
+                        return $state;
+                    })
+                    ->sortable()
+                    ->searchable(),
                 // Cuartel
                 TextColumn::make('parcel.name')
                     ->label('Cuartel')
@@ -108,7 +122,12 @@ class ApplicationRecordResource extends Resource
                     ->numeric(decimalPlaces: 0)
                     ->suffix(' l')
                     ->sortable(),
-
+                //Superficie aplicada
+                TextColumn::make('orderApplication.surface')
+                    ->label('Superficie aplicada')
+                    ->numeric(decimalPlaces: 2)
+                    ->suffix(' ha')
+                    ->sortable(),
                 // Cantidad de producto utilizado
                 TextColumn::make('product_usage')
                     ->label('Producto utilizado')
@@ -132,18 +151,6 @@ class ApplicationRecordResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                // Objetivo (razón)
-                TextColumn::make('order.objective')
-                    ->label('Objetivo')
-                    ->formatStateUsing(function ($state) {
-                        if (is_array($state)) {
-                            return implode(', ', array_filter($state));
-                        }
-                        return $state;
-                    })
-                    ->sortable()
-                    ->searchable(),
-
                 // Temperatura
                 TextColumn::make('orderApplication.temperature')
                     ->label('Temperatura')
@@ -164,7 +171,7 @@ class ApplicationRecordResource extends Resource
                     ->suffix(' %')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('orderApplication.moisture'),
+
 
                 TextColumn::make('total_cost')
                     ->label('Costo aplicación')
@@ -210,7 +217,42 @@ class ApplicationRecordResource extends Resource
                 // Acciones por registro
             ])
             ->bulkActions([
-                \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                ExportBulkAction::make()->exports([
+                    ExcelExport::make()
+                        ->fromTable()
+                        ->withFilename(date('Y-m-d') . ' - Export Registro de aplicaciones')
+                        ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                        ->withColumns([
+                            Column::make('created_at')->heading('Fecha')
+                                ->formatStateUsing(function ($state) {
+                                    $date = \Carbon\Carbon::parse($state);
+                                    return \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date);
+                                })
+                                ->format(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DDMMYYYY),
+                            Column::make('id')->heading('ID'),
+                            Column::make('parcel.name')->heading('Cuartel'),
+                            Column::make('order.objective')->heading('Objetivo'),
+                            Column::make('parcel.crop.especie')->heading('Cultivo'),
+                            Column::make('order.orderNumber')->heading('Número de orden'),
+                            Column::make('product.product_name')->heading('Producto'),
+                            Column::make('product.active_ingredients')->heading('Ingrediente activo'),
+                            Column::make('product.waiting_time')->heading('Carencia'),
+                            Column::make('product.reentry')->heading('Fecha de Reingreso'),
+                            Column::make('harvest_reentry')->heading('Reanudar Cosecha'),
+                            Column::make('dose_per_100l')->heading('Dosis L/100'),
+                            Column::make('order.wetting')->heading('Mojamiento L/Ha'),
+                            Column::make('liters_applied')->heading('Litros aplicados'),
+                            Column::make('orderApplication.surface')->heading('Superficie aplicada'),
+                            Column::make('product_usage')->heading('Producto utilizado'),
+                            Column::make('order.equipment')->heading('Equipamiento usado'),
+                            Column::make('applicators_details')->heading('Aplicadores'),
+                            Column::make('order.user.name')->heading('Encargado'),
+                            Column::make('orderApplication.temperature')->heading('Temperatura °C'),
+                            Column::make('orderApplication.wind_speed')->heading('Velocidad del viento km/hr'),
+                            Column::make('orderApplication.moisture')->heading('Humedad %'),
+                            Column::make('total_cost')->heading('Costo aplicación USD'),
+                        ]),
+                ]),
             ]);
     }
 

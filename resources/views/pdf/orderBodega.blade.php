@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Orden de Aplicación</title>
+    <title>Informe para Bodega</title>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap');
@@ -60,11 +60,18 @@
 
         /* TITULO PRINCIPAL */
         .main-title {
+
             text-align: center;
             font-size: 20px;
             margin-bottom: 20px;
             border-bottom: 1px solid #ccc;
             padding-bottom: 5px;
+        }
+        .order-number {
+            font-size: 14px;
+            text-align: center;
+            gap: 15px;
+            margin-bottom: 10px;
         }
 
         /* SECCIONES */
@@ -100,36 +107,6 @@
 
         .details li {
             margin-bottom: 3px;
-        }
-
-        /* GRID DE GRUPOS */
-        .grid-list {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 5px;
-            margin-top: 5px;
-        }
-
-        .grid-item {
-            padding: 6px;
-            font-size: 11px;
-            background: #fafafa;
-            border-radius: 3px;
-            text-align: center;
-            text-transform: capitalize;
-        }
-
-        /* CUARTELES */
-        .cuarteles-list {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .cuartel-item {
-            padding: 6px;
-            font-size: 11px;
-            text-align: left;
         }
 
         /* IMPLEMENTOS */
@@ -168,11 +145,6 @@
             background-color: #f9f9f9;
         }
 
-        /* SALTO DE PÁGINA */
-        .page-break {
-            page-break-before: always;
-        }
-
         /* FIRMA */
         .signature {
             margin-top: 30px;
@@ -203,107 +175,74 @@
     </div>
 
     <!-- TITULO PRINCIPAL -->
-    <h1 class="main-title">Orden de Aplicación N° {{ $order->orderNumber }}</h1>
+    <h1 class="main-title">Anexo Bodega</h1>
+    <h2 class="order-number">Orden N° {{ $order->orderNumber }}</h2>
 
     <!-- CAMPO -->
     <div class="box">
-        <div class="section-title-bar">Campo</div>
-        <h3>{{ $order->field->name ?? 'N/A' }}</h3>
+        <div class="section-title-bar">General</div>
+        <div class="details">
+            <ul>
+                <li><strong>Fecha orden:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y') }}</li>
+                <li><strong>Campo:</strong> {{ $order->field->name ?? 'N/A' }}</li>
+            </ul>
+            <ul>
+                <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
+                <li><strong>Responsable técnico:</strong> {{ $order->user->name ?? 'N/A' }}</li>
+            </ul>
+        </div>
     </div>
 
-    <!-- DETALLES -->
+    <!-- DETALLES-->
     <div class="box">
         <div class="section-title-bar">Detalles</div>
         <div class="details">
             <ul>
-                <li><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y') }}</li>
-                <li><strong>Responsable técnico:</strong> {{ $order->user->name ?? 'N/A' }}</li>
-            </ul>
-            <ul>
-                <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
-                <li><strong>Objetivo:</strong> {{ $order->objective ?? 'N/A' }}</li>
+                <li><strong>Superficie total:</strong> {{ number_format($order->total_area, 2) }} ha</li>
+                <li></li>
+                <li><strong>Mojamiento:</strong> {{ number_format($order->wetting, 2) }} l/ha</li>
+                <li><strong>Motadas esperadas:</strong> {{ number_format(($order->total_area * $order->wetting) / 2000, 2) }} motadas</li>
             </ul>
         </div>
     </div>
 
-    <!-- GRUPOS -->
-    <div class="box">
-        <div class="section-title-bar">Grupos</div>
-        <div class="grid-list">
-            @foreach ($order->family as $family)
-                <div class="grid-item">{{ $family }}</div>
-            @endforeach
-        </div>
-    </div>
-
-    <!-- PRODUCTOS -->
+    <!-- TABLA DE PRODUCTOS -->
     <div class="box">
         <div class="section-title-bar">Productos</div>
-        <p><strong>Mojamiento:</strong> {{ number_format($order->wetting, 2) }} l/ha</p>
-        <table>
-            <thead>
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Ingrediente Activo</th>
+            <th>Dosis (l/100l)</th>
+            <th>Motada (l)</th>
+            <th>Cantidad por motada (l-k)</th>
+            <th>Gasto total teórico (l-k)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach ($order->orderLines as $index => $line)
             <tr>
-                <th>#</th>
-                <th>Producto</th>
-                <th>Ingrediente activo</th>
-                <th>Dosis</th>
-                <th>Carencia</th>
-                <th>Reingreso</th>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $line->product->product_name }}</td>
+                <td>{{ $line->product->active_ingredients ?? 'N/A' }}</td>
+                <td>{{ number_format($line->dosis, 2) }}</td>
+                <td>{{ 2000 }}</td>
+                <td>{{ number_format(($line->dosis * 2000) / 100, 2) }}</td>
+                <td>{{ number_format(($line->dosis * 2000) / 100, 2) * (($order->total_area * $order->wetting) / 2000), 2}}</td>
+
             </tr>
-            </thead>
-            <tbody>
-            @foreach ($order->orderLines as $index => $line)
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $line->product->product_name }}</td>
-                    <td>{{ $line->product->active_ingredients ?? 'N/A' }}</td>
-                    <td>{{ $line->dosis }} l/100l</td>
-                    <td>{{ $line->waiting_time ?? 'N/A' }}</td>
-                    <td>{{ $line->reentry ?? 'N/A' }}</td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <!-- CUARTELES -->
-    <div class="page-break"></div>
-    <div class="box">
-        <div class="section-title-bar">Cuarteles</div>
-        <div class="cuarteles-list">
-            @foreach ($order->parcels as $index => $parcel)
-                <div class="cuartel-item">{{ $index + 1 }}. {{ $parcel->name }} - {{ $parcel->surface }} ha</div>
-            @endforeach
-        </div>
-        <p><strong>Superficie total:</strong> {{ number_format($order->total_area, 2) }} ha</p>
-    </div>
-
-    <!-- IMPLEMENTOS -->
-    <div class="box">
-        <div class="section-title-bar">Implementos</div>
-        <div class="implementos-section">
-            <h3>EPP</h3>
-            <ul>
-                @foreach ($order->epp as $item)
-                    <li>{{ $item }}</li>
-                @endforeach
-            </ul>
-
-            <h3>Equipamiento</h3>
-            <ul>
-                @foreach ($order->equipment as $equip)
-                    <li>{{ $equip }}</li>
-                @endforeach
-            </ul>
-        </div>
-    </div>
-
-    <!-- FIRMA -->
-    <div class="signature">
-        <div class="signature-line"></div>
-        <div class="signature-name">{{ $order->user->name ?? '________________' }}</div>
-        <div>Responsable técnico</div>
-    </div>
+        @endforeach
+        </tbody>
+    </table>
+</div>
+<div class="signature">
+    <div class="signature-line"></div>
+    <div class="signature-name">{{ $order->user->name ?? '________________' }}</div>
+    <div>Responsable técnico</div>
+</div>
 </div>
 </body>
+
 </html>

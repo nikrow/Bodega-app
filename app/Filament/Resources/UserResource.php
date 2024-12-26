@@ -122,6 +122,8 @@ class UserResource extends Resource
                     ->label('Nombre'),
                 Tables\Columns\TextColumn::make('email')
                     ->sortable()
+                    ->copyable()
+                    ->icon('heroicon-o-clipboard-document-list')
                     ->searchable()
                     ->label('Email'),
                 Tables\Columns\TextColumn::make('createdBy.name')
@@ -132,11 +134,6 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->date('d/m/Y H:i')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->sortable()
-                    ->date('d/m/Y H:i')
-                    ->label('Modificado el'),
                 Tables\Columns\SelectColumn::make('role')
                     ->label('Rol')
                     ->options([
@@ -166,6 +163,11 @@ class UserResource extends Resource
                     ->expandableLimitedList()
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('updated_at')
+
+                    ->sortable()
+                    ->date('d/m/Y H:i')
+                    ->label('Modificado el'),
             ])
             ->filters([
 
