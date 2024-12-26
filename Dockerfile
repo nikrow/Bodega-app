@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copiamos los archivos necesarios para npm
 COPY package*.json ./
-COPY pnpm-lock.yaml ./
+COPY package-lock.json ./
 COPY vite.config.js ./
 COPY resources ./resources
 
