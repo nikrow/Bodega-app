@@ -18,6 +18,8 @@ RUN apt-get update \
     libzip-dev \
     gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    chromium \
+    fonts-liberation libgbm-dev libnss3 \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,6 +40,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get update \
     && apt-get install -y yarn \
     && rm -rf /var/lib/apt/lists/*
+
+# Instalamos Puppeteer globalmente
+RUN npm install --location=global puppeteer@22.8.2
+
+# Configuración de Puppeteer para que utilice el Chromium instalado
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Instalamos dependencias de PHP y Laravel Octane
 RUN composer install --no-dev --optimize-autoloader
