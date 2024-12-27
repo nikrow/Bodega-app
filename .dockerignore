@@ -1,0 +1,11 @@
+node_modules
+vendor
+storage/logs/*
+public/build
+.env
+.git
+.idea
+Dockerfile
+docker-compose.yml
+*.md
+.DS_Store

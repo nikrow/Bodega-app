@@ -3,31 +3,35 @@ FROM node:22-bookworm AS build-env
 
 WORKDIR /app
 
-# Copiamos los archivos necesarios para npm
+# 1. Copiar solo los archivos necesarios para npm primero
 COPY package*.json ./
 COPY package-lock.json ./
+
+# 2. Instalar dependencias de Node.js
+RUN npm ci \
+    && npm audit fix
+
+# 3. Copiar el resto del código relacionado con Node.js
 COPY vite.config.js ./
 COPY resources ./resources
 
-# Instalamos dependencias de Node.js y construimos los activos
-RUN npm install \
-    && npm audit fix \
-    && npm run build
+# 4. Construir los activos
+RUN npm run build
 
 # --- Etapa 2: Instalación de Puppeteer ---
 FROM build-env AS puppeteer-install
 
-# Establecer la version de chrome a descargar
-ENV PUPPETEER_CHROMIUM_REVISION=131.0.6778.204
-ENV PUPPETEER_CACHE_DIR=/root/.cache/puppeteer
-
-# Instalamos dependencias del sistema para Puppeteer
+# Instalamos dependencias del sistema para Puppeteer y configuramos Node.js 22 (según la documentación de Browsershot)
 RUN apt-get update && apt-get install -y \
     gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalamos Puppeteer globalmente
-RUN npm install --location=global --unsafe-perm puppeteer@22.8.2
+# Instalamos Puppeteer v17 globalmente como lo sugiere la documentacion
+RUN npm install --location=global --unsafe-perm puppeteer@^17 \
+    && chmod -R o+rx /usr/lib/node_modules/puppeteer/.local-chromium
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
@@ -36,10 +40,10 @@ WORKDIR /app
 
 ENV SERVER_NAME=gjs.cl
 
-# Habilitar PHP production settings
+# 1. Habilitar PHP production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Instalamos dependencias del sistema
+# 2. Instalamos dependencias del sistema
 RUN apt-get update \
     && apt-get install -y \
     zip \
@@ -49,32 +53,37 @@ RUN apt-get update \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalamos extensiones de PHP necesarias para Laravel
+# 3. Instalamos extensiones de PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl
 
-# Copiamos composer desde la imagen oficial
+# 4. Copiamos composer desde la imagen oficial
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copiamos los archivos de la aplicación
+# 5. Copiar archivos de configuración de Composer primero
+COPY composer.* /app/
+
+# 6. Instalar dependencias de Composer
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# 7. Copiamos el resto de la aplicación
 COPY . /app
 
-# Copiamos las dependencias de composer y Laravel Octane
-RUN composer install --no-dev --optimize-autoloader
-
-# Configuramos Laravel
-RUN mkdir -p /app/storage/logs
-RUN php artisan config:clear
-RUN php artisan octane:install
+# 8. Configuramos Laravel
+RUN mkdir -p /app/storage/logs \
+    && php artisan config:clear \
+    && php artisan octane:install
 
 # --- Copiamos los artefactos de las etapas anteriores ---
 
 # Copiamos los assets construidos desde la etapa `build-env`
 COPY --from=build-env /app/public/build /app/public/build
 
-# Copiamos la instalación global de Puppeteer desde la etapa `puppeteer-install`
+# Copiamos la instalación global de Puppeteer y node_modules desde la etapa `puppeteer-install`
 COPY --from=puppeteer-install /usr/local/lib/node_modules/ /usr/local/lib/node_modules/
 COPY --from=puppeteer-install /usr/local/bin/ /usr/local/bin/
+COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
+COPY --from=puppeteer-install /root/.npm /root/.npm
 
 # Exponemos los puertos
 EXPOSE 8000
