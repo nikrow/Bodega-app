@@ -23,7 +23,7 @@ class ActivityLogResource extends ActivityLog
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultPaginationPageOption(100)
+            ->defaultPaginationPageOption(50)
             ->defaultSort('created_at', 'desc')
             ->columns([
 

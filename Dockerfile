@@ -17,13 +17,15 @@ RUN npm install \
 # --- Etapa 2: Instalación de Puppeteer ---
 FROM build-env AS puppeteer-install
 
+# Establecer la version de chrome a descargar
+ENV PUPPETEER_CHROMIUM_REVISION=131.0.6778.204
+
 # Instalamos dependencias del sistema para Puppeteer
 RUN apt-get update && apt-get install -y \
     gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev
-    # Puedes remover paquetes que no necesitas, como `sudo`
 
 # Instalamos Puppeteer globalmente
-RUN npm install --location=global --unsafe-perm puppeteer
+RUN npm install --location=global --unsafe-perm puppeteer@$PUPPETEER_CHROMIUM_REVISION
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
