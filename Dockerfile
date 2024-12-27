@@ -1,5 +1,5 @@
 # --- Etapa 1: Construcción de assets con Node.js ---
-FROM node:22-bookworm AS build-env
+FROM node:14-alpine AS build-env
 
 WORKDIR /app
 
@@ -19,19 +19,21 @@ COPY resources ./resources
 RUN npm run build
 
 # --- Etapa 2: Instalación de Puppeteer ---
-FROM build-env AS puppeteer-install
+FROM node:14-alpine AS puppeteer-install
 
-# Instalamos dependencias del sistema para Puppeteer y configuramos Node.js 22 (según la documentación de Browsershot)
-RUN apt-get update && apt-get install -y \
-    gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -sL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+# WORKDIR para evitar conflictos con node_modules de la etapa anterior
+WORKDIR /puppeteer-install
 
-# Instalamos Puppeteer v17 globalmente como lo sugiere la documentacion
-RUN npm install --location=global --unsafe-perm puppeteer@^17 \
-    && chmod -R o+rx /usr/lib/node_modules/puppeteer/.local-chromium
+# Establecer la ruta de descarga y del ejecutable de Chromium
+ENV PUPPETEER_DOWNLOAD_PATH=/puppeteer-chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/puppeteer-chromium/chrome/linux-1108766/chrome-linux/chrome
+
+# Instalamos dependencias del sistema para Puppeteer y configuramos Node.js 14 (según la documentación de Browsershot)
+RUN apk add --no-cache \
+    gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev
+
+# Instalamos Puppeteer v22.8.2 globalmente como lo sugiere la documentacion
+RUN npm install --location=global --unsafe-perm puppeteer@22.8.2
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
@@ -80,10 +82,11 @@ RUN mkdir -p /app/storage/logs \
 COPY --from=build-env /app/public/build /app/public/build
 
 # Copiamos la instalación global de Puppeteer y node_modules desde la etapa `puppeteer-install`
-COPY --from=puppeteer-install /usr/local/lib/node_modules/ /usr/local/lib/node_modules/
+COPY --from=puppeteer-install /puppeteer-install/node_modules /app/node_modules
 COPY --from=puppeteer-install /usr/local/bin/ /usr/local/bin/
 COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
 COPY --from=puppeteer-install /root/.npm /root/.npm
+COPY --from=puppeteer-install /puppeteer-chromium /puppeteer-chromium
 
 # Exponemos los puertos
 EXPOSE 8000
