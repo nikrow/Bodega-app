@@ -4,7 +4,7 @@ FROM node:22-bookworm AS build-env
 WORKDIR /app
 
 COPY package*.json ./
-COPY package-lock.json ./
+
 
 RUN npm ci \
     && npm audit fix
