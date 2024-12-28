@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y chromium
 
 # Instalamos Puppeteer v22.8.2 globalmente
-RUN npm install --location=global --unsafe-perm puppeteer@24.0.0
+RUN npm install --location=global --unsafe-perm puppeteer@22.8.2
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
