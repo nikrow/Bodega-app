@@ -26,8 +26,8 @@ WORKDIR /puppeteer-install
 
 # Establecer la ruta de descarga y del ejecutable de Chromium
 ENV PUPPETEER_DOWNLOAD_PATH=/puppeteer-chromium
-ENV PUPPETEER_EXECUTABLE_PATH=/puppeteer-chromium/chrome/linux-1108766/chrome-linux/chrome
-ENV PUPPETEER_CHROMIUM_REVISION=1108766
+ENV PUPPETEER_EXECUTABLE_PATH=/puppeteer-chromium/chrome/linux-122.0.6261.57/chrome-linux/chrome
+ENV PUPPETEER_CHROMIUM_REVISION=122.0.6261.57
 
 # Instalamos dependencias del sistema para Puppeteer
 RUN apt-get update && apt-get install -y \
@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y chromium
 
 # Instalamos Puppeteer v22.8.2 globalmente
-RUN npm install --location=global --unsafe-perm puppeteer@22.8.2
+RUN npm install --location=global --unsafe-perm puppeteer@24.0.0
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
