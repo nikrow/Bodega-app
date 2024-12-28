@@ -1,43 +1,16 @@
-# --- Etapa 1: Construcción de assets con Node.js ---
-FROM node:22-bookworm AS build-env
-
-WORKDIR /app
-
-COPY package*.json ./
-COPY package-lock.json ./
-
-RUN npm ci \
-    && npm audit fix
-
-COPY vite.config.js ./
-COPY resources ./resources
-
-RUN npm run build
-
-# --- Etapa 2: Instalación de Puppeteer ---
-FROM node:22-bookworm AS puppeteer-install
-
-WORKDIR /puppeteer-install
-
-# Dependencias del sistema para Puppeteer según la documentación de Spatie
-RUN apt-get update && apt-get install -y \
-    gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Instalar Puppeteer globalmente (y Chromium)
-RUN npm install --location=global --unsafe-perm puppeteer@^22
-
-# --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
-FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
+FROM dunglas/frankenphp:1.2.5-php8.2-bookworm
 
 WORKDIR /app
 
 ENV SERVER_NAME=gjs.cl
+ARG NODE_VERSION=22
 
-# 1. Habilitar PHP production settings
+# Enable PHP production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# 2. Instalamos dependencias del sistema
+COPY . /app
+
+# Instalamos dependencias del sistema
 RUN apt-get update \
     && apt-get install -y \
     zip \
@@ -45,37 +18,43 @@ RUN apt-get update \
     gnupg gosu curl ca-certificates zip unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
+    # Dependencias para Puppeteer/Chromium
+    wget gnupg libnss3 libxss1 libasound2 fonts-liberation xdg-utils libu2f-udev dbus \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Instalamos extensiones de PHP necesarias para Laravel
+# Instalamos extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl
 
-# 4. Copiamos composer desde la imagen oficial
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 5. Copiar archivos de configuración de Composer primero
-COPY composer.* /app/
+# Instalamos Node.js y otras herramientas de JavaScript
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@10.9.0 \
+    && npm install -g pnpm \
+    && npm install -g bun \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarnkey.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update \
+    && apt-get install -y yarn \
+    && rm -rf /var/lib/apt/lists/*
 
-# 6. Instalar dependencias de PHP y Laravel Octane
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Instalamos Puppeteer como dependencia global de Node.js
+RUN npm install -g puppeteer \
+    && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm install puppeteer-core
 
-# 7. Copiamos el resto de la aplicación
-COPY . /app
+# Instalamos dependencias de PHP y Laravel Octane
+RUN composer install --no-dev --optimize-autoloader
 
-# 8. Configuramos Laravel
-RUN mkdir -p /app/storage/logs \
-    && php artisan config:clear \
-    && php artisan octane:install
+RUN mkdir -p /app/storage/logs
+RUN php artisan config:clear
+RUN php artisan octane:install
 
-# --- Copiamos los artefactos de las etapas anteriores ---
-
-# Copiamos los assets construidos desde la etapa `build-env`
-COPY --from=build-env /app/public/build /app/public/build
-
-# Copiamos la instalación global de Puppeteer y node_modules desde la etapa `puppeteer-install`
-COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
-COPY --from=puppeteer-install /usr/local/bin/ /usr/local/bin/
+# Instalamos dependencias de Node.js y construimos los activos
+RUN npm install \
+    && npm audit fix \
+    && npm run build
 
 # Exponemos los puertos necesarios
 EXPOSE 8000
@@ -84,3 +63,4 @@ EXPOSE 443
 
 # Comando de inicio
 ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
+
