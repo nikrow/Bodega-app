@@ -4,7 +4,7 @@ FROM node:22-bookworm AS build-env
 WORKDIR /app
 
 COPY package*.json ./
-
+COPY package-lock.json ./
 
 RUN npm ci \
     && npm audit fix
@@ -19,11 +19,13 @@ FROM node:22-bookworm AS puppeteer-install
 
 WORKDIR /puppeteer-install
 
-# Directorio de caché de Puppeteer
-ENV PUPPETEER_CACHE_DIR=/root/.cache/puppeteer
+# Dependencias del sistema para Puppeteer según la documentación de Spatie
+RUN apt-get update && apt-get install -y \
+    gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalamos Puppeteer v22.8.2 globalmente
-RUN npm install --force --unsafe-perm --prefix /puppeteer-install puppeteer@22.8.2
+# Instalar Puppeteer globalmente (y Chromium)
+RUN npm install --location=global --unsafe-perm puppeteer@^22
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
@@ -45,7 +47,7 @@ RUN apt-get update \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Instalamos extensiones de PHP
+# 3. Instalamos extensiones de PHP necesarias para Laravel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl
 
@@ -54,9 +56,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # 5. Copiar archivos de configuración de Composer primero
 COPY composer.* /app/
-COPY . /app
 
-# 6. Instalar dependencias de Composer
+# 6. Instalar dependencias de PHP y Laravel Octane
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # 7. Copiamos el resto de la aplicación
@@ -72,13 +73,11 @@ RUN mkdir -p /app/storage/logs \
 # Copiamos los assets construidos desde la etapa `build-env`
 COPY --from=build-env /app/public/build /app/public/build
 
-# Copiamos la instalación global de Puppeteer, chromium y node_modules desde la etapa `puppeteer-install`
-COPY --from=puppeteer-install /puppeteer-install/node_modules /app/node_modules
+# Copiamos la instalación global de Puppeteer y node_modules desde la etapa `puppeteer-install`
+COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
 COPY --from=puppeteer-install /usr/local/bin/ /usr/local/bin/
-COPY --from=puppeteer-install /root/.npm /root/.npm
-COPY --from=puppeteer-install /root/.cache/puppeteer /root/.cache/puppeteer
 
-# Exponemos los puertos
+# Exponemos los puertos necesarios
 EXPOSE 8000
 EXPOSE 80
 EXPOSE 443
