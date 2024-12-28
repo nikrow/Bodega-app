@@ -1,4 +1,29 @@
-# ... (etapas anteriores) ...
+# --- Etapa 1: Construcción de assets con Node.js ---
+FROM node:22-bookworm AS build-env
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY package-lock.json ./
+
+RUN npm ci \
+    && npm audit fix
+
+COPY vite.config.js ./
+COPY resources ./resources
+
+RUN npm run build
+
+# --- Etapa 2: Instalación de Puppeteer ---
+FROM node:22-bookworm AS puppeteer-install
+
+WORKDIR /puppeteer-install
+
+# Directorio de caché de Puppeteer
+ENV PUPPETEER_CACHE_DIR=/root/.cache/puppeteer
+
+# Instalamos Puppeteer v22.8.2 globalmente
+RUN npm install --force --unsafe-perm --prefix /puppeteer-install puppeteer@22.8.2
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
@@ -29,12 +54,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # 5. Copiar archivos de configuración de Composer primero
 COPY composer.* /app/
-
-# 7. Copiamos el resto de la aplicación
 COPY . /app
 
 # 6. Instalar dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# 7. Copiamos el resto de la aplicación
+COPY . /app
 
 # 8. Configuramos Laravel
 RUN mkdir -p /app/storage/logs \
@@ -49,10 +75,8 @@ COPY --from=build-env /app/public/build /app/public/build
 # Copiamos la instalación global de Puppeteer, chromium y node_modules desde la etapa `puppeteer-install`
 COPY --from=puppeteer-install /puppeteer-install/node_modules /app/node_modules
 COPY --from=puppeteer-install /usr/local/bin/ /usr/local/bin/
-COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
 COPY --from=puppeteer-install /root/.npm /root/.npm
-COPY --from=puppeteer-install /puppeteer-chromium /puppeteer-chromium
-COPY --from=puppeteer-install /usr/bin/chromium /usr/bin/chromium
+COPY --from=puppeteer-install /root/.cache/puppeteer /root/.cache/puppeteer
 
 # Exponemos los puertos
 EXPOSE 8000
