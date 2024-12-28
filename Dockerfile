@@ -19,16 +19,11 @@ FROM node:22-bookworm AS puppeteer-install
 
 WORKDIR /puppeteer-install
 
-#No instalar chromium
-RUN apt-get update && apt-get install -y \
-    gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Directorio de caché de Puppeteer
 ENV PUPPETEER_CACHE_DIR=/root/.cache/puppeteer
 
-#Instalar la ultima version de puppeteer
-RUN npm install --location=global puppeteer
+# Instalamos Puppeteer v22.8.2 globalmente
+RUN npm install --force --unsafe-perm --prefix /puppeteer-install puppeteer@22.8.2
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
@@ -79,7 +74,6 @@ COPY --from=build-env /app/public/build /app/public/build
 # Copiamos la instalación global de Puppeteer, chromium y node_modules desde la etapa `puppeteer-install`
 COPY --from=puppeteer-install /puppeteer-install/node_modules /app/node_modules
 COPY --from=puppeteer-install /usr/local/bin/ /usr/local/bin/
-COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
 COPY --from=puppeteer-install /root/.npm /root/.npm
 COPY --from=puppeteer-install /root/.cache/puppeteer /root/.cache/puppeteer
 
