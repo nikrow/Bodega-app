@@ -84,7 +84,7 @@ COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
 COPY --from=puppeteer-install /root/.npm /root/.npm
 COPY --from=puppeteer-install /puppeteer-chromium /puppeteer-chromium
 
-# Exponemos los puertos
+# Exponemos los puertos y el comando de inicio
 EXPOSE 8000
 EXPOSE 80
 EXPOSE 443
