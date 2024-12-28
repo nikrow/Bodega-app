@@ -3,42 +3,32 @@ FROM node:22-bookworm AS build-env
 
 WORKDIR /app
 
-# 1. Copiar solo los archivos necesarios para npm primero
 COPY package*.json ./
 COPY package-lock.json ./
 
-# 2. Instalar dependencias de Node.js
 RUN npm ci \
     && npm audit fix
 
-# 3. Copiar el resto del código relacionado con Node.js
 COPY vite.config.js ./
 COPY resources ./resources
 
-# 4. Construir los activos
 RUN npm run build
 
 # --- Etapa 2: Instalación de Puppeteer ---
 FROM node:22-bookworm AS puppeteer-install
 
-# WORKDIR para evitar conflictos con node_modules de la etapa anterior
 WORKDIR /puppeteer-install
 
-# Establecer la ruta de descarga y del ejecutable de Chromium
-ENV PUPPETEER_DOWNLOAD_PATH=/puppeteer-chromium
-ENV PUPPETEER_EXECUTABLE_PATH=/puppeteer-chromium/chrome/linux-122.0.6261.57/chrome-linux/chrome
-ENV PUPPETEER_CHROMIUM_REVISION=122.0.6261.57
-
-# Instalamos dependencias del sistema para Puppeteer
+#No instalar chromium
 RUN apt-get update && apt-get install -y \
     gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm-dev libxshmfence-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar chromium
-RUN apt-get update && apt-get install -y chromium
+# Directorio de caché de Puppeteer
+ENV PUPPETEER_CACHE_DIR=/root/.cache/puppeteer
 
-# Instalamos Puppeteer v22.8.2 globalmente
-RUN npm install --location=global --unsafe-perm puppeteer@22.8.2
+#Instalar la ultima version de puppeteer
+RUN npm install --location=global puppeteer
 
 # --- Etapa 3: Construcción de la imagen final con FrankenPHP ---
 FROM dunglas/frankenphp:1.2.5-php8.2-bookworm AS final
@@ -91,8 +81,7 @@ COPY --from=puppeteer-install /puppeteer-install/node_modules /app/node_modules
 COPY --from=puppeteer-install /usr/local/bin/ /usr/local/bin/
 COPY --from=puppeteer-install /usr/lib/node_modules/ /usr/lib/node_modules/
 COPY --from=puppeteer-install /root/.npm /root/.npm
-COPY --from=puppeteer-install /puppeteer-chromium /puppeteer-chromium
-COPY --from=puppeteer-install /usr/bin/chromium /usr/bin/chromium
+COPY --from=puppeteer-install /root/.cache/puppeteer /root/.cache/puppeteer
 
 # Exponemos los puertos
 EXPOSE 8000
