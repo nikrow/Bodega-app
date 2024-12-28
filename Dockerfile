@@ -1,5 +1,5 @@
 # --- Etapa 1: Construcción de assets con Node.js ---
-FROM node:18-bookworm AS build-env
+FROM node:22-bookworm AS build-env
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ COPY resources ./resources
 RUN npm run build
 
 # --- Etapa 2: Instalación de Puppeteer ---
-FROM node:18-bookworm AS puppeteer-install
+FROM node:22-bookworm AS puppeteer-install
 
 # WORKDIR para evitar conflictos con node_modules de la etapa anterior
 WORKDIR /puppeteer-install
@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar chromium
-RUN apt-get install -y chromium
+RUN apt-get update && apt-get install -y chromium
 
 # Instalamos Puppeteer v22.8.2 globalmente
 RUN npm install --location=global --unsafe-perm puppeteer@22.8.2
