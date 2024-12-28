@@ -26,6 +26,7 @@ class OrderController extends Controller
             ->format('letter')
             ->margins(10, 10, 10, 10)
             ->showBackground()
+            ->noSandbox()
             ->waitUntilNetworkIdle()
             ->pdf();
 
@@ -53,6 +54,7 @@ class OrderController extends Controller
             ->format('letter')
             ->margins(10, 10, 10, 10)
             ->showBackground()
+            ->noSandbox()
             ->waitUntilNetworkIdle()
             ->pdf();
 
