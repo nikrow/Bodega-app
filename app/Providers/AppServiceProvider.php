@@ -4,6 +4,7 @@ namespace App\Providers;
 
 
 
+use App\Console\Commands\UpdateMissingOrderApplicationUsage;
 use App\Listeners\UpdateLoginTime;
 use App\Models\Crop;
 use App\Models\Movimiento;
@@ -53,6 +54,10 @@ class AppServiceProvider extends ServiceProvider
             UpdateActiveMinutesOnLogout::class,
         ],
     ];
+    protected $commands = [
+        UpdateMissingOrderApplicationUsage::class,
+    ];
+
     /**
      * Bootstrap any application services.
      */

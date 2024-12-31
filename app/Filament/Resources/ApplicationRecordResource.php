@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Enums\FamilyType;
 use App\Filament\Resources\ApplicationRecordResource\Pages;
+use App\Models\Order;
 use App\Models\OrderApplicationUsage;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -62,6 +64,7 @@ class ApplicationRecordResource extends Resource
                 // Número de orden
                 TextColumn::make('order.orderNumber')
                     ->label('Número de orden')
+                    ->searchable()
                     ->sortable(),
 
                 // Producto
@@ -210,9 +213,19 @@ class ApplicationRecordResource extends Resource
                             ->when($data['start_date'], fn($q) => $q->whereDate('created_at', '>=', $data['start_date']))
                             ->when($data['end_date'], fn($q) => $q->whereDate('created_at', '<=', $data['end_date']));
                     }),
+                Tables\Filters\SelectFilter::make('order.orderNumber')
+                    ->label('Orden')
+                    ->searchable()
+                    ->options(function () {
+                        $tenantId = Filament::getTenant()->id;
+                        // Filtrar solo órdenes que no están completadas
+                        return Order::where('field_id', $tenantId)
+                            ->pluck('orderNumber', 'id');
+
+                    })
 
             ], layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(3)
+            ->filtersFormColumns(5)
             ->actions([
                 // Acciones por registro
             ])

@@ -165,47 +165,39 @@ class OrderApplicationRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('liter')
                     ->label('Litros aplicados')
                     ->suffix('  l')
-                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->searchable(),
+                    ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ','),
                 Tables\Columns\TextColumn::make('surface')
                     ->label('Superficie aplicada')
                     ->suffix('  ha')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->searchable(),
+                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ','),
                 Tables\Columns\TextColumn::make('application_percentage')
                     ->label('Porcentaje del cuartel aplicado')
                     ->suffix('%')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->searchable(),
+                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ','),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('wetting')
                     ->label('Mojamiento')
                     ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('wind_speed')
                     ->label('Viento')
                     ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('temperature')
                     ->label('Temperatura')
                     ->suffix('  °C')
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('moisture')
                     ->label('Humedad')
                     ->suffix('  %')
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('applicators_name')
                 ->label('Aplicadores')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

@@ -58,8 +58,7 @@ class ApplicationUsageRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('total_cost')
                     ->label('Costo aplicación')
                     ->numeric()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ,
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('order.wetting')
                     ->label('Mojamiento')
                     ->numeric()

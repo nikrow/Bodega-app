@@ -13,7 +13,7 @@ class OrderApplicationObserver
      */
     public function created(OrderApplication $orderApplication): void
     {
-        Log::info('OrderApplication created: ' . $orderApplication->id);
+        Log::info('OrderApplication creada: ' . $orderApplication->id);
 
         try {
             if ($orderApplication->order && $orderApplication->order->orderLines) {
@@ -84,7 +84,7 @@ class OrderApplicationObserver
 
                         OrderApplicationUsage::updateOrCreate(
                             [
-                                'order_application_id' => $orderApplication->id, // <-- Agregar esta línea
+                                'order_application_id' => $orderApplication->id,
                                 'order_id' => $orderApplication->order->id,
                                 'parcel_id' => $orderApplication->parcel_id,
                                 'product_id' => $orderLine->product_id,
@@ -119,8 +119,7 @@ class OrderApplicationObserver
 
         try {
             // Eliminar los registros correspondientes en la tabla de uso de aplicación
-            $deleted = OrderApplicationUsage::where('order_id', $orderApplication->order->id)
-                ->where('parcel_id', $orderApplication->parcel_id)
+            $deleted = OrderApplicationUsage::where('order_application_id', $orderApplication->id)
                 ->delete();
 
             if ($deleted) {

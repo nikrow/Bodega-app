@@ -98,4 +98,13 @@ class OrderApplication extends Model
         return $this->belongsToMany(Applicator::class, 'order_application_applicator', 'order_application_id', 'applicator_id')
             ->where('field_id', Filament::getTenant()->id);
     }
+    public function orderApplicationUsage()
+    {
+        return $this->hasMany(OrderApplicationUsage::class, 'order_application_id');
+    }
+    public function applicationUsage()
+    {
+        return $this->hasMany(OrderApplicationUsage::class, 'order_application_id');
+    }
+
 }
