@@ -225,7 +225,7 @@ class ApplicationRecordResource extends Resource
                     })
 
             ], layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(5)
+            ->filtersFormColumns(4)
             ->actions([
                 // Acciones por registro
             ])

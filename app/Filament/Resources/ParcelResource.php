@@ -11,7 +11,9 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
@@ -45,6 +47,7 @@ class ParcelResource extends Resource
                     ->required()
                     ->rules(function (Forms\Get $get) {
                         return Rule::unique('parcels', 'name')
+                            ->whereNull('deactivated_at') // Omitir parcelas inactivas
                             ->ignore($get('id'));
                     }),
                 Forms\Components\Select::make('crop_id')
@@ -64,6 +67,18 @@ class ParcelResource extends Resource
                     ->suffix('ha')
                     ->required()
                     ->numeric(2),
+                Forms\Components\TextInput::make('deactivation_reason')
+                    ->label('Motivo de Baja')
+                    ->visible(fn($record) => $record !== null && !$record->is_active)
+                    ->disabled(),
+                Forms\Components\TextInput::make('deactivated_at')
+                    ->label('Fecha de Baja')
+                    ->visible(fn($record) => $record !== null && !$record->is_active)
+                    ->disabled(),
+                Forms\Components\TextInput::make('deactivatedBy.name')
+                    ->label('Dada de baja por')
+                    ->visible(fn($record) => $record !== null && !$record->is_active)
+                    ->disabled(),
             ]);
     }
 
@@ -99,20 +114,65 @@ class ParcelResource extends Resource
                 Tables\Columns\TextColumn::make('updatedBy.name')
                     ->label('Modificado por')
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('is_active')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Activa'),
+                Tables\Columns\TextColumn::make('deactivated_at')
+                    ->label('Fecha de Baja')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('deactivatedBy.name')
+                    ->label('Dada de baja por')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Estado')
+                    ->trueLabel('Activas')
+                    ->falseLabel('Inactivas')
+                    ->default(true),
                 Tables\Filters\SelectFilter::make('crop_id')
                     ->label('Cultivo')
                     ->searchable(true)
                     ->options(Crop::all()->pluck('especie', 'id')->toArray()),
-
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->icon('heroicon-o-eye')
+                        ->label('Ver')
+                        ->color('primary'),
+                    Tables\Actions\EditAction::make()
+                        ->icon('heroicon-o-pencil')
+                        ->label('Editar')
+                        ->color('warning')
+                        ->visible(fn ($record) => $record->is_active),
+                    Tables\Actions\Action::make('darDeBaja')
+                        ->label('Dar de Baja')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->modalHeading('Motivo de Baja')
+                        ->form([
+                            Forms\Components\Textarea::make('deactivation_reason')
+                                ->label('Motivo')
+                                ->required(),
+                        ])
+                        ->action(function (Parcel $record, array $data) {
+                            $record->update([
+                                'is_active' => false,
+                                'deactivated_at' => now(),
+                                'deactivated_by' => Auth::id(),
+                                'deactivation_reason' => $data['deactivation_reason'],
+                            ]);
+                        })
+                        ->requiresConfirmation()
+                        ->visible(fn ($record) => $record->is_active),
+                ])
             ])
             ->bulkActions([
                 ExportBulkAction::make()
             ]);
+
     }
 
     public static function getRelations(): array
@@ -128,6 +188,7 @@ class ParcelResource extends Resource
             'index' => Pages\ListParcels::route('/'),
             'create' => Pages\CreateParcel::route('/create'),
             'edit' => Pages\EditParcel::route('/{record}/edit'),
+            'view' => Pages\ViewParcel::route('/{record}'),
         ];
     }
 }

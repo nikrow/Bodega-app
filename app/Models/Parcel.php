@@ -33,6 +33,10 @@ class Parcel extends Model implements Auditable
         'created_by',
         'updated_by',
         'slug',
+        'is_active',
+        'deactivated_at',
+        'deactivated_by',
+        'deactivation_reason',
     ];
     public function getActivitylogOptions(): LogOptions
     {
@@ -45,18 +49,25 @@ class Parcel extends Model implements Auditable
             // Asignar `created_by` y `updated_by` al usuario autenticado
             $parcel->created_by = Auth::id();
             $parcel->updated_by = Auth::id();
+            $parcel->field_id = Filament::getTenant()->id;
+            $parcel->is_active = true;
+            // Generar un slug único
+            $originalSlug = Str::slug($parcel->name);
+            $slug = $originalSlug;
+            $count = 1;
 
-            // Asignar el `field_id` del tenant actual si está disponible
-            if (Filament::getTenant()) {
-                $parcel->field_id = Filament::getTenant()->id;
+            while (Parcel::where('slug', $slug)->exists()) {
+                $slug = "{$originalSlug}-{$count}";
+                $count++;
             }
 
-            // Generar el slug a partir del nombre
-            $parcel->slug = Str::slug($parcel->name);
+            $parcel->slug = $slug;
         });
 
-        static::updating(function ($field) {
-            $field->updated_by = Auth::id();
+        static::updating(function ($parcel) {
+            if ($parcel->is_active) {
+                $parcel->updated_by = Auth::id();
+            }
         });
     }
 
@@ -85,7 +96,21 @@ class Parcel extends Model implements Auditable
         return $this->belongsTo(Crop::class, 'crop_id');
     }
 
+    public function deactivatedBy()
+    {
+        return $this->belongsTo(User::class, 'deactivated_by');
+    }
+    // Relación con Order a través de OrderParcel
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'order_parcels', 'parcel_id', 'order_id');
+    }
 
+// Relación con OrderApplicationUsage
+    public function applicationUsages()
+    {
+        return $this->hasMany(OrderApplicationUsage::class, 'parcel_id');
+    }
 
 
 }
