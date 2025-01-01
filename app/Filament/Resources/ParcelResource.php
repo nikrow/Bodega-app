@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 
 
+use App\Enums\RoleType;
 use App\Filament\Resources\ParcelResource\Pages;
+use App\Filament\Resources\ParcelResource\RelationManagers\AplicacionesRelationManager;
 use App\Models\Crop;
 use App\Models\Parcel;
 use Filament\Forms;
@@ -166,7 +168,13 @@ class ParcelResource extends Resource
                             ]);
                         })
                         ->requiresConfirmation()
-                        ->visible(fn ($record) => $record->is_active),
+                        ->visible(function () {
+                            $user = Auth::user();
+                            return in_array($user->role, [
+                                RoleType::ADMIN->value,
+                            ]);
+                        })
+                        ->hidden(fn ($record) => !$record->is_active),
                 ])
             ])
             ->bulkActions([
@@ -178,7 +186,7 @@ class ParcelResource extends Resource
     public static function getRelations(): array
     {
         return [
-
+            AplicacionesRelationManager::class,
         ];
     }
 

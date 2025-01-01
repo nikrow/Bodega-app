@@ -100,17 +100,16 @@ class Parcel extends Model implements Auditable
     {
         return $this->belongsTo(User::class, 'deactivated_by');
     }
-    // Relación con Order a través de OrderParcel
-    public function orders()
-    {
-        return $this->belongsToMany(Order::class, 'order_parcels', 'parcel_id', 'order_id');
-    }
-
-// Relación con OrderApplicationUsage
+    public function deactivatedByName()
+        {
+            return $this->belongsTo(User::class, 'deactivated_by')->select(['id', 'name']);
+        }
     public function applicationUsages()
     {
         return $this->hasMany(OrderApplicationUsage::class, 'parcel_id');
     }
+
+
 
 
 }

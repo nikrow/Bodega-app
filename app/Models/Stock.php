@@ -55,14 +55,14 @@ class Stock extends Model implements Auditable
     {
         return $this->belongsTo(Field::class, 'field_id');
     }
-    public function movimientoProductos()
-    {
-        return $this->hasMany(MovimientoProducto::class, 'producto_id');
-
-    }
-
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
+    public function movimientos()
+    {
+        return $this->hasMany(StockMovement::class, 'product_id', 'product_id')
+            ->where('warehouse_id', $this->warehouse_id); // Filtra por la bodega del stock actual
+    }
+
 }

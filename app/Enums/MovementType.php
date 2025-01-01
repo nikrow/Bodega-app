@@ -12,6 +12,8 @@ enum MovementType: string implements HasColor, HasIcon, HasLabel
     case SALIDA = 'salida';
     case TRASLADO = 'traslado';
     case PREPARACION = 'preparacion';
+    case TRASLADO_ENTRADA = 'traslado-entrada';
+    case TRASLADO_SALIDA = 'traslado-salida';
 
 
     public function getColor(): string|array|null
@@ -21,6 +23,8 @@ enum MovementType: string implements HasColor, HasIcon, HasLabel
             self::SALIDA => 'danger',
             self::TRASLADO => 'warning',
             self::PREPARACION => 'danger',
+            self::TRASLADO_ENTRADA => 'warning',
+            self::TRASLADO_SALIDA => 'warning',
         };
     }
     public function getLabel(): string
@@ -30,6 +34,9 @@ enum MovementType: string implements HasColor, HasIcon, HasLabel
             self::SALIDA => __('salida'),
             self::TRASLADO => __('traslado'),
             self::PREPARACION => __('preparación'),
+            self::TRASLADO_ENTRADA => __('Traslado entrada'),
+            self::TRASLADO_SALIDA => __('Traslado salida'),
+
         };
 
         }
@@ -41,6 +48,8 @@ enum MovementType: string implements HasColor, HasIcon, HasLabel
             self::SALIDA => 'heroicon-o-arrow-down-right',
             self::TRASLADO => 'eos-swap-horiz',
             self::PREPARACION => 'heroicon-m-arrow-long-right',
+            self::TRASLADO_ENTRADA => 'heroicon-o-arrow-right',
+            self::TRASLADO_SALIDA => 'heroicon-o-arrow-left',
         };
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ParcelResource\Pages;
 
+use App\Enums\RoleType;
 use App\Filament\Resources\ParcelResource;
 use App\Models\Parcel;
 use Filament\Resources\Pages\ViewRecord;
@@ -40,7 +41,13 @@ class ViewParcel extends ViewRecord
                     ]);
                 })
                 ->requiresConfirmation()
-                ->visible(fn ($record) => $record->is_active),
+                ->visible(function () {
+                    $user = Auth::user();
+                    return in_array($user->role, [
+                        RoleType::ADMIN->value,
+                    ]);
+                })
+                ->hidden(fn ($record) => !$record->is_active),
 
         ];
 

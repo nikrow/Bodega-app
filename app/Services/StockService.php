@@ -373,21 +373,32 @@ class StockService
      * @param string|null $descripcionAdicional
      * @return void
      */
-    private function logStockMovement(Movimiento $movimiento, MovimientoProducto $productoMovimiento, MovementType $tipoMovimiento, float $cantidadCambio, ?string $descripcionAdicional = null, ?int $warehouseId = null): void
-    {
-        $descripcion = $descripcionAdicional
-            ? $descripcionAdicional
-            : "Movimiento {$productoMovimiento->id} de tipo {$tipoMovimiento->value} registrado.";
-
-        // Determinar la bodega si no se ha pasado una
-        if ($warehouseId === null) {
-            $warehouseId = match ($tipoMovimiento) {
-                MovementType::SALIDA, MovementType::PREPARACION, MovementType::TRASLADO => $movimiento->bodega_origen_id,
-                MovementType::ENTRADA => $movimiento->bodega_destino_id,
-            };
+    private function logStockMovement(
+        Movimiento $movimiento,
+        MovimientoProducto $productoMovimiento,
+        MovementType $tipoMovimiento,
+        float $cantidadCambio,
+        ?string $descripcionAdicional = null,
+        ?int $warehouseId = null
+    ): void {
+        // Si el tipo de movimiento es traslado, ajustamos el tipo según la bodega
+        if ($tipoMovimiento === MovementType::TRASLADO) {
+            if ($warehouseId === $movimiento->bodega_origen_id) {
+                $tipoMovimiento = MovementType::TRASLADO_SALIDA;
+            } elseif ($warehouseId === $movimiento->bodega_destino_id) {
+                $tipoMovimiento = MovementType::TRASLADO_ENTRADA;
+            }
         }
 
-        $data = [
+        $descripcion = $descripcionAdicional ?: "Movimiento {$productoMovimiento->id} de tipo {$tipoMovimiento->value} registrado.";
+
+        // Determinar la bodega si no se ha pasado una
+        $warehouseId = $warehouseId ?? match ($tipoMovimiento) {
+            MovementType::SALIDA, MovementType::PREPARACION, MovementType::TRASLADO_SALIDA => $movimiento->bodega_origen_id,
+            MovementType::ENTRADA, MovementType::TRASLADO_ENTRADA => $movimiento->bodega_destino_id,
+        };
+
+        StockMovement::create([
             'movement_type' => $tipoMovimiento->value,
             'product_id' => $productoMovimiento->producto_id,
             'warehouse_id' => $warehouseId,
@@ -398,18 +409,10 @@ class StockService
             'user_id' => $movimiento->user_id,
             'field_id' => $movimiento->field_id,
             'updated_by' => $movimiento->updated_by ?? $movimiento->user_id,
-        ];
-
-        $descripcion = 'preparacion orden';
-        if ($movimiento->order && $movimiento->order->orderNumber) {
-            $descripcion .= ' ' . $movimiento->orderNumber;
-        }
-
-        StockMovement::create($data);
+        ]);
 
         Log::info("Movimiento registrado en stock_movements: Tipo {$tipoMovimiento->value}, Producto ID {$productoMovimiento->producto_id}, Cantidad {$cantidadCambio}, Bodega ID {$warehouseId}");
     }
-
 
     /**
      * Revertir el impacto de un movimiento de producto.

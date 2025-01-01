@@ -1,96 +1,63 @@
 <?php
 
-namespace App\Filament\Resources\OrderResource\RelationManagers;
+namespace App\Filament\Resources\ParcelResource\RelationManagers;
 
-use Filament\Forms;
-use Filament\Forms\Form;
+
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
-class ApplicationUsageRelationManager extends RelationManager
+
+class AplicacionesRelationManager extends RelationManager
 {
-    protected static string $relationship = 'applicationUsage';
-
-    protected static ?string $title = 'Cantidad producto utilizado';
-    protected static ?string $modelLabel = 'Producto utilizado';
-
+    protected static string $relationship = 'applicationUsages'; // Relación definida en el modelo Parcel
+    protected static ?string $title = 'Aplicaciones';
+    protected static ?string $modelLabel = 'Aplicación';
 
     public function table(Table $table): Table
     {
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Fecha')
+                    ->label('Fecha de Aplicación')
                     ->date('d/m/Y')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('orderNumber')
-                    ->label('Número de orden')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('parcel.name')
-                    ->label('Cuartel')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('order.orderNumber')
+                    ->label('Número de Orden')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('product.product_name')
                     ->label('Producto')
                     ->sortable(),
-                TABLES\Columns\TextColumn::make('product.active_ingredients')
-                    ->label('Ingrediente activo')
+                Tables\Columns\TextColumn::make('product.active_ingredients')
+                    ->label('Ingrediente Activo')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('liters_applied')
-                    ->label('Litros aplicados')
+                    ->label('Litros Aplicados')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dose_per_100l')
-                    ->label('Dosis')
-                    ->numeric()
-                    ->suffix('l/100l')
-                    ->sortable(),
+                    ->label('Dosis (l/100l)')
+                    ->numeric(),
                 Tables\Columns\TextColumn::make('product_usage')
-                    ->label('Producto utilizado')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Producto Utilizado')
+                    ->numeric(),
                 Tables\Columns\TextColumn::make('total_cost')
-                    ->label('Costo aplicación')
-                    ->numeric()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('order.wetting')
-                    ->label('Mojamiento')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('product.waiting_time')
-                    ->label('Carencia'),
-                Tables\Columns\TextColumn::make('product.reentry')
-                    ->label('Reingreso')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('harvest_reentry')
-                    ->label('Reingreso Cosecha')
-                    ->getStateUsing(function ($record) {
-                        // Calcula la fecha de reingreso a la cosecha sumando la carencia en días a la fecha de creación
-                        $createdDate = $record->created_at ? $record->created_at->copy() : now();
-                        $waitingTimeDays = $record->product->waiting_time ?? 0;
-
-                        return $createdDate->addDays($waitingTimeDays);
-                    })
-                    ->date('d/m/Y')
-                    ->sortable(),
+                    ->label('Costo Total')
+                    ->numeric(),
             ])
             ->filters([
-                //
+                // Opcional: Añade filtros si es necesario
             ])
             ->headerActions([
-
+                // Acciones de cabecera, si las necesitas
             ])
             ->actions([
-
+                // Acciones individuales por registro, si las necesitas
             ])
             ->bulkActions([
                 ExportBulkAction::make()->exports([

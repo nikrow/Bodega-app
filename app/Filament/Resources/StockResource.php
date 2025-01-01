@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
+
 use App\Filament\Resources\StockResource\Pages;
-use App\Filament\Resources\StockResource\RelationManagers;
-use App\Filament\Resources\StockResource\RelationManagers\MovimientoProductosRelationManager;
+use App\Filament\Resources\StockResource\RelationManagers\MovimientosRelationManager;
 use App\Models\Stock;
 use App\Models\Warehouse;
 use Filament\Resources\Resource;
@@ -62,7 +62,7 @@ class StockResource extends Resource
     public static function getRelations(): array
     {
         return [
-
+            MovimientosRelationManager::class,
         ];
     }
 

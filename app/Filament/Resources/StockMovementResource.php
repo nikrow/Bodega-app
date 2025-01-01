@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\MovementType;
 use App\Filament\Resources\StockMovementResource\Pages;
 use App\Models\StockMovement;
 use App\Models\Warehouse;
@@ -41,17 +42,15 @@ class StockMovementResource extends Resource
                     ->label('ID'),
                 TextColumn::make('movement_type')
                     ->label('Tipo')
-                    ->colors([
-                        'success' => 'entrada',
-                        'danger' => 'salida',
-                        'warning' => 'traslado',
-                        'primary' => 'application_usage',
-                        'secondary' => 'application_usage_update',
-                        'error' => 'application_usage_deleted',
-                    ])
                     ->badge()
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(function ($record) {
+                        return MovementType::tryFrom($record->movement_type)?->getLabel();
+                    })
+                    ->color(function ($record) {
+                        return MovementType::tryFrom($record->movement_type)?->getColor();
+                    }),
                 TextColumn::make("producto.product_name")
                     ->label('Producto')
                     ->sortable()
@@ -63,8 +62,19 @@ class StockMovementResource extends Resource
                 TextColumn::make('quantity_change')
                     ->label('Cantidad')
                     ->numeric()
-                    ->sortable(),
-                TextColumn::make('order_number')
+                    ->sortable()
+                    ->getStateUsing(function ($record) {
+                        $negativeTypes = [
+                            MovementType::SALIDA->value,
+                            MovementType::TRASLADO_SALIDA->value,
+                            MovementType::PREPARACION->value,
+                        ];
+
+                        return in_array($record->movement_type, $negativeTypes)
+                            ? -abs($record->quantity_change)
+                            : abs($record->quantity_change);
+                    }),
+        TextColumn::make('order_number')
                     ->label('Orden')
                     ->sortable()
                     ->default('-')
@@ -126,7 +136,19 @@ class StockMovementResource extends Resource
                             Column::make('movement_type')->heading('Tipo'),
                             Column::make('producto.product_name')->heading('Producto'),
                             Column::make('warehouse.name')->heading('Bodega'),
-                            Column::make('quantity_change')->heading('Cantidad')->format(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1),
+                            Column::make('quantity_change')->heading('Cantidad')
+                                ->format(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1)
+                                ->getStateUsing(function ($record) {
+                                    $negativeTypes = [
+                                        MovementType::SALIDA->value,
+                                        MovementType::TRASLADO_SALIDA->value,
+                                        MovementType::PREPARACION->value,
+                                    ];
+
+                                    return in_array($record->movement_type, $negativeTypes)
+                                        ? -abs($record->quantity_change)
+                                        : abs($record->quantity_change);
+                                }),
                             Column::make('order_number')->heading('Orden'),
                             Column::make('description')->heading('Descripción'),
 
