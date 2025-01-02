@@ -29,7 +29,10 @@ class StockResource extends Resource
                     ->label('Producto')
                     ->searchable()
                     ->sortable(),
-
+                Tables\Columns\TextColumn::make('product.SAP_code')
+                    ->label('Código SAP')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('warehouse.name')
                     ->label('Bodega')
                     ->searchable()

@@ -1,8 +1,10 @@
 <?php
 namespace App\Filament\Resources\StockResource\RelationManagers;
 
+use App\Enums\MovementType;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -18,9 +20,17 @@ class MovimientosRelationManager extends RelationManager
                     ->label('Fecha')
                     ->dateTime('d-m-Y')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('movement_type')
+                TextColumn::make('movement_type')
                     ->label('Tipo')
-                    ->badge(),
+                    ->badge()
+                    ->sortable()
+                    ->searchable()
+                    ->getStateUsing(function ($record) {
+                        return MovementType::tryFrom($record->movement_type)?->getLabel();
+                    })
+                    ->color(function ($record) {
+                        return MovementType::tryFrom($record->movement_type)?->getColor();
+                    }),
                 Tables\Columns\TextColumn::make('producto.product_name')
                     ->label('Producto')
                     ->sortable()

@@ -44,6 +44,9 @@ class ParcelResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\TextInput::make('id')
+                    ->label('ID')
+                    ->readonly(),
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre')
                     ->required()
@@ -89,6 +92,10 @@ class ParcelResource extends Resource
         return $table
             ->defaultPaginationPageOption(50)
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
                     ->searchable()

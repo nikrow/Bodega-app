@@ -34,6 +34,7 @@ class ApplicationUsageRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('orderNumber')
                     ->label('Número de orden')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('parcel.name')
                     ->label('Cuartel')
@@ -109,7 +110,7 @@ class ApplicationUsageRelationManager extends RelationManager
                             Column::make('parcel.name')->heading('Cuartel'),
                             Column::make('order.objective')->heading('Objetivo'),
                             Column::make('parcel.crop.especie')->heading('Cultivo'),
-                            Column::make('order.orderNumber')->heading('Número de orden'),
+                            Column::make('orderNumber')->heading('Número de orden'),
                             Column::make('product.product_name')->heading('Producto'),
                             Column::make('product.active_ingredients')->heading('Ingrediente activo'),
                             Column::make('product.waiting_time')->heading('Carencia'),

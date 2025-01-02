@@ -39,6 +39,8 @@ class StockMovementResource extends Resource
                     ->dateTime('d-m-Y')
                     ->sortable(),
                 TextColumn::make('movimiento.id')
+                    ->sortable()
+                    ->searchable()
                     ->label('ID'),
                 TextColumn::make('movement_type')
                     ->label('Tipo')

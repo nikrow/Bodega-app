@@ -10,6 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Columns\Column;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class OrderApplicationRelationManager extends RelationManager
 {
@@ -195,7 +198,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('  %')
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('applicators_name')
+                Tables\Columns\TextColumn::make('applicators_details')
                 ->label('Aplicadores')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -211,10 +214,31 @@ class OrderApplicationRelationManager extends RelationManager
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\ExportBulkAction::make()
-                    ->label('Exportar')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('primary'),
+                ExportBulkAction::make()->exports([
+                    ExcelExport::make()
+                        ->fromTable()
+                        ->withFilename(date('Y-m-d') . ' - Aplicaciones ')
+                        ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                        ->withColumns([
+                            Column::make('created_at')->heading('Fecha')
+                                ->formatStateUsing(function ($state) {
+                                    $date = \Carbon\Carbon::parse($state);
+                                    return \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date);
+                                })
+                                ->format(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DDMMYYYY),
+                            Column::make('id')->heading('ID'),
+                            Column::make('parcel.name')->heading('Cuartel'),
+                            Column::make('liter')->heading('Litros Aplicados'),
+                            Column::make('surface')->heading('Superficie aplicada'),
+                            Column::make('application_percentage')->heading('Porcentaje del cuartel aplicado'),
+                            Column::make('createdBy.name')->heading('Creado por'),
+                            Column::make('wetting')->heading('Mojamiento'),
+                            Column::make('wind_speed')->heading('Viento'),
+                            Column::make('temperature')->heading('Temperatura'),
+                            Column::make('moisture')->heading('Humedad'),
+                            Column::make('applicators_details')->heading('Aplicadores'),
+                        ]),
+                ]),
             ]);
     }
 }

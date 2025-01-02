@@ -78,7 +78,13 @@ class MovimientoResource extends Resource
                         // Definir los tipos de movimiento permitidos según el rol
                         $allowedMovementTypes = $esEstanquero
                             ? [MovementType::TRASLADO, MovementType::PREPARACION]
-                            : MovementType::cases();
+                            : array_filter(MovementType::cases(), function ($type) {
+                                // Excluir traslado-entrada y traslado-salida
+                                return !in_array($type->value, [
+                                    MovementType::TRASLADO_ENTRADA->value,
+                                    MovementType::TRASLADO_SALIDA->value,
+                                ]);
+                            });
 
                         foreach ($allowedMovementTypes as $type) {
                             // Asignar etiquetas más amigables si es necesario

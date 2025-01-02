@@ -38,7 +38,7 @@ class ApplicationRecordResource extends Resource
                     ->label('Fecha aplicación')
                     ->date('d/m/Y')
                     ->sortable(),
-                TextColumn::make('id')
+                TextColumn::make('order_application_id')
                     ->label('ID Aplicación')
                     ->sortable(),
                 // Objetivo (razón)
@@ -62,7 +62,7 @@ class ApplicationRecordResource extends Resource
                     ->sortable()
                     ->searchable(),
                 // Número de orden
-                TextColumn::make('order.orderNumber')
+                TextColumn::make('orderNumber')
                     ->label('Número de orden')
                     ->searchable()
                     ->sortable(),
@@ -183,23 +183,11 @@ class ApplicationRecordResource extends Resource
                     ->prefix('USD')
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('product_family')
-                    ->label('Grupo')
-                    ->options([
-                        FamilyType::INSECTICIDA->value => 'Insecticida',
-                        FamilyType::HERBICIDA->value => 'Herbicida',
-                        FamilyType::FERTILIZANTE->value => 'Fertilizante',
-                        FamilyType::ACARICIDA->value => 'Acaricida',
-                        FamilyType::FUNGICIDA->value => 'Fungicida',
-                        FamilyType::BIOESTIMULANTE->value => 'Bioestimulante',
-                        FamilyType::REGULADOR->value => 'Regulador',
-                        FamilyType::BLOQUEADOR->value => 'Bloqueador',
-                        FamilyType::OTROS->value => 'Otros',
-                    ])
-                    ->relationship('product', 'family'),
+
                 Tables\Filters\SelectFilter::make('parcel.crop_id')
                     ->relationship('parcel.crop', 'especie')
                     ->label('Cultivo'),
+
                 Tables\Filters\Filter::make('fecha')
                     ->columns(2)
                     ->form([
@@ -213,19 +201,20 @@ class ApplicationRecordResource extends Resource
                             ->when($data['start_date'], fn($q) => $q->whereDate('created_at', '>=', $data['start_date']))
                             ->when($data['end_date'], fn($q) => $q->whereDate('created_at', '<=', $data['end_date']));
                     }),
-                Tables\Filters\SelectFilter::make('order.orderNumber')
-                    ->label('Orden')
+                Tables\Filters\SelectFilter::make('orderNumber')
+                    ->label('Número de orden')
                     ->searchable()
                     ->options(function () {
                         $tenantId = Filament::getTenant()->id;
-                        // Filtrar solo órdenes que no están completadas
-                        return Order::where('field_id', $tenantId)
-                            ->pluck('orderNumber', 'id');
 
+                        return OrderApplicationUsage::where('field_id', $tenantId)
+                            ->pluck('orderNumber', 'orderNumber')
+                            ->filter()
+                            ->toArray();
                     })
-
+                    ->attribute('orderNumber')
             ], layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(4)
+            ->filtersFormColumns(3)
             ->actions([
                 // Acciones por registro
             ])
@@ -242,11 +231,11 @@ class ApplicationRecordResource extends Resource
                                     return \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date);
                                 })
                                 ->format(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DDMMYYYY),
-                            Column::make('id')->heading('ID'),
+                            Column::make('order_application_id')->heading('ID Aplicación'),
                             Column::make('parcel.name')->heading('Cuartel'),
                             Column::make('order.objective')->heading('Objetivo'),
                             Column::make('parcel.crop.especie')->heading('Cultivo'),
-                            Column::make('order.orderNumber')->heading('Número de orden'),
+                            Column::make('orderNumber')->heading('Número de orden'),
                             Column::make('product.product_name')->heading('Producto'),
                             Column::make('product.active_ingredients')->heading('Ingrediente activo'),
                             Column::make('product.waiting_time')->heading('Carencia'),
