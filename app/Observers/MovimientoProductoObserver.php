@@ -2,19 +2,13 @@
 
 namespace App\Observers;
 
-use App\Exceptions\Stock\InsufficientStockException;
-use App\Exceptions\Stock\InvalidMovementTypeException;
-use App\Exceptions\Stock\ProductNotFoundException;
-use App\Exceptions\Stock\WarehouseNotFoundException;
 use App\Models\MovimientoProducto;
 use App\Services\StockService;
-use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class MovimientoProductoObserver
 {
-    protected $stockService;
+    protected StockService $stockService;
 
     public function __construct(StockService $stockService)
     {
@@ -22,65 +16,56 @@ class MovimientoProductoObserver
     }
 
     /**
-     * Handle the MovimientoProducto "created" event.
+     * Cuando se crea un MovimientoProducto, actualizar stock y crear logs.
      */
     public function created(MovimientoProducto $productoMovimiento): void
     {
         try {
-            DB::transaction(function () use ($productoMovimiento) {
-                $this->stockService->applyStockChanges($productoMovimiento);
-                // El registro en stock_movements ya se maneja dentro del StockService
-            });
-            Log::info("Stock actualizado correctamente para el MovimientoProducto ID: {$productoMovimiento->id}");
-        } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
-            Log::error("Error específico al aplicar cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
-            throw $e;
-        } catch (Exception $e) {
-            Log::error("Error general al aplicar cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
+            // Al crearse, actualiza stock, crea StockMovement y StockHistory
+            $this->stockService->applyStockChanges($productoMovimiento);
+            Log::info("MovimientoProducto ID {$productoMovimiento->id} creado y stock actualizado.");
+        } catch (\Exception $e) {
+            Log::error("Error al crear MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
             throw $e;
         }
     }
 
     /**
-     * Handle the MovimientoProducto "updated" event.
+     * Cuando se actualiza (por ejemplo, se cambia la cantidad).
      */
     public function updated(MovimientoProducto $productoMovimiento): void
     {
+        $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
+
         try {
-            DB::transaction(function () use ($productoMovimiento) {
-                $cantidadAnterior = $productoMovimiento->getOriginal('cantidad');
-                $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
-            });
-            Log::info("Stock actualizado correctamente para el MovimientoProducto ID: {$productoMovimiento->id}");
-        } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
-            Log::error("Error específico al actualizar cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
-            throw $e;
-        } catch (Exception $e) {
-            Log::error("Error general al actualizar cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
+            $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
+            Log::info("MovimientoProducto ID {$productoMovimiento->id} actualizado y stock ajustado.");
+        } catch (\Exception $e) {
+            Log::error("Error al actualizar MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
             throw $e;
         }
     }
 
     /**
-     * Handle the MovimientoProducto "deleted" event.
+     * Cuando se elimina un MovimientoProducto, revertir stock y borrar logs.
      */
     public function deleted(MovimientoProducto $productoMovimiento): void
     {
         try {
-            DB::transaction(function () use ($productoMovimiento) {
-                // Revertir el impacto en el stock
-                $this->stockService->revertProductMovementImpact($productoMovimiento);
+            // 1. Revertir el impacto (actualiza stock de vuelta)
+            $this->stockService->revertProductMovementImpact($productoMovimiento);
 
-                // Eliminar los StockMovements asociados
-                $productoMovimiento->stockMovements()->delete();
+            // 2. Eliminar StockMovement(s) relacionados
+            $productoMovimiento->stockMovements()->delete();
 
-                Log::info("StockService: Impacto revertido y StockMovements eliminados para MovimientoProducto ID: {$productoMovimiento->id}");
-            });
-        } catch (InsufficientStockException|ProductNotFoundException|InvalidMovementTypeException|WarehouseNotFoundException $e) {
-            Log::error("Error específico al revertir cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
-            throw $e;
-        } catch (Exception $e) {
-            Log::error("Error general al revertir cambios de stock para MovimientoProducto ID: {$productoMovimiento->id}. Error: {$e->getMessage()}");
+            // 3. Eliminar StockHistories relacionados (si quieres borrar el historial).
+            //    Si tu relación en StockHistory apunta a movement_product_id
+            //    podrías hacer:
+            \App\Models\StockHistory::where('movement_product_id', $productoMovimiento->id)->delete();
+
+            Log::info("MovimientoProducto ID {$productoMovimiento->id} eliminado, stock revertido, StockMovement y StockHistory borrados.");
+        } catch (\Exception $e) {
+            Log::error("Error al eliminar MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
             throw $e;
         }
     }

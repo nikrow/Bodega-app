@@ -29,6 +29,8 @@ class ViewStock extends ViewRecord
                         ->label('Producto')
                         ->size(TextEntry\TextEntrySize::Large)
                         ->weight(FontWeight::Bold),
+                    TextEntry::make('warehouse.name')
+                        ->label('Bodega'),
                     TextEntry::make('updated_at')
                         ->label('Última Actualización'),
 
@@ -36,8 +38,7 @@ class ViewStock extends ViewRecord
             Section::make('Detalles')
                 ->collapsed()
                 ->schema([
-                    TextEntry::make('warehouse.name')
-                        ->label('Bodega'),
+
                     TextEntry::make('product.family')
                         ->label('Grupo')
                 ])
