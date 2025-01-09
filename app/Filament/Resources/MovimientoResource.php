@@ -146,6 +146,11 @@ class MovimientoResource extends Resource
                                 ->where('is_special', true)
                                 ->pluck('name', 'id');
                         }
+                        if ($tipoMovimiento === MovementType::TRASLADO->value) {
+                            return Warehouse::where('field_id', $tenantId)
+                                ->where('is_special', false)
+                                ->pluck('name', 'id');
+                        }
                         // Para otros tipos, mostrar todas las bodegas del tenant
                         return Warehouse::where('field_id', $tenantId)
                             ->pluck('name', 'id');

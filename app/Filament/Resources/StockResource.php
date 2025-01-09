@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 
 use App\Filament\Resources\StockResource\Pages;
-use App\Filament\Resources\StockResource\RelationManagers\HistorialRelationManager;
 use App\Filament\Resources\StockResource\RelationManagers\MovimientosRelationManager;
 use App\Models\Stock;
 use App\Models\Warehouse;
@@ -26,6 +25,7 @@ class StockResource extends Resource
     {
         return $table
             ->defaultPaginationPageOption(50)
+            ->defaultSort('product.product_name', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('product.product_name')
                     ->label('Producto')
@@ -51,7 +51,7 @@ class StockResource extends Resource
                 Tables\Columns\TextColumn::make('product.price')
                     ->label('Valor')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('updated_at', 'Última Actualización')
+                Tables\Columns\TextColumn::make('updated_at')
                     ->label('Última Actualización')
                     ->sortable(),
             ])
@@ -71,7 +71,6 @@ class StockResource extends Resource
     {
         return [
             MovimientosRelationManager::class,
-            HistorialRelationManager::class,
         ];
     }
 

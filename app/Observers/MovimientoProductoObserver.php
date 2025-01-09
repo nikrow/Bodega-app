@@ -52,21 +52,14 @@ class MovimientoProductoObserver
     public function deleted(MovimientoProducto $productoMovimiento): void
     {
         try {
-            // 1. Revertir el impacto (actualiza stock de vuelta)
+            // Revertir el impacto
             $this->stockService->revertProductMovementImpact($productoMovimiento);
 
-            // 2. Eliminar StockMovement(s) relacionados
-            $productoMovimiento->stockMovements()->delete();
-
-            // 3. Eliminar StockHistories relacionados (si quieres borrar el historial).
-            //    Si tu relación en StockHistory apunta a movement_product_id
-            //    podrías hacer:
-            \App\Models\StockHistory::where('movement_product_id', $productoMovimiento->id)->delete();
-
-            Log::info("MovimientoProducto ID {$productoMovimiento->id} eliminado, stock revertido, StockMovement y StockHistory borrados.");
+            Log::info("MovimientoProducto ID {$productoMovimiento->id} eliminado y movimientos posteriores recalculados.");
         } catch (\Exception $e) {
             Log::error("Error al eliminar MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
             throw $e;
         }
     }
+
 }

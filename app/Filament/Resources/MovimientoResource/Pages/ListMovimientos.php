@@ -8,6 +8,7 @@ use Filament\Actions;
 use Filament\Facades\Filament;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Auth;
 
 class ListMovimientos extends ListRecords
 {
@@ -18,9 +19,13 @@ class ListMovimientos extends ListRecords
     {
         // Obtener el campo actual (field) del usuario
         $currentFieldId = Filament::getTenant()->id;
+        $user = Auth::user();
 
         // Obtener todas las bodegas que pertenecen al campo actual
-        $warehouses = Warehouse::where('field_id', $currentFieldId)->get();
+        $warehouses = Warehouse::where('field_id', $currentFieldId)
+            ->where('is_special', 0)
+            ->whereIn('id', $user->warehouses()->pluck('warehouses.id'))
+            ->get();
 
         // Crear una pestaña para todas las bodegas que pertenecen al campo actual
         $tabs = [

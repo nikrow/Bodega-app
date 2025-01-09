@@ -154,6 +154,8 @@ class MovimientoProductosRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha')
                     ->date('d/m/Y')
@@ -168,8 +170,6 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('unidad_medida')
-                    ->label('Unidad de Medida'),
             ])
             ->filters([
                 //

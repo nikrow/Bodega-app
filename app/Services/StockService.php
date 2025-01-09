@@ -11,7 +11,6 @@ use App\Models\Movimiento;
 use App\Models\MovimientoProducto;
 use App\Models\Stock;
 use App\Models\StockMovement;
-use App\Models\StockHistory; // <-- Modelo del historial de stock
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -168,11 +167,11 @@ class StockService
                 $this->handleTraslado($stockOrigen, $stockDestino, $cantidadNueva, $producto->price, $userId, $movimiento, $productoMovimiento);
 
                 // En lugar de duplicar "TRASLADO", creamos TRASLADO-SALIDA y TRASLADO-ENTRADA
-                $descripcionSalida  = "Traslado - Salida. ID Movimiento: {$movimiento->id}";
-                $descripcionEntrada = "Traslado - Entrada. ID Movimiento: {$movimiento->id}";
+                $descripcionSalida  = "Traslado hacia " . optional($movimiento->bodega_destino)->name;
+                $descripcionEntrada = "Traslado desde " . optional($movimiento->bodega_origen)->name;
 
-                $this->logStockMovement($movimiento, $productoMovimiento, 'TRASLADO-SALIDA', $cantidadNueva, $descripcionSalida, $movimiento->bodega_origen_id);
-                $this->logStockMovement($movimiento, $productoMovimiento, 'TRASLADO-ENTRADA', $cantidadNueva, $descripcionEntrada, $movimiento->bodega_destino_id);
+                $this->logStockMovement($movimiento, $productoMovimiento, 'traslado-salida', $cantidadNueva, $descripcionSalida, $movimiento->bodega_origen_id);
+                $this->logStockMovement($movimiento, $productoMovimiento, 'traslado-entrada', $cantidadNueva, $descripcionEntrada, $movimiento->bodega_destino_id);
                 break;
 
             case MovementType::PREPARACION:
@@ -267,9 +266,6 @@ class StockService
 
             Log::info("Stock actualizado: Producto ID {$stock->product_id}, Bodega ID {$stock->warehouse_id}, Cambio: {$cantidadCambio}");
 
-            // Tras la actualización, registramos snapshot de StockHistory
-            $this->createStockHistory($stock, $cantidadCambio, $userId, $movimiento, $productoMovimiento);
-
         });
     }
 
@@ -356,25 +352,6 @@ class StockService
                Cantidad {$cantidadCambio}, Bodega {$warehouseId}, Desc: {$descripcion}");
     }
 
-
-    /**
-     * Crear un snapshot en StockHistory justo después de cada updateStock.
-     */
-    private function createStockHistory(Stock $stock, float $cantidadCambio, int $userId, Movimiento $movimiento,MovimientoProducto $productoMovimiento): void
-    {
-        StockHistory::create([
-            'stock_id'          => $stock->id,
-            'product_id'        => $stock->product_id,
-            'movement_id'       => $movimiento->id,
-            'movement_product_id' => $productoMovimiento->id,
-            'warehouse_id'      => $stock->warehouse_id,
-            'field_id'          => $stock->field_id,
-            'quantity_snapshot' => $stock->quantity,   // Cantidad final tras update
-            'price_snapshot'    => $stock->price,      // Precio final tras update
-            'created_by'        => $userId,
-        ]);
-    }
-
     /**
      * Revertir el impacto de un movimiento de producto.
      */
@@ -396,7 +373,7 @@ class StockService
                         $movimiento->bodega_destino_id,
                         $movimiento->field_id
                     );
-                    $this->updateStockWithoutHistory($stockDestino, -$cantidad, null, $userId);
+                    $this->updateStock($stockDestino, -$cantidad, null, $userId, $movimiento, $productoMovimiento);
                     break;
 
                 case MovementType::SALIDA:
@@ -406,7 +383,7 @@ class StockService
                         $movimiento->bodega_origen_id,
                         $movimiento->field_id
                     );
-                    $this->updateStockWithoutHistory($stockOrigen, $cantidad, null, $userId);
+                    $this->updateStock($stockOrigen, $cantidad, null, $userId, $movimiento, $productoMovimiento);
                     break;
 
                 case MovementType::TRASLADO:
@@ -421,9 +398,8 @@ class StockService
                         $movimiento->bodega_destino_id,
                         $movimiento->field_id
                     );
-
-                    $this->updateStockWithoutHistory($stockOrigen, $cantidad, null, $userId);
-                    $this->updateStockWithoutHistory($stockDestino, -$cantidad, null, $userId);
+                    $this->updateStock($stockOrigen, $cantidad, null, $userId, $movimiento, $productoMovimiento);
+                    $this->updateStock($stockDestino, -$cantidad, null, $userId, $movimiento, $productoMovimiento);
                     break;
 
                 case MovementType::PREPARACION:
@@ -433,7 +409,6 @@ class StockService
                         $movimiento->bodega_origen_id,
                         $movimiento->field_id
                     );
-                    $this->updateStockWithoutHistory($stockOrigen, $cantidad, null, $userId);
                     break;
 
                 default:
@@ -469,33 +444,5 @@ class StockService
                 throw new InsufficientStockException("Stock insuficiente para {$tipo->value}.");
             }
         }
-    }
-    /**
-     * Actualizar la cantidad de stock SIN crear un snapshot en StockHistory.
-     */
-    private function updateStockWithoutHistory(
-        Stock $stock,
-        float $cantidadCambio,
-        ?float $nuevoPrecio,
-        int $userId
-    ): void {
-        DB::transaction(function () use ($stock, $cantidadCambio, $nuevoPrecio, $userId) {
-            if ($stock->quantity + $cantidadCambio < 0) {
-                Log::error("Stock insuficiente para la operación. Producto ID: {$stock->product_id}, Bodega ID: {$stock->warehouse_id}");
-                throw new InsufficientStockException("Stock insuficiente para la operación.");
-            }
-
-            // Actualizar la cantidad
-            $stock->quantity += $cantidadCambio;
-
-            // Actualizar precio si corresponde
-            if ($nuevoPrecio !== null) {
-                $stock->price = $nuevoPrecio;
-            }
-            $stock->updated_by = $userId;
-            $stock->save();
-
-            Log::info("Stock (SIN HISTORY) actualizado: Producto ID {$stock->product_id}, Bodega ID {$stock->warehouse_id}, Cambio: {$cantidadCambio}");
-        });
     }
 }

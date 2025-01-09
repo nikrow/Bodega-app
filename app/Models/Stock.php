@@ -64,9 +64,5 @@ class Stock extends Model implements Auditable
         return $this->hasMany(StockMovement::class, 'product_id', 'product_id')
             ->where('warehouse_id', $this->warehouse_id); // Filtra por la bodega del stock actual
     }
-    public function historial()
-    {
-        return $this->hasMany(StockHistory::class, 'stock_id', 'id');
-    }
 
 }
