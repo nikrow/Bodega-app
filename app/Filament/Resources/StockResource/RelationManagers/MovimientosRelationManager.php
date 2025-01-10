@@ -51,6 +51,17 @@ class MovimientosRelationManager extends RelationManager
                     ->searchable(),
                 Tables\Columns\TextColumn::make('quantity_change')
                     ->label('Cantidad')
+                    ->getStateUsing(function ($record) {
+                        $negativeTypes = [
+                            MovementType::SALIDA->value,
+                            MovementType::TRASLADO_SALIDA->value,
+                            MovementType::PREPARACION->value,
+                        ];
+
+                        return in_array($record->movement_type, $negativeTypes)
+                            ? -abs($record->quantity_change)
+                            : abs($record->quantity_change);
+                    })
                     ->numeric(),
                 Tables\Columns\TextColumn::make('order_number')
                     ->label('Orden'),

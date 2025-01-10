@@ -38,10 +38,6 @@ class ApplicatorResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('rut')
                     ->label('RUT')
-                    ->rule(function (Forms\Get $get) {
-                        return Rule::unique('applicators', 'rut')
-                            ->ignore($get('id'));
-                    })
                     ->required(),
                 Forms\Components\TextInput::make('tractor')
                     ->label('Tractor')

@@ -21,9 +21,11 @@ use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\ActionSize;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -212,6 +214,7 @@ class OrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha')
@@ -221,10 +224,7 @@ class OrderResource extends Resource
                     ->label('Número de orden')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('objective')
-                    ->label('Objetivo')
-                    ->searchable()
-                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('crop.especie')
                     ->label('Cultivo')
                     ->searchable()
@@ -243,6 +243,10 @@ class OrderResource extends Resource
                 Tables\Columns\IconColumn::make('is_completed')
                     ->boolean()
                     ->label('Completado'),
+                Tables\Columns\TextColumn::make('objective')
+                    ->label('Objetivo')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Fecha de actualización')
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -250,13 +254,12 @@ class OrderResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('is_completed')
-                    ->label('Completado')
-                    ->default(false)
+                    ->label('Estado')
+                    ->default(0)
                     ->options([
-                        'true' => 'Completado',
-                        'false' => 'Pendiente',
+                        1 => 'Completado',
+                        0 => 'Pendiente',
                     ])
-
             ])
             ->actions([
                 ActionGroup::make([
@@ -291,12 +294,11 @@ class OrderResource extends Resource
                         ->icon('phosphor-file-pdf-duotone')
                         ->url(fn(Order $record) => route('orders.bodegaPdf', $record->id))
                         ->openUrlInNewTab(),
-                ])
-            ])
+                ])->button()->size(ActionSize::Small)
+            ], position: ActionsPosition::BeforeColumns)
+
             ->bulkActions([
-
                     ExportBulkAction::make()
-
             ]);
     }
     public static function getRelations(): array

@@ -50,6 +50,7 @@ class StockResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('product.price')
                     ->label('Valor')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Última Actualización')

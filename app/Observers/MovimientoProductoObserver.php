@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\MovimientoProducto;
+use App\Models\StockMovement;
 use App\Services\StockService;
 use Illuminate\Support\Facades\Log;
 
@@ -55,6 +56,9 @@ class MovimientoProductoObserver
             // Revertir el impacto
             $this->stockService->revertProductMovementImpact($productoMovimiento);
 
+            StockMovement::where('related_id', $productoMovimiento->id)
+                ->where('related_type', MovimientoProducto::class)
+                ->delete();
             Log::info("MovimientoProducto ID {$productoMovimiento->id} eliminado y movimientos posteriores recalculados.");
         } catch (\Exception $e) {
             Log::error("Error al eliminar MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
