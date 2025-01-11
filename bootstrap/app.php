@@ -20,7 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
             // Otros middleware de autenticación si los tienes
             \App\Http\Middleware\UpdateLastActivity::class,
             EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
             SubstituteBindings::class,
         ]);
     })
