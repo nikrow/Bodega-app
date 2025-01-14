@@ -2,11 +2,13 @@
 namespace App\Filament\Resources\StockResource\RelationManagers;
 
 use App\Enums\MovementType;
+use Carbon\Carbon;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Columns\Column;
@@ -19,17 +21,17 @@ class MovimientosRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->defaultPaginationPageOption(25)
+            ->defaultPaginationPageOption(50)
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('created_at')
                     ->label('Fecha')
                     ->dateTime('d-m-Y')
                     ->sortable(),
-                TextColumn::make('movimiento.id')
+                TextColumn::make('movement_number')
+                    ->label('Número de Movimiento')
                     ->sortable()
-                    ->searchable()
-                    ->label('ID'),
+                    ->searchable(),
                 TextColumn::make('movement_type')
                     ->label('Tipo')
                     ->badge()
@@ -84,14 +86,14 @@ class MovimientosRelationManager extends RelationManager
                         ->fromTable()
                         ->ignoreFormatting(['quantity_change'])
                         ->withFilename(date('Y-m-d') . ' - Movimientos productos ')
-                        ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                        ->withWriterType(Excel::XLSX)
                         ->withColumns([
                             Column::make('created_at')->heading('Fecha')
                                 ->formatStateUsing(function ($state) {
-                                    $date = \Carbon\Carbon::parse($state);
-                                    return \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date);
+                                    $date = Carbon::parse($state);
+                                    return Date::PHPToExcel($date);
                                 })
-                                ->format(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DDMMYYYY),
+                                ->format(NumberFormat::FORMAT_DATE_DDMMYYYY),
                             Column::make('id')->heading('ID'),
                             Column::make('producto.product_name')->heading('Producto'),
                             Column::make('warehouse.name')->heading('Bodega'),

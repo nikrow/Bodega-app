@@ -45,7 +45,7 @@ class OrderParcelRelationManager extends RelationManager
 
                         if ($parcelSurface > 0) {
                             $percentage = ($totalSurfaceApplied / $parcelSurface) * 100;
-                            return round($percentage, 2);
+                            return round($percentage, 3);
                         }
 
                         return 0;

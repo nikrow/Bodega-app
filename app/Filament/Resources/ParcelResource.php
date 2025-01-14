@@ -91,6 +91,7 @@ class ParcelResource extends Resource
     {
         return $table
             ->defaultPaginationPageOption(50)
+            ->defaultSort('name')
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')

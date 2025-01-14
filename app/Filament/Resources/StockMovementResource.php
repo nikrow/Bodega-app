@@ -94,8 +94,9 @@ class StockMovementResource extends Resource
                     ->options([
                         'entrada' => 'Entrada',
                         'salida' => 'Salida',
-                        'traslado' => 'Traslado',
                         'preparacion' => 'Preparacion',
+                        'traslado-salida' => 'Traslado Salida',
+                        'traslado-entrada' => 'Traslado Entrada',
                     ])
                     ->label('Tipo de Movimiento'),
                 Tables\Filters\Filter::make('fecha')

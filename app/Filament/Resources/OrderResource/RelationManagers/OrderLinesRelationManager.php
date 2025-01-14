@@ -107,7 +107,7 @@ class OrderLinesRelationManager extends RelationManager
 
                             if ($totalArea > 0 && $wetting > 0) {
                                 $estimatedUsage = ($totalArea * $wetting * $dosis) / 100;
-                                $set('EstimatedProductUsage', round($estimatedUsage, 2));
+                                $set('EstimatedProductUsage', round($estimatedUsage, 3));
                             } else {
                                 $set('EstimatedProductUsage', 'Datos insuficientes para calcular');
                             }
@@ -164,7 +164,7 @@ class OrderLinesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('dosis')
                     ->label('Dosis')
                 ->suffix('      l/100l')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->numeric(decimalPlaces: 3, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('waiting_time')

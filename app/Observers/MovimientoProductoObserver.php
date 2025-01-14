@@ -24,9 +24,9 @@ class MovimientoProductoObserver
         try {
             // Al crearse, actualiza stock, crea StockMovement y StockHistory
             $this->stockService->applyStockChanges($productoMovimiento);
-            Log::info("MovimientoProducto ID {$productoMovimiento->id} creado y stock actualizado.");
+            Log::info("MovimientoProducto ID $productoMovimiento->id creado y stock actualizado.");
         } catch (\Exception $e) {
-            Log::error("Error al crear MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
+            Log::error("Error al crear MovimientoProducto ID $productoMovimiento->id: {$e->getMessage()}");
             throw $e;
         }
     }
@@ -40,9 +40,9 @@ class MovimientoProductoObserver
 
         try {
             $this->stockService->applyStockChanges($productoMovimiento, $cantidadAnterior);
-            Log::info("MovimientoProducto ID {$productoMovimiento->id} actualizado y stock ajustado.");
+            Log::info("MovimientoProducto ID $productoMovimiento->id actualizado y stock ajustado.");
         } catch (\Exception $e) {
-            Log::error("Error al actualizar MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
+            Log::error("Error al actualizar MovimientoProducto ID $productoMovimiento->id: {$e->getMessage()}");
             throw $e;
         }
     }
@@ -53,17 +53,20 @@ class MovimientoProductoObserver
     public function deleted(MovimientoProducto $productoMovimiento): void
     {
         try {
-            // Revertir el impacto
+            // Revertir el impacto del movimiento eliminado en el stock
             $this->stockService->revertProductMovementImpact($productoMovimiento);
 
+            // Eliminar el registro del movimiento de stock asociado
             StockMovement::where('related_id', $productoMovimiento->id)
                 ->where('related_type', MovimientoProducto::class)
                 ->delete();
-            Log::info("MovimientoProducto ID {$productoMovimiento->id} eliminado y movimientos posteriores recalculados.");
+
+            Log::info("MovimientoProducto ID {$productoMovimiento->id} eliminado y stock actualizado correctamente.");
         } catch (\Exception $e) {
             Log::error("Error al eliminar MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
             throw $e;
         }
     }
+
 
 }

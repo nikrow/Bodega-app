@@ -17,7 +17,7 @@ class ViewStock extends ViewRecord
         return $infolist
         ->schema([
             Section::make('Cantidad')
-                ->columns(2)
+                ->columns()
                 ->schema([
                     TextEntry::make('quantity')
                         ->label('Cantidad Disponible')
@@ -38,7 +38,7 @@ class ViewStock extends ViewRecord
             Section::make('Detalles')
                 ->collapsed()
                 ->schema([
-
+                    TextEntry::make('id'),
                     TextEntry::make('product.family')
                         ->label('Grupo')
                 ])

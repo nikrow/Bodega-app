@@ -2,16 +2,20 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\FamilyType;
+
 use App\Filament\Resources\ApplicationRecordResource\Pages;
-use App\Models\Order;
+
 use App\Models\OrderApplicationUsage;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
+use Maatwebsite\Excel\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
@@ -108,7 +112,7 @@ class ApplicationRecordResource extends Resource
                 // Dosis l/100 lt
                 TextColumn::make('dose_per_100l')
                     ->label('Dosis l/100lt')
-                    ->numeric(decimalPlaces: 2)
+                    ->numeric(decimalPlaces: 3)
                     ->suffix(' l/100l')
                     ->sortable(),
 
@@ -178,7 +182,7 @@ class ApplicationRecordResource extends Resource
 
                 TextColumn::make('total_cost')
                     ->label('Costo aplicación')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->numeric(decimalPlaces: 2, decimalSeparator: ',', thousandsSeparator: '.')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->prefix('USD')
             ])
@@ -189,7 +193,7 @@ class ApplicationRecordResource extends Resource
                     ->label('Cultivo'),
 
                 Tables\Filters\Filter::make('fecha')
-                    ->columns(2)
+                    ->columns()
                     ->form([
                         DatePicker::make('start_date')->label('Fecha Inicio'),
                         DatePicker::make('end_date')
@@ -223,14 +227,14 @@ class ApplicationRecordResource extends Resource
                     ExcelExport::make()
                         ->fromTable()
                         ->withFilename(date('Y-m-d') . ' - Export Registro de aplicaciones')
-                        ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                        ->withWriterType(Excel::XLSX)
                         ->withColumns([
                             Column::make('created_at')->heading('Fecha')
                                 ->formatStateUsing(function ($state) {
-                                    $date = \Carbon\Carbon::parse($state);
-                                    return \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($date);
+                                    $date = Carbon::parse($state);
+                                    return Date::PHPToExcel($date);
                                 })
-                                ->format(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DDMMYYYY),
+                                ->format(NumberFormat::FORMAT_DATE_DDMMYYYY),
                             Column::make('order_application_id')->heading('ID Aplicación'),
                             Column::make('parcel.name')->heading('Cuartel'),
                             Column::make('order.objective')->heading('Objetivo'),

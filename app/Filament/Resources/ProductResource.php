@@ -113,6 +113,7 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('product_name')
             ->columns([
                 Tables\Columns\TextColumn::make('product_name')
                     ->label('Nombre')

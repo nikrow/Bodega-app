@@ -357,7 +357,7 @@ class StockService
      */
     public function revertProductMovementImpact(MovimientoProducto $productoMovimiento): void
     {
-        Log::info("StockService: Revirtiendo impacto (SIN HISTORY) para MovimientoProducto ID: {$productoMovimiento->id}");
+        Log::info("StockService: Revirtiendo impacto SOLO STOCK para MovimientoProducto ID: {$productoMovimiento->id}");
 
         $movimiento = $productoMovimiento->movimiento;
         $tipo = MovementType::from(strtolower($movimiento->tipo->value));
@@ -367,7 +367,6 @@ class StockService
         try {
             switch ($tipo) {
                 case MovementType::ENTRADA:
-                    // Revertir entrada: restamos en destino SIN crear history
                     $stockDestino = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_destino_id,
@@ -377,7 +376,6 @@ class StockService
                     break;
 
                 case MovementType::SALIDA:
-                    // Revertir salida: sumamos en origen SIN crear history
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_origen_id,
@@ -387,7 +385,6 @@ class StockService
                     break;
 
                 case MovementType::TRASLADO:
-                    // Revertir traslado: sumamos en origen y restamos en destino SIN history
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_origen_id,
@@ -403,25 +400,22 @@ class StockService
                     break;
 
                 case MovementType::PREPARACION:
-                    // Revertir preparación: sumamos al origen SIN history
                     $stockOrigen = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_origen_id,
                         $movimiento->field_id
                     );
+                    $this->updateStock($stockOrigen, $cantidad, null, $userId, $movimiento, $productoMovimiento);
                     break;
-
-                default:
-                    Log::warning("StockService: Tipo de movimiento no reconocido para revertir: {$tipo->value}");
-                    throw new InvalidMovementTypeException("Tipo de movimiento no válido: {$tipo->value}");
             }
 
-            Log::info("StockService: Impacto revertido SIN HISTORY para MovimientoProducto ID: {$productoMovimiento->id}");
+            Log::info("Stock actualizado correctamente tras eliminación de MovimientoProducto ID: {$productoMovimiento->id}");
         } catch (Exception $e) {
-            Log::error("StockService Error: {$e->getMessage()} al revertir SIN HISTORY - MovimientoProducto ID: {$productoMovimiento->id}");
+            Log::error("Error al revertir el stock para MovimientoProducto ID {$productoMovimiento->id}: {$e->getMessage()}");
             throw $e;
         }
     }
+
 
     /**
      * Validar stock suficiente antes de crear un movimiento (salida, preparación).

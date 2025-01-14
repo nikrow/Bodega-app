@@ -25,7 +25,7 @@ class StockResource extends Resource
     {
         return $table
             ->defaultPaginationPageOption(50)
-            ->defaultSort('product.product_name', 'desc')
+            ->defaultSort('product.product_name')
             ->columns([
                 Tables\Columns\TextColumn::make('product.product_name')
                     ->label('Producto')
@@ -46,7 +46,7 @@ class StockResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Cantidad Disponible')
-                    ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->numeric(decimalPlaces: 2, decimalSeparator: ',', thousandsSeparator: '.')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('product.price')
                     ->label('Valor')
