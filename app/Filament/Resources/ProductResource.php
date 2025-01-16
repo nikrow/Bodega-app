@@ -136,8 +136,10 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('unit_measure')
                     ->label('Unidad de Medida')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('SAP_family')
-                    ->label('Familia SAP')
+                Tables\Columns\TextColumn::make('price')
+                    ->label('Precio USD')
+                    ->sortable()
+                    ->numeric(decimalPlaces: 2, decimalSeparator: ',', thousandsSeparator: '.')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
