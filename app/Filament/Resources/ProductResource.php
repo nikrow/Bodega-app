@@ -103,11 +103,13 @@ class ProductResource extends Resource
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia')
                     ->suffix('dias')
+                    ->default(0)
                     ->numeric(),
 
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
                     ->suffix('horas')
+                    ->default(0)
                     ->numeric()
                     ->reactive(),
                 ]);

@@ -90,11 +90,11 @@ class ApplicationRecordResource extends Resource
 
                 // Fecha de reingreso
                 TextColumn::make('reentry_date')
-                    ->label('Fecha de reingreso')
+                    ->label('Reingreso a cuartel')
                     ->getStateUsing(function ($record) {
                         $createdDate = $record->created_at ? $record->created_at->copy() : now();
-                        $reentryDays = $record->product->waiting_time ?? 0;
-                        return $createdDate->addDays($reentryDays);
+                        $reentryHour = $record->product->reentry ?? 0;
+                        return $createdDate->addHours($reentryHour);
                     })
                     ->date('d/m/Y')
                     ->sortable(),
@@ -104,8 +104,8 @@ class ApplicationRecordResource extends Resource
                     ->label('Reanudar cosecha')
                     ->getStateUsing(function ($record) {
                         $createdDate = $record->created_at ? $record->created_at->copy() : now();
-                        $waitingTimeHour = $record->product->reentry ?? 0;
-                        return $createdDate->addHours($waitingTimeHour);
+                        $reentryDays = $record->product->waiting_time ?? 0;
+                        return $createdDate->addDays($reentryDays);
                     })
                     ->date('d/m/Y H:i')
                     ->sortable(),

@@ -30,7 +30,7 @@ class ApplicationUsageRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha')
-                    ->date('d/m/Y')
+                    ->date('d/m/Y ')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('orderNumber')
                     ->label('Número de orden')
@@ -51,7 +51,7 @@ class ApplicationUsageRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dose_per_100l')
                     ->label('Dosis')
-                    ->numeric(3, '.', ',')
+                    ->numeric(3, ',', '.')
                     ->suffix('  l/100l')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('product_usage')
@@ -69,13 +69,18 @@ class ApplicationUsageRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('product.waiting_time')
                     ->suffix('  dias')
                     ->label('Carencia'),
-                Tables\Columns\TextColumn::make('product.reentry')
-                    ->label('Reingreso')
-                    ->suffix('   hora(s)')
-                    ->numeric()
+                
+                Tables\Columns\TextColumn::make('reentry_date')
+                    ->label('Reingreso a cuartel')
+                    ->getStateUsing(function ($record) {
+                        $createdDate = $record->created_at ? $record->created_at->copy() : now();
+                        $reentryHour = $record->product->reentry ?? 0;
+                        return $createdDate->addHours($reentryHour);
+                    })
+                    ->date('d/m/Y H:i')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('harvest_reentry')
-                    ->label('Reingreso Cosecha')
+                    ->label('Reanudar Cosecha')
                     ->getStateUsing(function ($record) {
                         // Calcula la fecha de reingreso a la cosecha sumando la carencia en días a la fecha de creación
                         $createdDate = $record->created_at ? $record->created_at->copy() : now();

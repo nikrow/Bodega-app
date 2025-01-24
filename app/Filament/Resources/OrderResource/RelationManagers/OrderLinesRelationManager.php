@@ -78,7 +78,7 @@ class OrderLinesRelationManager extends RelationManager
                     ->required()
                     ->label('Dosis')
                     ->suffix('l/100l')
-                    ->numeric(3, '.', ',')
+                    ->numeric(3, ',', '.')
                     ->reactive()
                     ->helperText(function (callable $get) {
                         $productId = $get('product_id');
@@ -119,14 +119,12 @@ class OrderLinesRelationManager extends RelationManager
                     ->label('Carencia')
                     ->required()
                     ->suffix('dias')
-                    ->default(0)
-                    ->numeric(),
+                    ->readOnly(),
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
                     ->required()
                     ->suffix('horas')
-                    ->default(0)
-                    ->numeric(),
+                    ->readOnly(),
                 Forms\Components\TextInput::make('EstimatedProductUsage')
                     ->label('Cantidad estimada de uso de producto')
                     ->readonly()
@@ -165,7 +163,7 @@ class OrderLinesRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dosis')
                     ->label('Dosis')
-                ->suffix('  l/100l')
+                    ->suffix('  l/100l')
                     ->numeric(decimalPlaces: 3, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable()
                     ->sortable(),
@@ -188,6 +186,7 @@ class OrderLinesRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make()
                     ->label('Agregar producto')
                     ->icon('heroicon-o-plus')
+                    ->visible(fn($record) => $this->getOwnerRecord()->orderApplications()->count() === 0)
                     ->color('primary'),
             ])
             ->actions([
