@@ -222,6 +222,7 @@
             <ul>
                 <li><strong>Cultivo:</strong> {{ $order->crop->especie ?? 'N/A' }}</li>
                 <li><strong>Objetivo:</strong> {{ $order->objective ?? 'N/A' }}</li>
+                <li><strong>Indicaciones:</strong> {{ $order->indications}}</li>
             </ul>
         </div>
     </div>

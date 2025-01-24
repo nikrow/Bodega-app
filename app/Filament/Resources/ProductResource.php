@@ -14,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ProductResource extends Resource
 {
@@ -101,10 +102,12 @@ class ProductResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia')
+                    ->suffix('dias')
                     ->numeric(),
 
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
+                    ->suffix('horas')
                     ->numeric()
                     ->reactive(),
                 ]);
@@ -172,7 +175,7 @@ class ProductResource extends Resource
     public static function getRelations(): array
     {
         return [
-
+            AuditsRelationManager::class
         ];
     }
 

@@ -51,8 +51,8 @@ class ApplicationUsageRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dose_per_100l')
                     ->label('Dosis')
-                    ->numeric()
-                    ->suffix('l/100l')
+                    ->numeric(3, '.', ',')
+                    ->suffix('  l/100l')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('product_usage')
                     ->label('Producto utilizado')
@@ -67,9 +67,11 @@ class ApplicationUsageRelationManager extends RelationManager
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('product.waiting_time')
+                    ->suffix('  dias')
                     ->label('Carencia'),
                 Tables\Columns\TextColumn::make('product.reentry')
                     ->label('Reingreso')
+                    ->suffix('   hora(s)')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('harvest_reentry')

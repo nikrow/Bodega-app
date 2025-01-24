@@ -2,34 +2,35 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\FamilyType;
-use App\Filament\Resources\OrderResource\Pages;
-use App\Filament\Resources\OrderResource\RelationManagers\ApplicationUsageRelationManager;
-use App\Filament\Resources\OrderResource\RelationManagers\OrderApplicationRelationManager;
-use App\Filament\Resources\OrderResource\RelationManagers\OrderLinesRelationManager;
-use App\Filament\Resources\OrderResource\RelationManagers\OrderParcelRelationManager;
+
+use Filament\Forms;
 use App\Models\Crop;
+use App\Models\User;
+use Filament\Tables;
 use App\Models\Field;
 use App\Models\Order;
-use App\Models\OrderParcel;
-use App\Models\Parcel;
-use App\Models\User;
-use App\Models\Warehouse;
 use Filament\Actions;
-use Filament\Facades\Filament;
-use Filament\Forms;
-use Filament\Forms\Components\Section;
+use App\Models\Parcel;
 use Filament\Forms\Form;
+use App\Enums\FamilyType;
+use App\Models\Warehouse;
+use Filament\Tables\Table;
+use App\Models\OrderParcel;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
-use Filament\Support\Enums\ActionSize;
-use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Section;
+use Filament\Support\Enums\ActionSize;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\ActionsPosition;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use App\Filament\Resources\OrderResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use App\Filament\Resources\OrderResource\RelationManagers\OrderLinesRelationManager;
+use App\Filament\Resources\OrderResource\RelationManagers\OrderParcelRelationManager;
+use App\Filament\Resources\OrderResource\RelationManagers\ApplicationUsageRelationManager;
+use App\Filament\Resources\OrderResource\RelationManagers\OrderApplicationRelationManager;
 
 class OrderResource extends Resource
 {
@@ -97,6 +98,9 @@ class OrderResource extends Resource
                             ->label('Mojamiento')
                             ->numeric()
                             ->required(),
+                        
+                        Forms\Components\Textarea::make('indications')
+                            ->label('Indicaciones'),
                         ]),
 
                 Section::make('Cuarteles')
@@ -134,8 +138,8 @@ class OrderResource extends Resource
                                     $set('TotalArea', $totalArea);
                                 })
                                 ->saveRelationshipsUsing(function (Order $record, $state) {
-                                    $fieldId = $record->field_id; // Obtén el field_id de la orden actual
-                                    $userId = auth()->id(); // Obtén el ID del usuario autenticado
+                                    $fieldId = $record->field_id;
+                                    $userId = auth()->id(); 
 
                                     // Verificar relaciones existentes y actualizar los campos
                                     $syncData = collect($state)->mapWithKeys(function ($parcelId) use ($fieldId, $userId, $record) {
@@ -271,15 +275,24 @@ class OrderResource extends Resource
                         ->color('success')
                         ->icon('heroicon-o-check-circle')
                         ->requiresConfirmation()
-                        ->action(function (Order $record) {
-                            // Lógica para marcar como completado
-                            $record->is_completed = true;
-                            $record->save();
-
-                            // Opcional: Registrar una entrada en los logs
-                            Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
-                        })
+                        ->form([
+                            Forms\Components\Textarea::make('observations')
+                                ->label('Resumen de la orden')
+                                ->required(),
+                        ])
+                        ->action(function (array $data, Order $record) {
+                            try {
+                                $record->observations = $data['observations'];
+                                $record->is_completed = true;
+                                $record->save();
+                        
+                                Log::info("Orden ID: {$record->id} ha sido completada por el usuario ID: " . Auth::id());
+                            } catch (\Exception $e) {
+                                Log::error("Error al guardar la orden: {$e->getMessage()}");
+                            }
+                        })                     
                         ->hidden(fn(Order $record) => $record->is_completed),
+                        
                     Tables\Actions\DeleteAction::make()
                         ->visible(fn(Order $record) => $record->orderLines()->count() === 0),
                     Actions\Action::make('downloadPdf')

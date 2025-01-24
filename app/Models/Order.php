@@ -32,6 +32,8 @@ class Order extends Model
         'is_completed',
         'applicators',
         'objective',
+        'observations',
+        'indications',
 
     ];
     protected $casts = [
@@ -60,12 +62,10 @@ class Order extends Model
         });
         static::updating(function ($order) {
             if ($order->is_completed && $order->isDirty()) {
-                $cambiosRelevantes = collect($order->getDirty())->except(['is_completed']);
+                $cambiosRelevantes = collect($order->getDirty())->except(['is_completed', 'observations']);
                 if ($cambiosRelevantes->isEmpty()) {
-                    // Solo se está actualizando 'is_completed' y los campos a ignorar
                     return;
                 }
-                // Si se intenta modificar otros campos, lanzar excepción
                 throw ValidationException::withMessages([
                     'is_completed' => 'No puedes modificar un movimiento que ya ha sido completado.',
                 ]);

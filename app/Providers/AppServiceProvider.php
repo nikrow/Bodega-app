@@ -4,16 +4,13 @@ namespace App\Providers;
 
 
 
+
 use App\Console\Commands\UpdateMissingOrderApplicationUsage;
 use App\Listeners\UpdateLoginTime;
-use App\Models\Crop;
 use App\Models\Movimiento;
 use App\Models\MovimientoProducto;
 use App\Models\OrderApplication;
 
-use App\Models\OrderApplicationUsage;
-use App\Models\User;
-use App\Models\Warehouse;
 use App\Observers\MovimientoObserver;
 use App\Observers\MovimientoProductoObserver;
 use App\Observers\OrderApplicationObserver;
@@ -24,8 +21,6 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Spatie\Activitylog\Models\Activity;
-use App\Policies\CropPolicy;
-use App\Policies\WarehousePolicy;
 use App\Listeners\UpdateActiveMinutesOnLogout;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -56,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
     ];
     protected $commands = [
         UpdateMissingOrderApplicationUsage::class,
+        
     ];
 
     /**

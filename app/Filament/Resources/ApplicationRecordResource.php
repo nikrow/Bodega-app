@@ -40,7 +40,7 @@ class ApplicationRecordResource extends Resource
                 // Fecha de aplicación
                 TextColumn::make('created_at')
                     ->label('Fecha aplicación')
-                    ->date('d/m/Y')
+                    ->date('d/m/Y H:i')
                     ->sortable(),
                 TextColumn::make('order_application_id')
                     ->label('ID Aplicación')
@@ -85,6 +85,7 @@ class ApplicationRecordResource extends Resource
                 // Carencia
                 TextColumn::make('product.waiting_time')
                     ->label('Carencia')
+                    ->suffix('  dias')
                     ->sortable(),
 
                 // Fecha de reingreso
@@ -92,7 +93,7 @@ class ApplicationRecordResource extends Resource
                     ->label('Fecha de reingreso')
                     ->getStateUsing(function ($record) {
                         $createdDate = $record->created_at ? $record->created_at->copy() : now();
-                        $reentryDays = $record->product->reentry ?? 0;
+                        $reentryDays = $record->product->waiting_time ?? 0;
                         return $createdDate->addDays($reentryDays);
                     })
                     ->date('d/m/Y')
@@ -103,10 +104,10 @@ class ApplicationRecordResource extends Resource
                     ->label('Reanudar cosecha')
                     ->getStateUsing(function ($record) {
                         $createdDate = $record->created_at ? $record->created_at->copy() : now();
-                        $waitingTimeDays = $record->product->waiting_time ?? 0;
-                        return $createdDate->addDays($waitingTimeDays);
+                        $waitingTimeHour = $record->product->reentry ?? 0;
+                        return $createdDate->addHours($waitingTimeHour);
                     })
-                    ->date('d/m/Y')
+                    ->date('d/m/Y H:i')
                     ->sortable(),
 
                 // Dosis l/100 lt

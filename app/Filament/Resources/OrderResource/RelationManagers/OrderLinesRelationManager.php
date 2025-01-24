@@ -78,7 +78,7 @@ class OrderLinesRelationManager extends RelationManager
                     ->required()
                     ->label('Dosis')
                     ->suffix('l/100l')
-                    ->numeric()
+                    ->numeric(3, '.', ',')
                     ->reactive()
                     ->helperText(function (callable $get) {
                         $productId = $get('product_id');
@@ -118,11 +118,13 @@ class OrderLinesRelationManager extends RelationManager
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia')
                     ->required()
+                    ->suffix('dias')
                     ->default(0)
                     ->numeric(),
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
                     ->required()
+                    ->suffix('horas')
                     ->default(0)
                     ->numeric(),
                 Forms\Components\TextInput::make('EstimatedProductUsage')
@@ -163,18 +165,20 @@ class OrderLinesRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dosis')
                     ->label('Dosis')
-                ->suffix('      l/100l')
+                ->suffix('  l/100l')
                     ->numeric(decimalPlaces: 3, thousandsSeparator: '.', decimalSeparator: ',')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('waiting_time')
                     ->label('Carencia')
                     ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ',')
+                    ->suffix('  dias')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reentry')
                     ->label('Reingreso')
                     ->searchable()
+                    ->suffix('  horas')
                     ->sortable(),
             ])
             ->filters([

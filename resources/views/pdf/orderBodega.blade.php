@@ -202,6 +202,7 @@
                 <li></li>
                 <li><strong>Mojamiento:</strong> {{ number_format($order->wetting, 2) }} l/ha</li>
                 <li><strong>Motadas esperadas:</strong> {{ number_format(($order->total_area * $order->wetting) / 2000, 2) }} motadas</li>
+                <li><strong>Indicaciones:</strong> {{ $order->indications}}</li>
             </ul>
         </div>
     </div>

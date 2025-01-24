@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources\OrderResource\Pages;
 
-use App\Filament\Resources\OrderResource;
 use App\Models\Order;
-use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
 use Filament\Tables\Actions\Action;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Textarea;
+use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\OrderResource;
+use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
 
 class EditOrder extends EditRecord
 {
@@ -35,14 +36,22 @@ class EditOrder extends EditRecord
                 ->color('success')
                 ->icon('heroicon-o-check-circle')
                 ->requiresConfirmation()
-                ->action(function (Order $record) {
-                    // Lógica para marcar como completado
-                    $record->is_completed = true;
-                    $record->save();
-
-                    // Opcional: Registrar una entrada en los logs
-                    Log::info("Movimiento ID: {$record->id} ha sido completado por el usuario ID: " . Auth::id());
-                })
+                ->form([
+                    Textarea::make('observations')
+                        ->label('Resumen de la orden')
+                        ->required(),
+                ])
+                ->action(function (array $data, Order $record) {
+                    try {
+                        $record->observations = $data['observations'];
+                        $record->is_completed = true;
+                        $record->save();
+                
+                        Log::info("Orden ID: {$record->id} ha sido completada por el usuario ID: " . Auth::id());
+                    } catch (\Exception $e) {
+                        Log::error("Error al guardar la orden: {$e->getMessage()}");
+                    }
+                })                     
                 ->hidden(fn(Order $record) => $record->is_completed),
         ];
     }
