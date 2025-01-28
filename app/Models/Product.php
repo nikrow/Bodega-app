@@ -24,7 +24,9 @@ class Product extends Model implements Auditable
         'SAP_family',
         'family',
         'price',
+        'requires_batch_control',
         'waiting_time',
+        'sag_code',
         'reentry',
         'created_by',
         'updated_by',
@@ -34,6 +36,10 @@ class Product extends Model implements Auditable
         'dosis_min',
         'dosis_max',
     ];
+    protected $casts = [
+        'requires_batch_control' => 'boolean',
+    ];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -84,6 +90,10 @@ class Product extends Model implements Auditable
     public function field()
     {
         return $this->belongsTo(Field::class);
+    }
+    public function requiresBatchControl(): bool
+    {
+        return $this->requires_batch_control;
     }
 
 }

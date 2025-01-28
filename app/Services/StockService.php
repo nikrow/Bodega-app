@@ -2,19 +2,20 @@
 
 namespace App\Services;
 
-use App\Enums\MovementType;
-use App\Exceptions\Stock\InsufficientStockException;
-use App\Exceptions\Stock\InvalidMovementTypeException;
-use App\Exceptions\Stock\ProductNotFoundException;
-use App\Exceptions\Stock\WarehouseNotFoundException;
-use App\Models\Movimiento;
-use App\Models\MovimientoProducto;
-use App\Models\Stock;
-use App\Models\StockMovement;
 use Exception;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Batch;
+use App\Models\Stock;
+use App\Models\Movimiento;
+use App\Enums\MovementType;
+use App\Models\StockMovement;
+use App\Models\MovimientoProducto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Exceptions\Stock\ProductNotFoundException;
+use App\Exceptions\Stock\InsufficientStockException;
+use App\Exceptions\Stock\WarehouseNotFoundException;
+use App\Exceptions\Stock\InvalidMovementTypeException;
 
 class StockService
 {
@@ -54,8 +55,31 @@ class StockService
      */
     private function revertPreviousImpact(MovementType $tipo, Movimiento $movimiento, MovimientoProducto $productoMovimiento, float $cantidadAnterior): void
     {
+        $producto = $productoMovimiento->producto;
         switch ($tipo) {
             case MovementType::ENTRADA:
+                if ($producto->requiresBatchControl()) {
+                    // Revertir impacto en lotes
+                    $batches = Batch::where('product_id', $producto->id)
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+    
+                    foreach ($batches as $batch) {
+                        if ($cantidadAnterior <= 0) {
+                            break;
+                        }
+    
+                        $cantidadReducir = min($batch->quantity, $cantidadAnterior);
+                        $batch->quantity -= $cantidadReducir;
+                        $cantidadAnterior -= $cantidadReducir;
+                        $batch->save();
+    
+                        if ($batch->quantity <= 0) {
+                            $batch->delete();
+                        }
+                    }
+                } else {
+
                 $stockDestino = $this->getOrCreateStock(
                     $productoMovimiento->producto_id,
                     $movimiento->bodega_destino_id,
@@ -64,7 +88,7 @@ class StockService
                     $movimiento->user_id
                 );
                 $this->updateStock($stockDestino, -$cantidadAnterior, null, $movimiento->user_id, $movimiento, $productoMovimiento);
-
+            }      
                 break;
 
             case MovementType::PREPARACION:
@@ -116,6 +140,21 @@ class StockService
     {
         switch ($tipo) {
             case MovementType::ENTRADA:
+                if ($producto->requiresBatchControl()) {
+                    // Crear un nuevo lote
+                    Batch::create([
+                        'product_id' => $producto->id,
+                        'quantity' => $cantidadNueva,
+                        'expiration_date' => $productoMovimiento->expiration_date,
+                        'lot_number' => $productoMovimiento->lot_number,
+                        'buy_order' => $movimiento->orden_compra,
+                        'invoice_number' => $movimiento->guia_despacho,
+                        'provider' => $movimiento->nombre_proveedor,
+                    ]);
+    
+                    Log::info("Lote creado: Producto ID {$producto->product_name}, Cantidad {$cantidadNueva}, Bodega ID {$movimiento->bodega_destino_id}");
+                } else {
+                    // Actualizar stock de destino
                 $stockDestino = $this->getOrCreateStock(
                     $productoMovimiento->producto_id,
                     $movimiento->bodega_destino_id,
@@ -124,10 +163,10 @@ class StockService
                     $userId
                 );
                 $this->updateStock($stockDestino, $cantidadNueva, $producto->price, $userId, $movimiento, $productoMovimiento);
-
+                }
                 // Registrar en stock_movements (sin signos negativos)
-                $descripcion = "Entrada: OC: {$movimiento->orden_compra}, GD: {$movimiento->guia_despacho},
-                                Proveedor: {$movimiento->nombre_proveedor}. ID Movimiento: {$movimiento->id}";
+                $descripcion = "OC: {$movimiento->orden_compra}, GD: {$movimiento->guia_despacho},
+                                Proveedor: {$movimiento->nombre_proveedor}";
                 $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, $descripcion, $movimiento->bodega_destino_id);
                 break;
 
@@ -274,7 +313,7 @@ class StockService
      */
     private function handleSalida(Stock $stockOrigen, float $cantidad, float $precioCompra, int $userId, Movimiento $movimiento, MovimientoProducto $productoMovimiento): void
     {
-        $this->updateStock($stockOrigen, -$cantidad, $precioCompra, $userId, $movimiento,$productoMovimiento);
+            $this->updateStock($stockOrigen, -$cantidad, $precioCompra, $userId, $movimiento,$productoMovimiento);
     }
 
     /**

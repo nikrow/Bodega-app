@@ -24,12 +24,11 @@ class ApplicationRecordResource extends Resource
 {
     protected static ?string $model = OrderApplicationUsage::class;
 
-    protected static ?string $navigationIcon = 'carbon-report';
     protected static ?string $navigationLabel = 'Registro de aplicaciones';
     protected static ?string $pluralModelLabel = 'Registros de aplicaciones';
     protected static ?string $modelLabel = 'Registro de aplicación';
     protected static ?string $navigationGroup = 'Informes';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function table(Tables\Table $table): Tables\Table
     {
@@ -139,7 +138,7 @@ class ApplicationRecordResource extends Resource
                 // Cantidad de producto utilizado
                 TextColumn::make('product_usage')
                     ->label('Producto utilizado')
-                    ->numeric(decimalPlaces: 2)
+                    ->numeric(decimalPlaces: 3)
                     ->suffix(' l')
                     ->sortable(),
 

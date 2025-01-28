@@ -85,6 +85,12 @@ class MovimientoProductosRelationManager extends RelationManager
                             // Obtener el producto y su unidad de medida
                             $product = Product::find($productId);
 
+                            if ($product && $product->requiresBatchControl()) {
+                                $set('requires_batch_control', true);
+                            } else {
+                                $set('requires_batch_control', false);
+                            }
+
                             if ($product) {
                                 $set('unidad_medida', $product->unit_measure);
                                 $set('precio_compra', $product->price);
@@ -134,16 +140,18 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->required()
                     ->disabled()
                     ->default('Sin unidad'),
-
+                
                 Forms\Components\TextInput::make('lot_number')
                     ->label('Número de Lote')
                     ->string()
-                    ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo->value === 'entrada'),
+                    ->visible(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada')
+                    ->required(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada'),
 
                 Forms\Components\DatePicker::make('expiration_date')
                     ->label('Fecha de Vencimiento')
                     ->date()
-                    ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo->value === 'entrada'),
+                    ->visible(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada')
+                    ->required(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada'),
 
                 Forms\Components\Hidden::make('precio_compra'),
             ]);

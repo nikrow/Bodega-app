@@ -1,0 +1,3 @@
+  App-2.0[m bdfe621d test
+* [32mmain   [m 12c53888 [[34mBodega-app/main[m: ahead 2] V 1.4.6   Changes to be committed: 	modified:   app/Filament/Resources/ApplicationRecordResource.php 	modified:   app/Filament/Resources/OrderResource/RelationManagers/ApplicationUsageRelationManager.php 	modified:   app/Filament/Resources/OrderResource/RelationManagers/OrderLinesRelationManager.php 	modified:   app/Filament/Resources/ProductResource.php
+  test   [m cbb6eb00 [[34mBodega-app/test[m] 1.3.5 test dockerfile

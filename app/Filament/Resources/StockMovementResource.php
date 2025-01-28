@@ -21,7 +21,6 @@ class StockMovementResource extends Resource
 {
     protected static ?string $model = StockMovement::class;
 
-    protected static ?string $navigationIcon = 'carbon-report';
     protected static ?string $navigationLabel = 'Movimientos Stock';
     protected static ?string $modelLabel = 'Movimientos Stock';
     protected static ?string $navigationGroup = 'Informes';

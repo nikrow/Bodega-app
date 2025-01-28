@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Google\Service\Compute\Zone;
 use Illuminate\Validation\Rule;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
@@ -90,6 +91,11 @@ class ProductResource extends Resource
                         UnidadMedida::UNIDAD->value => 'unidad',
                     ])
                     ->required(),
+                Forms\Components\TextInput::make('sag_code')
+                    ->label('Código SAG')
+                    ->required()
+                    ->unique(),
+                
                 Forms\Components\TextInput::make('dosis_min')
                     ->label('Dosis Min')
                     ->helperText ('Lt-Kg/100l')
@@ -103,6 +109,7 @@ class ProductResource extends Resource
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia')
                     ->suffix('dias')
+                    ->required()
                     ->default(0)
                     ->numeric(),
 
@@ -110,8 +117,13 @@ class ProductResource extends Resource
                     ->label('Reingreso')
                     ->suffix('horas')
                     ->default(0)
+                    ->required()
                     ->numeric()
                     ->reactive(),
+                Forms\Components\Toggle::make('requires_batch_control')
+                    ->label('Requiere Control de Lote')
+                    ->onColor('success')
+                    ->default(false),
                 ]);
     }
 
@@ -127,7 +139,6 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('active_ingredients')
                     ->label('Ingredientes activos')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('family')
                     ->label('Grupo')
@@ -141,12 +152,22 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('unit_measure')
                     ->label('Unidad de Medida')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('sag_code')
+                    ->label('Código SAG')
+                    ->sortable()
+                    ->copyable()
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('price')
                     ->label('Precio USD')
                     ->sortable()
                     ->numeric(decimalPlaces: 2, decimalSeparator: ',', thousandsSeparator: '.')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
+                Tables\Columns\ToggleColumn::make('requires_batch_control')
+                    ->label('Control de Lote')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
