@@ -6,13 +6,17 @@ use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use OwenIt\Auditing\Contracts\Auditable;
+use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Climate extends Model
+class Climate extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
+
     protected $table = 'climates';
     protected $fillable = [
         'field_id',
@@ -53,5 +57,9 @@ class Climate extends Model
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+    public function audit()
+    {
+        return $this->morphMany(Audit::class, 'auditable');
     }
 }

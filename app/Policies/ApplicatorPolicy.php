@@ -79,7 +79,7 @@ class ApplicatorPolicy
     /**
      * Determinar si el usuario puede eliminar permanentemente un registro.
      */
-    public function forceDelete(User $user, Applicator $aplicator): bool
+    public function forceDelete(User $user, Applicator $applicator): bool
     {
         return $user->role === RoleType::ADMIN->value;
     }
@@ -90,5 +90,16 @@ class ApplicatorPolicy
     private function hasAccess(User $user, array $roles): bool
     {
         return in_array($user->role, $roles);
+    }
+    public function restoreAudit(User $user, Applicator $applicator): bool
+    {
+        return $user->role === RoleType::ADMIN->value;
+    }
+    public function audit(User $user,Applicator $applicator): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN->value,
+            RoleType::AGRONOMO->value,
+        ]);
     }
 }

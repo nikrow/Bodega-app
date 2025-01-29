@@ -83,5 +83,18 @@ class ProductPolicy
     {
         return $user->role === RoleType::ADMIN->value;
     }
+
+    public function restoreAudit(User $user, Product $product): bool
+    {
+        return $user->role === RoleType::ADMIN->value;
+    }
+    public function audit(User $user, Product $product): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN->value,
+            RoleType::AGRONOMO->value,
+        ]);
+    }
+    
 }
 

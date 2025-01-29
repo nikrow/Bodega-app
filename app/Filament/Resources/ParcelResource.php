@@ -4,20 +4,22 @@ namespace App\Filament\Resources;
 
 
 
-use App\Enums\RoleType;
-use App\Filament\Resources\ParcelResource\Pages;
-use App\Filament\Resources\ParcelResource\RelationManagers\AplicacionesRelationManager;
-use App\Models\Crop;
-use App\Models\Parcel;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use App\Models\Crop;
 use Filament\Tables;
-use Filament\Tables\Actions\ActionGroup;
+use App\Models\Parcel;
+use App\Enums\RoleType;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Auth;
+use OwenIt\Auditing\Contracts\Audit;
+use Filament\Tables\Actions\ActionGroup;
+use App\Filament\Resources\ParcelResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+use App\Filament\Resources\ParcelResource\RelationManagers\AplicacionesRelationManager;
 
 
 class ParcelResource extends Resource
@@ -195,6 +197,7 @@ class ParcelResource extends Resource
     {
         return [
             AplicacionesRelationManager::class,
+            AuditsRelationManager::class
         ];
     }
 

@@ -81,5 +81,16 @@ class ParcelPolicy
     {
         return $user->role === RoleType::ADMIN->value;
     }
+
+    public function restoreAudit(User $user, Parcel $parcel): bool
+    {
+        return $user->role === RoleType::ADMIN->value;
+    }
+    public function audit(User $user, Parcel $parcel): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN->value,
+        ]);
+    }
 }
 

@@ -36,7 +36,7 @@ class MovimientoResource extends Resource
     protected static ?int $navigationSort = 20;
     protected static ?string $navigationLabel = 'Agregar movimiento';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'eva-swap';
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {

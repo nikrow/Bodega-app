@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -17,8 +18,7 @@ class BatchResource extends Resource
 {
     protected static ?string $model = Batch::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Bodega';
+    protected static ?string $navigationGroup = 'Informes';
     protected static ?string $navigationLabel = 'Lotes';
     protected static ?string $modelLabel = 'Lote';
     protected static ?int $navigationSort = 40;
@@ -82,12 +82,10 @@ class BatchResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+            
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    
-                ]),
+                ExportBulkAction::make(),
             ]);
     }
 
@@ -103,7 +101,7 @@ class BatchResource extends Resource
         return [
             'index' => Pages\ListBatches::route('/'),
             'create' => Pages\CreateBatch::route('/create'),
-            'edit' => Pages\EditBatch::route('/{record}/edit'),
+            /* 'edit' => Pages\EditBatch::route('/{record}/edit'), */
         ];
     }
 }

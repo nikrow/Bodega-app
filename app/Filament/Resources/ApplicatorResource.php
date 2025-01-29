@@ -2,22 +2,23 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ApplicatorResource\Pages;
-use App\Filament\Resources\ApplicatorResource\RelationManagers;
-use App\Models\Applicator;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
+use App\Models\Applicator;
 use Filament\Tables\Table;
 use Illuminate\Validation\Rule;
+use Filament\Resources\Resource;
+use App\Filament\Resources\ApplicatorResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use App\Filament\Resources\ApplicatorResource\RelationManagers;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ApplicatorResource extends Resource
 {
     protected static ?string $model = Applicator::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'fas-people-group';
     protected static ?string $tenantOwnershipRelationshipName = 'field';
     protected static ?string $navigationGroup = 'Anexos';
     protected static ?string $navigationLabel = 'Aplicadores';
@@ -95,7 +96,7 @@ class ApplicatorResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AuditsRelationManager::class
         ];
     }
 

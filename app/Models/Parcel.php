@@ -108,8 +108,8 @@ class Parcel extends Model implements Auditable
     {
         return $this->hasMany(OrderApplicationUsage::class, 'parcel_id');
     }
-
-
-
-
+    public function audit()
+    {
+        return $this->morphTo(Audit::class, 'auditable_id', 'id');
+    }
 }

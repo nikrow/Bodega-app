@@ -91,4 +91,16 @@ class ClimatePolicy
     {
         return in_array($user->role, $roles);
     }
+
+    public function restoreAudit(User $user, Climate $climate): bool
+    {
+        return $user->role === RoleType::ADMIN->value;
+    }
+    public function audit(User $user, Climate $climate): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN->value,
+            RoleType::AGRONOMO->value,
+        ]);
+    }
 }

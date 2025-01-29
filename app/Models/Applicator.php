@@ -5,13 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use OwenIt\Auditing\Contracts\Auditable;
+use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Applicator extends Model
+class Applicator extends Model implements Auditable
 {
     use LogsActivity;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
+
     protected $table = 'applicators';
     protected $fillable = [
         'field_id',
@@ -57,5 +61,9 @@ class Applicator extends Model
             ->withTimestamps();
     }
 
+    public function audit()
+    {
+        return $this->morphMany(Audit::class, 'auditable'); 
+    }
 
 }
