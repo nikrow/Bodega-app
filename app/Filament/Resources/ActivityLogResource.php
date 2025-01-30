@@ -52,6 +52,7 @@ class ActivityLogResource extends ActivityLog
                             ->when($data['end_date'], fn ($q) => $q->whereDate('created_at', '<=', $data['end_date']));
                     }),
             ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->bulkActions([
                 ExportBulkAction::make(),
 

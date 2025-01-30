@@ -402,16 +402,33 @@ class StockService
         $tipo = MovementType::from(strtolower($movimiento->tipo->value));
         $cantidad = $productoMovimiento->cantidad;
         $userId = Auth::id() ?? 1;
+        $producto = $productoMovimiento->producto;
 
         try {
             switch ($tipo) {
                 case MovementType::ENTRADA:
+                    if ($producto->requiresBatchControl()) {
+                        // Buscar lote asociado a esta entrada y eliminarlo
+                        $batch = Batch::where('product_id', $producto->id)
+                            ->where('lot_number', $productoMovimiento->lot_number)
+                            ->where('expiration_date', $productoMovimiento->expiration_date)
+                            ->first();
+    
+                        if ($batch) {
+                            $batch->delete();
+                            Log::info("Lote eliminado: Producto ID {$producto->id}, Lote ID {$batch->id}");
+                        } else {
+                            Log::warning("No se encontró el lote asociado a la entrada para eliminar.");
+                        }
+                    } else {
+    
                     $stockDestino = $this->getStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_destino_id,
                         $movimiento->field_id
                     );
                     $this->updateStock($stockDestino, -$cantidad, null, $userId, $movimiento, $productoMovimiento);
+                }
                     break;
 
                 case MovementType::SALIDA:
