@@ -1,0 +1,61 @@
+spec:
+  name: sea-lion-app
+  services:
+  - name: web
+    git:
+      repo_clone_url: https://github.com/nikrow/Bodega-app.git
+      branch: main
+    build_command: |
+      install-php-extensions pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl
+      composer install --no-dev --optimize-autoloader
+      npm ci
+      npm run build
+    run_command: php artisan serve --host=0.0.0.0 --port=$PORT
+    envs:
+    - key: APP_KEY
+      scope: RUN_AND_BUILD_TIME
+      value: ${APP_KEY}
+    - key: APP_ENV
+      scope: RUN_AND_BUILD_TIME
+      value: production
+    - key: APP_DEBUG
+      scope: RUN_AND_BUILD_TIME
+      value: "false"
+    - key: DB_CONNECTION
+      scope: RUN_AND_BUILD_TIME
+      value: ${DB_CONNECTION}
+    - key: DB_HOST
+      scope: RUN_AND_BUILD_TIME
+      value: ${DB_HOST}
+    - key: DB_PORT
+      scope: RUN_AND_BUILD_TIME
+      value: ${DB_PORT}
+    - key: DB_DATABASE
+      scope: RUN_AND_BUILD_TIME
+      value: ${DB_DATABASE}
+    - key: DB_USERNAME
+      scope: RUN_AND_BUILD_TIME
+      value: ${DB_USERNAME}
+    - key: DB_PASSWORD
+      scope: RUN_AND_BUILD_TIME
+      value: ${DB_PASSWORD}
+    http_port: 8080
+    routes:
+    - path: /
+    hooks:
+      postDeploy:
+        cmds:
+          - php artisan config:clear
+          - php artisan cache:clear 
+          - php artisan route:clear 
+          - php artisan view:clear
+          - php artisan optimize:clear 
+          - composer dump-autoload
+          - php artisan migrate --force
+          - php artisan config:cache
+          - php artisan event:cache
+          - php artisan route:cache
+          - php artisan view:cache 
+          - php -d memory_limit=256M artisan optimize
+          - php artisan filament:optimize
+          - php artisan storage:link

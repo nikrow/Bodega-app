@@ -1,0 +1,35 @@
+name: sea-lion-app
+services:
+  - name: web
+    git:
+      repo_clone_url: https://github.com/nikrow/Bodega-app.git
+      branch: main
+    dockerfile_path: Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xs
+    envs:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+    routes:
+      - path: /
+    health_check:
+      http_path: /health
+    post_deploy:
+      cmds:
+        - php artisan config:clear
+        - php artisan cache:clear 
+        - php artisan route:clear 
+        - php artisan view:clear
+        - php artisan optimize:clear 
+        - composer dump-autoload
+        - php artisan migrate --force
+        - php artisan config:cache
+        - php artisan event:cache
+        - php artisan route:cache
+        - php artisan view:cache 
+        - php -d memory_limit=256M artisan optimize
+        - php artisan filament:optimize
+        - php artisan storage:link
