@@ -15,6 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Movimiento extends Model implements Auditable
 {
     use HasFactory;
+    
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
     protected $fillable = [

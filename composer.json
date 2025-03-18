@@ -30,6 +30,7 @@
         "pxlrbt/filament-excel": "^2.3",
         "rupadana/filament-api-service": "^3.3",
         "spatie/browsershot": "^4.4",
+        "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-pdf": "^1.5",
         "swisnl/filament-backgrounds": "^1.1",
         "tapp/filament-auditing": "^3.0",
