@@ -26,7 +26,7 @@ class Parcel extends Model implements Auditable
     protected $fillable = [
         'name',
         'field_id',
-        'crop_id',
+        'crops_id',
         'planting_year',
         'plants',
         'surface',
@@ -34,6 +34,7 @@ class Parcel extends Model implements Auditable
         'updated_by',
         'slug',
         'is_active',
+        'user_id',
         'deactivated_at',
         'deactivated_by',
         'deactivation_reason',
@@ -47,6 +48,7 @@ class Parcel extends Model implements Auditable
     {
         static::creating(function ($parcel) {
             // Asignar `created_by` y `updated_by` al usuario autenticado
+            $parcel->user_id = Auth::id();
             $parcel->created_by = Auth::id();
             $parcel->updated_by = Auth::id();
             $parcel->field_id = Filament::getTenant()->id;

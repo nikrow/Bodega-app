@@ -5,7 +5,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum EquipmentType: string implements HasColor, HasIcon, HasLabel
+enum EquipmentType: string implements HasColor, HasLabel
 {
     case TURBONEBULIZADOR = 'turbonebulizador';
     case TURBOCANON = 'turbocañon';
@@ -93,22 +93,6 @@ enum EquipmentType: string implements HasColor, HasIcon, HasLabel
             self::INYECCION => 'warning',
         };
     }
-    public function getIcon(): ?string
-    {
-        return match ($this) {
-            self::TURBONEBULIZADOR => 'heroicon-o-cloud',
-            self::TURBOCANON => 'heroicon-o-fire',
-            self::HELICOPTERO => 'heroicon-o-airplane',
-            self::DRON => 'heroicon-o-drone',
-            self::CARACOL => 'heroicon-o-bug',
-            self::BOMBAESPALDA => 'heroicon-o-backpack',
-            self::BARRA => 'heroicon-o-view-grid',
-            self::AZUFRADOR => 'heroicon-o-sun',
-            self::PITON => 'heroicon-o-cursor-click',
-            self::BARRA_PULVERIZACION => 'heroicon-o-view-grid',
-            self::VIA_RIEGO => 'heroicon-o-view-grid',
-            self::INYECCION => 'heroicon-o-view-grid',
-        };
-    }
+    
 
 }

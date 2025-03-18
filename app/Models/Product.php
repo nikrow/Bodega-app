@@ -53,6 +53,7 @@ class Product extends Model implements Auditable
     {
         static::creating(function ($field) {
 
+            $field->user_id = Auth::id();
             $field->created_by = Auth::id();
             $field->updated_by = Auth::id();
             $field->slug = Str::slug($field->product_name);

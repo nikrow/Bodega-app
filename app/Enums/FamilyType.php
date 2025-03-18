@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum FamilyType: string implements HasLabel, HasColor, HasIcon
+enum FamilyType: string implements HasLabel, HasColor
 {
     case INSECTICIDA = 'insecticida';
     case HERBICIDA = 'herbicida';
@@ -63,18 +63,4 @@ enum FamilyType: string implements HasLabel, HasColor, HasIcon
         };
     }
 
-    public function getIcon(): ?string
-    {
-        return match ($this) {
-            self::INSECTICIDA => 'heroicon-o-bug',
-            self::HERBICIDA => 'heroicon-o-sparkles',
-            self::FERTILIZANTE => 'heroicon-o-flower',
-            self::ACARICIDA => 'heroicon-o-shield-check',
-            self::FUNGICIDA => 'heroicon-o-cloud',
-            self::BIOESTIMULANTE => 'heroicon-o-leaf',
-            self::REGULADOR => 'heroicon-o-arrow-circle-up',
-            self::BLOQUEADOR => 'heroicon-o-lock-closed',
-            self::OTROS => 'heroicon-o-heart',
-        };
-    }
 }
