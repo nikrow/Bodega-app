@@ -14,10 +14,25 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nodejs \
     npm \
+    # Dependencias para intl
+    libicu-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalamos extensiones PHP
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+# Instalamos extensiones PHP incluyendo intl
+RUN docker-php-ext-configure intl \
+    && docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    intl
+
+# Establecemos variables de entorno
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV PATH="$PATH:/root/.composer/vendor/bin"
 
 # Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -37,7 +52,7 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
 COPY . /app
 
 # Instalamos dependencias
-RUN composer install --no-dev --optimize-autoloader \
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
     && npm ci \
     && npm run build \
     && rm -rf node_modules
@@ -45,6 +60,25 @@ RUN composer install --no-dev --optimize-autoloader \
 # Configuramos permisos
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
+
+# Creamos el script post-deploy
+RUN echo '#!/bin/bash \n\
+php artisan config:clear \n\
+php artisan cache:clear \n\
+php artisan route:clear \n\
+php artisan view:clear \n\
+php artisan optimize:clear \n\
+composer dump-autoload \n\
+php artisan migrate --force \n\
+php artisan config:cache \n\
+php artisan event:cache \n\
+php artisan route:cache \n\
+php artisan view:cache \n\
+php -d memory_limit=256M artisan optimize \n\
+php artisan filament:optimize \n\
+php artisan storage:link \n\
+' > /app/post-deploy.sh \
+&& chmod +x /app/post-deploy.sh
 
 # Exponemos el puerto
 EXPOSE 8080

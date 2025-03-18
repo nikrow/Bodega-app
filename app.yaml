@@ -1,35 +1,60 @@
 name: sea-lion-app
 services:
   - name: web
-    git:
-      repo_clone_url: https://github.com/nikrow/Bodega-app.git
-      branch: main
     dockerfile_path: Dockerfile
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: nikrow/Bodega-app
     http_port: 8080
     instance_count: 1
     instance_size_slug: basic-xs
-    envs:
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: "false"
     routes:
       - path: /
+    source_dir: /
     health_check:
-      http_path: /health
-    post_deploy:
-      cmds:
-        - php artisan config:clear
-        - php artisan cache:clear 
-        - php artisan route:clear 
-        - php artisan view:clear
-        - php artisan optimize:clear 
-        - composer dump-autoload
-        - php artisan migrate --force
-        - php artisan config:cache
-        - php artisan event:cache
-        - php artisan route:cache
-        - php artisan view:cache 
-        - php -d memory_limit=256M artisan optimize
-        - php artisan filament:optimize
-        - php artisan storage:link
+      http_path: /
+      port: 8080
+    envs:
+      - key: APP_NAME
+        scope: RUN_TIME
+        value: Laravel
+      - key: APP_ENV
+        scope: RUN_TIME
+        value: production
+      - key: APP_KEY
+        scope: RUN_TIME
+        value: ${APP_KEY}
+      - key: APP_DEBUG
+        scope: RUN_TIME
+        value: "false"
+      - key: APP_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
+      - key: LOG_CHANNEL
+        scope: RUN_TIME
+        value: stack
+      - key: LOG_LEVEL
+        scope: RUN_TIME
+        value: debug
+      - key: DB_CONNECTION
+        scope: RUN_TIME
+        value: mysql
+      - key: DB_HOST
+        scope: RUN_TIME
+        value: ${DB_HOST}
+      - key: DB_PORT
+        scope: RUN_TIME
+        value: ${DB_PORT}
+      - key: DB_DATABASE
+        scope: RUN_TIME
+        value: ${DB_DATABASE}
+      - key: DB_USERNAME
+        scope: RUN_TIME
+        value: ${DB_USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_TIME
+        value: ${DB_PASSWORD}
+      - key: COMPOSER_ALLOW_SUPERUSER
+        scope: BUILD_TIME
+        value: "1"
