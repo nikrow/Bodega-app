@@ -13,11 +13,20 @@ enum StatusType: string implements HasColor, HasIcon, HasLabel
     case COMPLETO = 'Completo';
     case CANCELADO = 'Cancelado';
 
+    public static function getValues(): array
+    {
+        return [
+            self::PENDIENTE->value => 'Pendiente',
+            self::ENPROCESO->value => 'En proceso',
+            self::COMPLETO->value => 'Completo',
+            self::CANCELADO->value => 'Cancelado',
+        ];
+    }
     public function getColor(): string|array|null
     {
         return match ($this) {
-            self::PENDIENTE => 'danger',
-            self::ENPROCESO => 'warning',
+            self::PENDIENTE => 'warning',
+            self::ENPROCESO => 'info',
             self::COMPLETO => 'success',
             self::CANCELADO => 'danger',
         };
@@ -26,7 +35,7 @@ enum StatusType: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::PENDIENTE => 'heroicon-o-clock',
-            self::ENPROCESO => 'heroicon-o-clock',
+            self::ENPROCESO => 'heroicon-s-truck',
             self::COMPLETO => 'heroicon-o-check',
             self::CANCELADO => 'heroicon-o-x-circle',
         };

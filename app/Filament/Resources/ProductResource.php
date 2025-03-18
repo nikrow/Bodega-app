@@ -2,20 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\FamilyType;
-use App\Enums\SapFamilyType;
-use App\Enums\UnidadMedida;
-use App\Filament\Resources\ProductResource\Pages;
-use App\Models\Product;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Package;
+use App\Models\Product;
+use Filament\Forms\Form;
+use App\Enums\FamilyType;
 use Filament\Tables\Table;
-use Google\Service\Compute\Zone;
+use App\Enums\UnidadMedida;
+use App\Enums\SapFamilyType;
 use Illuminate\Validation\Rule;
+use Filament\Resources\Resource;
+use Google\Service\Compute\Zone;
+use App\Filament\Resources\ProductResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+use App\Filament\Resources\ProductResource\RelationManagers\PackagesRelationManager;
 
 class ProductResource extends Resource
 {
@@ -93,8 +95,10 @@ class ProductResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('sag_code')
                     ->label('Código SAG')
-                    ->required()
-                    ->unique(),
+                    ->rules(function (Forms\Get $get) {
+                        return Rule::unique('products', 'sag_code')
+                            ->ignore($get('id'));
+                    }),
                 
                 Forms\Components\TextInput::make('dosis_min')
                     ->label('Dosis Min')
@@ -120,6 +124,16 @@ class ProductResource extends Resource
                     ->required()
                     ->numeric()
                     ->reactive(),
+
+                    Forms\Components\Select::make('packages')
+                    ->label('Envases')
+                    ->relationship('packages', 'name')
+                    ->multiple()
+                    ->required()
+                    ->preload()
+                    ->options(Package::all()->pluck('name', 'id'))
+                    ->placeholder('Seleccione uno o más envases'),
+                
                 Forms\Components\Toggle::make('requires_batch_control')
                     ->label('Requiere Control de Lote')
                     ->onColor('success')
@@ -157,6 +171,11 @@ class ProductResource extends Resource
                     ->sortable()
                     ->copyable()
                     ->icon('heroicon-o-clipboard-document-list')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('packages.name')
+                    ->label('Envases')
+                    ->badge()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price')

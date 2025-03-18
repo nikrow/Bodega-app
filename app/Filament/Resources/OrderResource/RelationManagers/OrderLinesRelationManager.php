@@ -149,6 +149,9 @@ class OrderLinesRelationManager extends RelationManager
                     ->suffix('kg/lt')
                     ->reactive()
                     ->numeric(),
+                Forms\Components\Toggle::make('notes')
+                    ->default(true)
+                    ->label('Verificado'),
             ]);
     }
 

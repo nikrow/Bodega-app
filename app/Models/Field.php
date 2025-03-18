@@ -89,6 +89,10 @@ class Field extends Model implements Auditable
     {
         return $this->belongsToMany(User::class, 'field_user', 'field_id', 'user_id');
     }
+    public function purchaseOrders()
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
 
 }
 

@@ -18,6 +18,21 @@ enum FamilyType: string implements HasLabel, HasColor, HasIcon
     case BLOQUEADOR = 'bloqueador';
     case OTROS = 'otros';
 
+    public static function getValues(): array
+    {
+        return [
+            self::INSECTICIDA->value => 'Insecticida',
+            self::HERBICIDA->value => 'Herbicida',
+            self::FERTILIZANTE->value => 'Fertilizante',
+            self::ACARICIDA->value => 'Acaricida',
+            self::FUNGICIDA->value => 'Fungicida',
+            self::BIOESTIMULANTE->value => 'Bioestimulante',
+            self::REGULADOR->value => 'Regulador',
+            self::BLOQUEADOR->value => 'Bloqueador',
+            self::OTROS->value => 'Otros',
+        ];
+    }
+
     public function getLabel(): string
     {
         return match ($this) {

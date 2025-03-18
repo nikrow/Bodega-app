@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\FamilyType;
+use App\Enums\UnidadMedida;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +40,8 @@ class Product extends Model implements Auditable
     ];
     protected $casts = [
         'requires_batch_control' => 'boolean',
+        'family' => FamilyType::class,
+        'unit_measure' => UnidadMedida::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -59,6 +63,12 @@ class Product extends Model implements Auditable
         $this->attributes['dosis_min'] = str_replace(',', '.', $value);
     }
 
+    public function fertilizations()
+    {
+        return $this->belongsToMany(Fertilization::class, 'fertilization_product')
+                    ->withPivot('cantidad')
+                    ->withTimestamps();
+    }
     /**
      * Set the dosis_max attribute.
      *
@@ -95,5 +105,13 @@ class Product extends Model implements Auditable
     {
         return $this->requires_batch_control;
     }
+    public function packages()
+{
+    return $this->belongsToMany(Package::class, 'product_packages')
+                ->using(ProductPackage::class)
+                ->withTimestamps();
+                
+}
+
 
 }

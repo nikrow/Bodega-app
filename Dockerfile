@@ -53,7 +53,6 @@ RUN php artisan octane:install
 
 # Instalamos dependencias de Node.js y construimos los activos
 RUN npm install \
-    && npm audit fix \
     && npm run build
 
 # Exponemos los puertos necesarios

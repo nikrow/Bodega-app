@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-
+use App\Enums\EppType;
+use App\Enums\EquipmentType;
+use App\Enums\FamilyType;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

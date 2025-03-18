@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources;
 
-
+use App\Enums\EppType;
+use App\Enums\EquipmentType;
 use Filament\Forms;
 use App\Models\Crop;
 use App\Models\User;
@@ -88,9 +89,7 @@ class OrderResource extends Resource
                             }),
 
                         Forms\Components\Select::make('family')
-                            ->options(collect(FamilyType::cases())
-                                ->mapWithKeys(fn(FamilyType $type) => [$type->value => $type->getLabel()])
-                                ->toArray())
+                            ->options(FamilyType::class)
                             ->label('Grupo')
                             ->required()
                             ->multiple(),
@@ -182,34 +181,14 @@ class OrderResource extends Resource
                                 ->label('Equipamiento')
                                 ->columns(2)
                                 ->gridDirection('row')
-                                ->options([
-                                    'turbonebulizador' => 'Turbonebulizador',
-                                    'turbocañon' => 'Turbocáñon',
-                                    'helicoptero' => 'Helicoptero',
-                                    'dron' => 'Dron',
-                                    'caracol' => 'Caracol',
-                                    'bomba_espalda' => 'Bomba espalda',
-                                    'barra_levera_parada' => 'Barra levera parada',
-                                    'azufrador' => 'Azufrador',
-                                    'piton' => 'Piton',
-                                    'barra_pulverizacion' => 'Barra pulverización',
-
-                                ])
+                                ->options(EquipmentType::class)
                                 ->required(),
                             Forms\Components\CheckboxList::make('epp')
                                 ->label('EPP')
                                 ->columns(2)
                                 ->bulkToggleable()
                                 ->gridDirection('row')
-                                ->options([
-                                    'traje_aplicacion' => 'Traje de aplicación',
-                                    'guantes' => 'Guantes',
-                                    'botas' => 'Botas',
-                                    'protector_auditivo' => 'Protector auditivo',
-                                    'anteojos' => 'Anteojos',
-                                    'antiparras' => 'Antiparras',
-                                    'mascara_filtro' => 'Mascara de filtro',
-                                ])
+                                ->options(EppType::class)
                                 ->required(),
                         ])
             ]);

@@ -286,14 +286,14 @@
             <h3>EPP</h3>
             <ul>
                 @foreach ($order->epp as $item)
-                    <li>{{ $item }}</li>
+                    <li>{{ \App\Enums\EppType::tryFrom($item)?->getLabel() ?? $item }}</li>
                 @endforeach
             </ul>
 
             <h3>Equipamiento</h3>
             <ul>
                 @foreach ($order->equipment as $equip)
-                    <li>{{ $equip }}</li>
+                <li>{{ \App\Enums\EquipmentType::tryFrom($equip)?->getLabel() ?? $equip }}</li>
                 @endforeach
             </ul>
         </div>

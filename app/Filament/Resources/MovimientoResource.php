@@ -8,6 +8,7 @@ use App\Filament\Resources\MovimientoResource\Pages;
 use App\Filament\Resources\MovimientoResource\RelationManagers\MovimientoProductosRelationManager;
 use App\Models\Movimiento;
 use App\Models\Order;
+use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\Warehouse;
 use Filament\Facades\Filament;
@@ -175,9 +176,11 @@ class MovimientoResource extends Resource
                     ->visible(fn ($get) => $get('tipo') === MovementType::PREPARACION->value)
                     ->reactive(),
 
-                TextInput::make('orden_compra')
+                Select::make('orden_compra')
                     ->label('Orden de compra')
-                    ->numeric()
+                    ->options(function () {
+                        return PurchaseOrder::all()->pluck('number', 'id')->toArray();
+                    })
                     ->visible(fn ($get) => $get('tipo') == MovementType::ENTRADA->value),
 
                 TextInput::make('nombre_proveedor')

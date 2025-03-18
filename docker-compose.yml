@@ -96,24 +96,6 @@ services:
             - '/dev/shm:/dev/shm'
         networks:
             - sail
-    phpmyadmin:
-        image: phpmyadmin/phpmyadmin:latest
-        container_name: phpmyadmin
-        restart: unless-stopped
-        environment:
-            PMA_HOST: mysql
-            PMA_PORT: 3306
-            PMA_USER: ${DB_USERNAME}
-            PMA_PASSWORD: ${DB_PASSWORD}
-            PMA_AUTH_TYPE: cookie
-        ports:
-            - "8080:80"
-        networks:
-            - sail
-        depends_on:
-            - mysql
-
-
 networks:
     sail:
         driver: bridge

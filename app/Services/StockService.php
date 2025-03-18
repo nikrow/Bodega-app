@@ -63,21 +63,19 @@ class StockService
                     $batches = Batch::where('product_id', $producto->id)
                         ->orderBy('created_at', 'desc')
                         ->get();
-    
+            
                     foreach ($batches as $batch) {
-                        if ($cantidadAnterior <= 0) {
-                            break;
-                        }
-    
-                        $cantidadReducir = min($batch->quantity, $cantidadAnterior);
-                        $batch->quantity -= $cantidadReducir;
-                        $cantidadAnterior -= $cantidadReducir;
-                        $batch->save();
-    
-                        if ($batch->quantity <= 0) {
-                            $batch->delete();
-                        }
+                        $batch->delete();
                     }
+            
+                    $stockDestino = $this->getOrCreateStock(
+                        $productoMovimiento->producto_id,
+                        $movimiento->bodega_destino_id,
+                        $movimiento->field_id,
+                        $productoMovimiento->producto->price,
+                        $movimiento->user_id
+                    );
+                    $this->updateStock($stockDestino, -$cantidadAnterior, null, $movimiento->user_id, $movimiento, $productoMovimiento);
                 } else {
 
                 $stockDestino = $this->getOrCreateStock(
@@ -151,7 +149,17 @@ class StockService
                         'invoice_number' => $movimiento->guia_despacho,
                         'provider' => $movimiento->nombre_proveedor,
                     ]);
-    
+                    $stockDestino = $this->getOrCreateStock(
+                        $productoMovimiento->producto_id,
+                        $movimiento->bodega_destino_id,
+                        $movimiento->field_id,
+                        $producto->price,
+                        $userId
+                    );
+            
+                    // Incrementamos el stock en la cantidad de la entrada.
+                    $this->updateStock($stockDestino, $cantidadNueva, $producto->price, $userId, $movimiento, $productoMovimiento);
+
                     Log::info("Lote creado: Producto ID {$producto->product_name}, Cantidad {$cantidadNueva}, Bodega ID {$movimiento->bodega_destino_id}");
                 } else {
                     // Actualizar stock de destino
@@ -420,6 +428,13 @@ class StockService
                         } else {
                             Log::warning("No se encontró el lote asociado a la entrada para eliminar.");
                         }
+                        $stockDestino = $this->getStock(
+                            $productoMovimiento->producto_id,
+                            $movimiento->bodega_destino_id,
+                            $movimiento->field_id
+                        );
+                        $this->updateStock($stockDestino, -$cantidad, null, $userId, $movimiento, $productoMovimiento);
+                
                     } else {
     
                     $stockDestino = $this->getStock(

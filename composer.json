@@ -5,7 +5,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "ext-pdo": "*",
         "actb/blade-github-octicons": "dev-develop",
         "barryvdh/laravel-dompdf": "^3.0",
@@ -20,7 +20,7 @@
         "google/apiclient": "^2.18",
         "hasnayeen/blade-eva-icons": "^2.0",
         "joaopaulolndev/filament-pdf-viewer": "^1.0",
-        "laravel/framework": "11.31.0.0",
+        "laravel/framework": "^11",
         "laravel/octane": "^2.5",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
@@ -28,12 +28,12 @@
         "owen-it/laravel-auditing": "^13.6",
         "owenvoke/blade-fontawesome": "^2.6",
         "pxlrbt/filament-excel": "^2.3",
-        "rmsramos/activitylog": "^1.0",
         "rupadana/filament-api-service": "^3.3",
         "spatie/browsershot": "^4.4",
         "spatie/laravel-pdf": "^1.5",
         "swisnl/filament-backgrounds": "^1.1",
-        "tapp/filament-auditing": "^3.0"
+        "tapp/filament-auditing": "^3.0",
+        "webklex/laravel-imap": "^6.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",

@@ -27,6 +27,8 @@ class MovimientoProducto extends Model
         'lot_number',
         'expiration_date',
         'total',
+        'package_id',
+        'cantidad_envases',
     ];
     protected $casts = [
         'cantidad' => 'float',
@@ -40,16 +42,59 @@ class MovimientoProducto extends Model
     }
     protected static function booted()
     {
-        static::creating(function ($field) {
+        static::creating(function ($movimientoProducto) {
+            $movimientoProducto->created_by = Auth::id();
+            $movimientoProducto->field_id = Filament::getTenant()->id;
+            $movimientoProducto->total = $movimientoProducto->cantidad * $movimientoProducto->precio_compra;
 
-            $field->created_by = Auth::id();
-            $field->field_id = Filament::getTenant()->id;
-            $field->total = $field->cantidad * $field->precio_compra;
-
+            // Calcular cantidad de envases si hay un package seleccionado
+            if ($movimientoProducto->package_id) {
+                $package = Package::find($movimientoProducto->package_id);
+                if ($package) {
+                    $movimientoProducto->cantidad_envases = ceil($movimientoProducto->cantidad / $package->capacity);
+                }
+            }
+        });
+    
+        static::created(function ($movimientoProducto) {
+            if ($movimientoProducto->package_id) {
+                MovimientoEnvase::create([
+                    'movimiento_producto_id' => $movimientoProducto->id,
+                    'package_id' => $movimientoProducto->package_id,
+                    'cantidad_envases' => $movimientoProducto->cantidad_envases,
+                ]);
+            }
         });
 
+        static::updating(function ($movimientoProducto) {
+            // Solo recalcular si el usuario no ha modificado manualmente la cantidad de envases
+            if ($movimientoProducto->package_id) {
+                $package = Package::find($movimientoProducto->package_id);
+                if ($package && !$movimientoProducto->isDirty('cantidad_envases')) {
+                    $movimientoProducto->cantidad_envases = ceil($movimientoProducto->cantidad / $package->capacity);
+                }
+            }
+        });
+        static::updated(function ($movimientoProducto) {
+            // Actualizar la cantidad de envases en MovimientoEnvase
+            $envase = MovimientoEnvase::where('movimiento_producto_id', $movimientoProducto->id)->first();
 
+            if ($envase) {
+                $envase->update([
+                    'cantidad_envases' => $movimientoProducto->cantidad_envases,
+                ]);
+            } else {
+                if ($movimientoProducto->package_id) {
+                    MovimientoEnvase::create([
+                        'movimiento_producto_id' => $movimientoProducto->id,
+                        'package_id' => $movimientoProducto->package_id,
+                        'cantidad_envases' => $movimientoProducto->cantidad_envases,
+                    ]);
+                }
+            }
+        });
     }
+
     public function stockMovements()
     {
         return $this->morphMany(StockMovement::class, 'related');
@@ -87,5 +132,13 @@ class MovimientoProducto extends Model
         return [
             AuditsRelationManager::class,
         ];
+    }
+    public function package()
+    {
+        return $this->belongsTo(Package::class, 'package_id');
+    }
+    public function movimientoEnvases()
+    {
+        return $this->hasMany(MovimientoEnvase::class, 'movimiento_producto_id');
     }
 }

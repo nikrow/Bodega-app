@@ -2,15 +2,18 @@
 
 namespace App\Filament\Resources\MovimientoResource\RelationManagers;
 
-use App\Models\Product;
-use App\Models\Stock;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use App\Models\Stock;
+use App\Models\Package;
+use App\Models\Product;
+use Filament\Forms\Get;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Google\Service\Drive\Label;
+use App\Models\PurchaseOrderDetail;
 use Illuminate\Support\Facades\Log;
+use Filament\Resources\RelationManagers\RelationManager;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class MovimientoProductosRelationManager extends RelationManager
@@ -29,7 +32,10 @@ class MovimientoProductosRelationManager extends RelationManager
                             // Check if the movement type is 'entrada'
                             if ($movimiento->tipo->value === 'entrada') {
                                 // Return all products
-                                return Product::pluck('product_name', 'id');
+                                $PurchaseOrderDetail = PurchaseOrderDetail::where('purchase_order_id', $movimiento->orden_compra)->get();
+                                $productIds = $PurchaseOrderDetail->pluck('product_id');
+                                return Product::whereIn('id', $productIds)->pluck('product_name', 'id');
+                                
                             } else {
                                 $warehouseId = $movimiento->bodega_origen_id;
 
@@ -153,6 +159,36 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->visible(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada')
                     ->required(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada'),
 
+                    Forms\Components\Select::make('package_id')
+                    ->label('Envase')
+                    ->relationship('package', 'name')
+                    ->preload()
+                    ->visible(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada')
+                    ->required(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada')
+                    ->reactive()
+                    ->afterStateUpdated(function (callable $get, callable $set) {
+                        $cantidad = $get('cantidad');
+                        $package = Package::find($get('package_id'));
+                
+                        if ($package) {
+                            $cantidad_envases_sugerida = ceil($cantidad / $package->capacity);
+                            $set('cantidad_envases', $cantidad_envases_sugerida);
+                        }
+                    }),
+                
+                Forms\Components\TextInput::make('cantidad_envases')
+                    ->label('Cantidad de Envases')
+                    ->numeric()
+                    ->minValue(1)
+                    ->live()
+                    ->helperText(fn (callable $get) => 
+                        ($get('package_id') && $get('cantidad_envases') < ceil($get('cantidad') / Package::find($get('package_id'))->capacity))
+                        ? '⚠️ La cantidad de envases es menor a la recomendada.'
+                        : 'Cantidad calculada automáticamente pero modificable por el usuario.'
+                    )
+                    ->visible(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada')
+                    ->required(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada'),
+
                 Forms\Components\Hidden::make('precio_compra'),
             ]);
     }
@@ -176,6 +212,15 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->label('Cantidad')
                     ->numeric(thousandsSeparator:'.', decimalPlaces: 1)
                     ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('unidad_medida')
+                    ->label('Unidad de Medida')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('package.name')
+                    ->label('Envase')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
 
             ])

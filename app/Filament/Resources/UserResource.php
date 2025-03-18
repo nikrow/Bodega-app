@@ -12,7 +12,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Rmsramos\Activitylog\Actions\ActivityLogTimelineTableAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class UserResource extends Resource
@@ -173,7 +172,6 @@ class UserResource extends Resource
 
             ])
             ->actions([
-                ActivityLogTimelineTableAction::make('Actividades'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

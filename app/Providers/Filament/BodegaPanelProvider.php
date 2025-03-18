@@ -21,7 +21,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Rmsramos\Activitylog\ActivitylogPlugin;
 use Rupadana\ApiService\ApiServicePlugin;
 use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Swis\Filament\Backgrounds\ImageProviders\MyImages;
@@ -78,11 +77,6 @@ class BodegaPanelProvider extends PanelProvider
                         MyImages::make()
                             ->directory('/img/backgrounds')
                     ),
-                ActivitylogPlugin::make()
-                    ->resource(ActivityLogResource::class)
-                    ->navigationGroup('Admin')
-                    ->label('Log')
-                    ->pluralLabel('Logs'),
                 ApiServicePlugin::make()
             ])
             ->authGuard('web')
