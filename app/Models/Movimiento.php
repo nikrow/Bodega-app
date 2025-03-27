@@ -72,7 +72,7 @@ class Movimiento extends Model implements Auditable
         });
 
         static::updating(function ($movimiento) {
-            // Si el movimiento ya fue completado, no se permiten modificaciones excepto cambiar 'is_completed'.
+            // Si el movimiento ya fue completado, no se php artisan ten modificaciones excepto cambiar 'is_completed'.
             if ($movimiento->is_completed) {
                 $cambiosRelevantes = collect($movimiento->getDirty())->except(['is_completed']);
 

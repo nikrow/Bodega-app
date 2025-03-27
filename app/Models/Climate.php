@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use OwenIt\Auditing\Contracts\Auditable;
+use Filament\Facades\Filament;
 use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Climate extends Model implements Auditable
 {
@@ -34,12 +35,12 @@ class Climate extends Model implements Auditable
     protected static function booted()
     {
         static::creating(function ($climate) {
-            $climate->created_by = auth()->id();
+            $climate->created_by = Auth::id();
             $climate->field_id = Filament::getTenant()->id;
-            $climate->updated_by = auth()->id();
+            $climate->updated_by = Auth::id();
         });
         static::updating(function ($climate) {
-            $climate->updated_by = auth()->id();
+            $climate->updated_by = Auth::id();
         });
     }
     public function createdBy()

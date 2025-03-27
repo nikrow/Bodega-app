@@ -138,7 +138,7 @@ class OrderResource extends Resource
                                 })
                                 ->saveRelationshipsUsing(function (Order $record, $state) {
                                     $fieldId = $record->field_id;
-                                    $userId = auth()->id(); 
+                                    $userId = Auth::id();
 
                                     // Verificar relaciones existentes y actualizar los campos
                                     $syncData = collect($state)->mapWithKeys(function ($parcelId) use ($fieldId, $userId, $record) {

@@ -17,17 +17,21 @@ use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
     protected static ?string $tenantOwnershipRelationshipName = 'fields';
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $navigationGroup = 'Admin';
+
     protected static bool $isScopedToTenant = false;
+
     protected static ?string $navigationLabel = 'Usuarios';
 
     protected static ?string $modelLabel = 'Usuario';
 
     protected static ?string $slug = 'usuarios';
+    
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?int $navigationSort = 50;

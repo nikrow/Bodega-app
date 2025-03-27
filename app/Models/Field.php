@@ -93,6 +93,23 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(PurchaseOrder::class);
     }
+    public function machineries()
+    {
+        return $this->hasMany(Machinery::class);
+    }
+    public function operators()
+    {
+        return $this->hasMany(Operator::class);
+    }
+    public function tractors()
+    {
+        return $this->hasMany(Tractor::class);
+    }
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+    
 
 }
 
