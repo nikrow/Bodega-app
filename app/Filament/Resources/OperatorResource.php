@@ -20,13 +20,13 @@ class OperatorResource extends Resource
 
     protected static ?string $navigationIcon = 'eos-dashboard';
 
-    protected static ?string $navigationGroup = 'Anexos';
+    protected static ?string $navigationGroup = 'Maquinaria';
 
     protected static ?int $navigationSort = 80;
 
     protected static ?string $navigationLabel = 'Operador';
 
-    protected static ?string $modelLabel = 'Oprerador';
+    protected static ?string $modelLabel = 'Operador';
 
     protected static ?string $pluralModelLabel = 'Operadores';
 

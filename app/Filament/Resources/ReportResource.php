@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ReportResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ReportResource\RelationManagers;
+use Google\Service\Area120Tables\Resource\Tables as ResourceTables;
 
 class ReportResource extends Resource
 {
@@ -76,6 +77,8 @@ class ReportResource extends Resource
                 Tables\Columns\TextColumn::make('date')
                     ->date('d/m/Y')
                     ->label('Fecha'),
+                    Tables\Columns\TextColumn::make('createdBy.name')
+                    ->label('Creado por'),
                 Tables\Columns\TextColumn::make('crop.especie')
                     ->label('Cultivo'),
                 Tables\Columns\TextColumn::make('tractor.name')

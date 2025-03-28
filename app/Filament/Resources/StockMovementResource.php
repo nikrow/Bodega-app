@@ -37,7 +37,7 @@ class StockMovementResource extends Resource
                     ->label('Fecha')
                     ->dateTime('d-m-Y')
                     ->sortable(),
-                TextColumn::make('movimientoProducto.movimiento.id')
+                TextColumn::make('related_id')
                     ->sortable()
                     ->searchable()
                     ->label('ID'),

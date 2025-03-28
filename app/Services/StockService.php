@@ -59,13 +59,13 @@ class StockService
         switch ($tipo) {
             case MovementType::ENTRADA:
                 if ($producto->requiresBatchControl()) {
-                    // Revertir impacto en lotes
-                    $batches = Batch::where('product_id', $producto->id)
-                        ->orderBy('created_at', 'desc')
-                        ->get();
-            
-                    foreach ($batches as $batch) {
+                    $batch = Batch::where('product_id', $producto->id)
+                        ->where('lot_number', $productoMovimiento->lot_number)
+                        ->where('expiration_date', $productoMovimiento->expiration_date)
+                        ->first();
+                    if ($batch) {
                         $batch->delete();
+                        Log::info("Lote eliminado: ID {$batch->id}");
                     }
             
                     $stockDestino = $this->getOrCreateStock(
@@ -149,6 +149,8 @@ class StockService
                         'invoice_number' => $movimiento->guia_despacho,
                         'provider' => $movimiento->nombre_proveedor,
                     ]);
+                    Log::info("Lote creado exitosamente.");
+                    
                     $stockDestino = $this->getOrCreateStock(
                         $productoMovimiento->producto_id,
                         $movimiento->bodega_destino_id,

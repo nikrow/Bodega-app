@@ -55,28 +55,11 @@ class ProductResource extends Resource
 
                 Forms\Components\Select::make('SAP_family')
                     ->label('Familia SAP')
-                    ->options([
-                        SapFamilyType::FERTILIZANTES->value => 'fertilizantes-enmiendas',
-                        SapFamilyType::FITOSANITARIOS->value => 'fitosanitarios',
-                        SapFamilyType::FITOREGULADORES->value => 'fitoreguladores',
-                        SapFamilyType::BIOESTIMULANTES->value => 'bioestimulantes',
-                        SapFamilyType::OTROS->value => 'otros',
-                    ])
+                    ->options(SapFamilyType::class)
                     ->required(),
                 Forms\Components\Select::make('family')
                     ->label('Grupo')
-                    ->options([
-                        FamilyType::ACARICIDA->value => 'acaricida',
-                        FamilyType::BLOQUEADOR->value => 'bloqueador',
-                        FamilyType::BIOESTIMULANTE->value => 'bioestimulante',
-                        FamilyType::HERBICIDA->value => 'herbicida',
-                        FamilyType::INSECTICIDA->value => 'insecticida',
-                        FamilyType::FERTILIZANTE->value => 'fertilizante',
-                        FamilyType::FUNGICIDA->value => 'fungicida',
-                        FamilyType::REGULADOR->value => 'regulador',
-                        FamilyType::OTROS->value => 'otros',
-
-                    ])
+                    ->options(FamilyType::class)
                     ->required(),
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
@@ -87,11 +70,7 @@ class ProductResource extends Resource
 
                 Forms\Components\Select::make('unit_measure')
                     ->label('Unidad de Medida')
-                    ->options([
-                        UnidadMedida::KILOGRAMO->value => 'kilogramo',
-                        UnidadMedida::LITRO->value => 'litro',
-                        UnidadMedida::UNIDAD->value => 'unidad',
-                    ])
+                    ->options(UnidadMedida::class)
                     ->required(),
                 Forms\Components\TextInput::make('sag_code')
                     ->label('Código SAG')
@@ -125,7 +104,7 @@ class ProductResource extends Resource
                     ->numeric()
                     ->reactive(),
 
-                    Forms\Components\Select::make('packages')
+                    /* Forms\Components\Select::make('packages')
                     ->label('Envases')
                     ->relationship('packages', 'name')
                     ->multiple()
@@ -133,7 +112,7 @@ class ProductResource extends Resource
                     ->preload()
                     ->options(Package::all()->pluck('name', 'id'))
                     ->placeholder('Seleccione uno o más envases'),
-                
+                 */
                 Forms\Components\Toggle::make('requires_batch_control')
                     ->label('Requiere Control de Lote')
                     ->onColor('success')
@@ -194,17 +173,7 @@ class ProductResource extends Resource
             ->filters([
                     Tables\Filters\SelectFilter::make('family')
                     ->label('Grupo')
-                    ->options([
-                        FamilyType::INSECTICIDA->value => 'insecticida',
-                        FamilyType::HERBICIDA->value => 'herbicida',
-                        FamilyType::FERTILIZANTE->value => 'fertilizante',
-                        FamilyType::ACARICIDA->value => 'acaricida',
-                        FamilyType::FUNGICIDA->value => 'fungicida',
-                        FamilyType::BIOESTIMULANTE->value => 'bioestimulante',
-                        FamilyType::REGULADOR->value => 'regulador',
-                        FamilyType::BLOQUEADOR->value => 'bloqueador',
-                        FamilyType::OTROS->value => 'otros',
-                        ])
+                    ->options(FamilyType::class)
                 ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -139,14 +139,7 @@ class UserResource extends Resource
                     ->sortable(),
                 Tables\Columns\SelectColumn::make('role')
                     ->label('Rol')
-                    ->options([
-                        RoleType::ADMIN->value => 'admin',
-                        RoleType::AGRONOMO->value => 'agronomo',
-                        RoleType::USUARIO->value => 'usuario',
-                        RoleType::BODEGUERO->value => 'bodeguero',
-                        RoleType::ASISTENTE->value => 'asistente',
-                        RoleType::ESTANQUERO->value => 'estanquero',
-                    ])
+                    ->options(RoleType::class)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('fields.name')
                     ->label('Campos')

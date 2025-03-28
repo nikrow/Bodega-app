@@ -10,4 +10,6 @@ enum RoleType: string
     case ASISTENTE = 'asistente';
     case ESTANQUERO = 'estanquero';
     case USUARIO = 'usuario';
+    case tractorero = 'tractorero';
+    case usuarioMaq = 'usuarioMaq';
 }

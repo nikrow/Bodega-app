@@ -159,7 +159,7 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->visible(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada')
                     ->required(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada'),
 
-                    Forms\Components\Select::make('package_id')
+                    /* Forms\Components\Select::make('package_id')
                     ->label('Envase')
                     ->relationship('package', 'name')
                     ->preload()
@@ -190,7 +190,8 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->required(fn (callable $get) => $get('requires_batch_control') === true && $this->ownerRecord->tipo->value == 'entrada'),
 
                 Forms\Components\Hidden::make('precio_compra'),
-            ]);
+                */
+            ]); 
     }
 
     public function table(Table $table): Table
@@ -217,11 +218,11 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->label('Unidad de Medida')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('package.name')
+                /* Tables\Columns\TextColumn::make('package.name')
                     ->label('Envase')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->sortable(),
+                    ->sortable(), */
 
             ])
             ->filters([
