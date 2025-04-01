@@ -3,27 +3,29 @@
 namespace App\Providers\Filament;
 
 
-use App\Filament\Resources\ActivityLogResource;
-use App\Models\Field;
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\MenuItem;
-use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
-use Filament\PanelProvider;
+use App\Models\Field;
 use Filament\Widgets;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Filament\PanelProvider;
+use Filament\Navigation\MenuItem;
+use Illuminate\Support\Facades\Auth;
+use Filament\Navigation\NavigationGroup;
+use Rupadana\ApiService\ApiServicePlugin;
+use Filament\Http\Middleware\Authenticate;
+use App\Filament\Resources\ActivityLogResource;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Rupadana\ApiService\ApiServicePlugin;
-use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Swis\Filament\Backgrounds\ImageProviders\MyImages;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 
 
 class BodegaPanelProvider extends PanelProvider
@@ -77,7 +79,10 @@ class BodegaPanelProvider extends PanelProvider
                         MyImages::make()
                             ->directory('/img/backgrounds')
                     ),
-                ApiServicePlugin::make()
+                ApiServicePlugin::make(),
+                FilamentSpatieLaravelBackupPlugin::make()
+                ->authorize(fn (): bool => Auth::user()->email === 'admin@admin.com'),
+                    
             ])
             ->authGuard('web')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

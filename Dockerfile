@@ -16,6 +16,10 @@ RUN apt-get update && apt-get install -y \
     npm \
     # Dependencias para intl
     libicu-dev \
+    # Agregamos default-mysql-client para mysqldump
+    default-mysql-client \
+    # Agregamos nano
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos extensiones PHP incluyendo intl
@@ -63,20 +67,44 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 
 # Creamos el script post-deploy
 RUN echo '#!/bin/bash \n\
+set -e \n\
+echo "===========================================" \n\
+echo "Iniciando comandos post-despliegue" \n\
+echo "===========================================" \n\
+# Verificar si mysqldump está instalado \n\
+if ! command -v mysqldump &> /dev/null; then \n\
+    echo "ERROR: mysqldump no está instalado. Asegúrate de que default-mysql-client esté instalado en el Dockerfile." \n\
+    exit 1 \n\
+fi \n\
+# PASO 1: Limpieza de caché y archivos temporales \n\
+echo "PASO 1: Limpieza de caché y archivos temporales" \n\
+echo "----------------------------------------------" \n\
 php artisan config:clear \n\
 php artisan cache:clear \n\
 php artisan route:clear \n\
 php artisan view:clear \n\
 php artisan optimize:clear \n\
 composer dump-autoload \n\
+echo "Limpieza completada." \n\
+# PASO 2: Configuración y optimización \n\
+echo "PASO 2: Configuración y optimización" \n\
+echo "-----------------------------------" \n\
+# Ejecutamos migraciones \n\
+echo "Ejecutando migraciones..." \n\
 php artisan migrate --force \n\
+# Optimizaciones \n\
+echo "Aplicando optimizaciones..." \n\
 php artisan config:cache \n\
 php artisan event:cache \n\
 php artisan route:cache \n\
 php artisan view:cache \n\
-php -d memory_limit=256M artisan optimize \n\
 php artisan filament:optimize \n\
+# Generar enlaces simbólicos \n\
+echo "Generando enlaces simbólicos..." \n\
 php artisan storage:link \n\
+echo "===========================================" \n\
+echo "Comandos post-despliegue ejecutados con éxito" \n\
+echo "===========================================" \n\
 ' > /app/post-deploy.sh \
 && chmod +x /app/post-deploy.sh
 

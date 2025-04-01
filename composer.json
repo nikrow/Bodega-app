@@ -20,6 +20,8 @@
         "google/apiclient": "^2.18",
         "hasnayeen/blade-eva-icons": "^2.0",
         "joaopaulolndev/filament-pdf-viewer": "^1.0",
+        "laravel-notification-channels/pusher-push-notifications": "^4.2",
+        "laravel-notification-channels/pushover": "^4.1",
         "laravel/framework": "^11",
         "laravel/octane": "^2.5",
         "laravel/sanctum": "^4.0",
