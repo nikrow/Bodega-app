@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class order_line extends Model
+class order_line extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'order_id',
         'product_id',

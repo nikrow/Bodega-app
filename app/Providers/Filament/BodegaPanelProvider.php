@@ -24,6 +24,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Swis\Filament\Backgrounds\FilamentBackgroundsPlugin;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Edwink\FilamentUserActivity\FilamentUserActivityPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 
@@ -82,7 +83,7 @@ class BodegaPanelProvider extends PanelProvider
                 ApiServicePlugin::make(),
                 FilamentSpatieLaravelBackupPlugin::make()
                 ->authorize(fn (): bool => Auth::user()->email === 'admin@admin.com'),
-                    
+                
             ])
             ->authGuard('web')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

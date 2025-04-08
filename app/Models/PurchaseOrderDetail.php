@@ -7,13 +7,15 @@ use Filament\Facades\Filament;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class PurchaseOrderDetail extends Model
+class PurchaseOrderDetail extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'purchase_order_id',
         'field_id',

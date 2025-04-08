@@ -4,20 +4,21 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasTenants;
+use App\Enums\RoleType;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\Contracts\HasApiTokens;
-use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use OwenIt\Auditing\Contracts\Auditable;
+use Filament\Models\Contracts\HasTenants;
+use Filament\Models\Contracts\FilamentUser;
+use Laravel\Sanctum\Contracts\HasApiTokens;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Edwink\FilamentUserActivity\Traits\UserActivityTrait;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 
 class User extends Authenticatable implements Auditable, HasTenants, FilamentUser, HasApiTokens
@@ -71,6 +72,7 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
             'active_minutes' => 'integer',
             'last_login_at' => 'datetime',
             'last_activity_at' => 'datetime',
+            'role' => RoleType::class,
         ];
     public function fields(): BelongsToMany
     {
@@ -78,9 +80,20 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
     }
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === RoleType::ADMIN;
     }
-
+    public function assignedTractor()
+    {
+        return $this->hasOne(Tractor::class, 'operator_id');
+    }
+    public function assignedMachineries()
+    {
+        return $this->belongsToMany(Machinery::class, 'user_machinery', 'user_id', 'machinery_id');
+    }
+    public function isOperator()
+    {
+        return $this->role === RoleType::OPERARIO;
+    }
     public function hasRole(string $role): bool
     {
         return $this->role === $role;

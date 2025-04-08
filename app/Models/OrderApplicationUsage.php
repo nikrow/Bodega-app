@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class OrderApplicationUsage extends Model
+class OrderApplicationUsage extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
+
     protected $table = 'order_application_usages';
     protected $fillable = [
         'field_id',

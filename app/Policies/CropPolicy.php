@@ -15,11 +15,11 @@ class CropPolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -29,11 +29,11 @@ class CropPolicy
     public function view(User $user, Crop $crop): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -42,7 +42,7 @@ class CropPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -50,7 +50,7 @@ class CropPolicy
      */
     public function update(User $user, Crop $crop): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -58,7 +58,7 @@ class CropPolicy
      */
     public function delete(User $user, Crop $crop): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -66,7 +66,7 @@ class CropPolicy
      */
     public function restore(User $user, Crop $crop): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -74,6 +74,6 @@ class CropPolicy
      */
     public function forceDelete(User $user, Crop $crop): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 }

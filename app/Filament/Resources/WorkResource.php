@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\CostType;
 use App\Filament\Resources\WorkResource\Pages;
 use App\Filament\Resources\WorkResource\RelationManagers;
 use App\Models\Crop;
@@ -44,9 +45,10 @@ class WorkResource extends Resource
                 Forms\Components\TextInput::make('description')
                     ->label('Descripción')
                     ->nullable(),
-                Forms\Components\Select::make('crop_id')
-                    ->label('Cultivo')
-                    ->options(Crop::pluck('especie', 'id')->toArray())
+                Forms\Components\Select::make('cost_type')
+                    ->label('Centro Costo')
+                    ->options(CostType::class)
+                    ->native(false)
                     ->required(),
         
             ]);
@@ -57,11 +59,16 @@ class WorkResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->sortable()
                     ->label('Nombre'),
+                Tables\Columns\TextColumn::make('cost_type')
+                    ->label('Centro Costo')
+                    ->color(CostType::class)
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('description')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->label('Descripción'),
-                Tables\Columns\TextColumn::make('crop.especie')
-                    ->label('Cultivo'),
             ])
             ->filters([
                 //

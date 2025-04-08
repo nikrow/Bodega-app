@@ -15,11 +15,11 @@ class StockMovementPolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -29,11 +29,11 @@ class StockMovementPolicy
     public function view(User $user, StockMovement $StockMovement): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -43,9 +43,9 @@ class StockMovementPolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ESTANQUERO->value,
+            RoleType::ADMIN,
+            RoleType::BODEGUERO,
+            RoleType::ESTANQUERO,
         ]);
     }
 
@@ -55,8 +55,8 @@ class StockMovementPolicy
     public function update(User $user, StockMovement $StockMovement): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::BODEGUERO->value,
+            RoleType::ADMIN,
+            RoleType::BODEGUERO,
         ]);
     }
 
@@ -65,7 +65,7 @@ class StockMovementPolicy
      */
     public function delete(User $user, StockMovement $StockMovement): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -73,7 +73,7 @@ class StockMovementPolicy
      */
     public function restore(User $user, StockMovement $StockMovement): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -81,7 +81,7 @@ class StockMovementPolicy
      */
     public function forceDelete(User $user, StockMovement $StockMovement): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**

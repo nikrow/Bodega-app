@@ -71,6 +71,7 @@ class MovimientoResource extends Resource
                 Select::make('tipo')
                     ->label('Tipo de Movimiento')
                     ->searchable()
+                    ->native(false)
                     ->required()
                     ->disabled(fn($record) => $record !== null)
                     ->options(function () use ($user, $esEstanquero) {
@@ -172,12 +173,14 @@ class MovimientoResource extends Resource
                             ->pluck('orderNumber', 'id');
                     })
                     ->searchable()
+                    ->native(false)
                     ->nullable()
                     ->visible(fn ($get) => $get('tipo') === MovementType::PREPARACION->value)
                     ->reactive(),
 
                 Select::make('orden_compra')
                     ->label('Orden de compra')
+                    ->native(false)
                     ->options(function () {
                         return PurchaseOrder::all()->pluck('number', 'id')->toArray();
                     })

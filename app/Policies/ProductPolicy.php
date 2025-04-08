@@ -14,12 +14,12 @@ class ProductPolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -29,12 +29,12 @@ class ProductPolicy
     public function view(User $user, Product $product): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -44,8 +44,8 @@ class ProductPolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 
@@ -55,8 +55,8 @@ class ProductPolicy
     public function update(User $user, Product $product): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 
@@ -65,7 +65,7 @@ class ProductPolicy
      */
     public function delete(User $user, Product $product): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -73,7 +73,7 @@ class ProductPolicy
      */
     public function restore(User $user, Product $product): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -81,18 +81,18 @@ class ProductPolicy
      */
     public function forceDelete(User $user, Product $product): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     public function restoreAudit(User $user, Product $product): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
     public function audit(User $user, Product $product): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
     

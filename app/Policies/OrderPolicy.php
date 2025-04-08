@@ -14,11 +14,11 @@ class OrderPolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -28,11 +28,11 @@ class OrderPolicy
     public function view(User $user, Order $order): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -42,8 +42,8 @@ class OrderPolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 
@@ -53,8 +53,8 @@ class OrderPolicy
     public function update(User $user, Order $order): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 
@@ -63,7 +63,7 @@ class OrderPolicy
      */
     public function delete(User $user, Order $order): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -71,7 +71,7 @@ class OrderPolicy
      */
     public function restore(User $user, Order $order): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -79,6 +79,6 @@ class OrderPolicy
      */
     public function forceDelete(User $user, Order $order): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 }

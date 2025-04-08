@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role',['admin', 'agronomo', 'bodeguero', 'asistente', 'estanquero', 'usuario']);
+        Schema::table('tractors', function (Blueprint $table) {
+            $table->foreignId('report_last_hourometer_id',)->nullable()->constrained('reports')->after('field_id');
         });
     }
 
@@ -21,8 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
+        Schema::table('tractors', function (Blueprint $table) {
+            $table->dropForeign(['report_last_hourometer_id']);
+            $table->dropColumn('report_last_hourometer_id');
         });
     }
 };

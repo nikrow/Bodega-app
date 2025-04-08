@@ -14,11 +14,11 @@ class ParcelPolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -28,11 +28,11 @@ class ParcelPolicy
     public function view(User $user, Parcel $parcel): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -42,7 +42,7 @@ class ParcelPolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
+            RoleType::ADMIN,
 
         ]);
     }
@@ -53,7 +53,7 @@ class ParcelPolicy
     public function update(User $user, Parcel $parcel): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
+            RoleType::ADMIN,
 
         ]);
     }
@@ -63,7 +63,7 @@ class ParcelPolicy
      */
     public function delete(User $user, Parcel $parcel): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -71,7 +71,7 @@ class ParcelPolicy
      */
     public function restore(User $user, Parcel $parcel): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -79,17 +79,17 @@ class ParcelPolicy
      */
     public function forceDelete(User $user, Parcel $parcel): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     public function restoreAudit(User $user, Parcel $parcel): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
     public function audit(User $user, Parcel $parcel): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
+            RoleType::ADMIN,
         ]);
     }
 }

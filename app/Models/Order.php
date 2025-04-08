@@ -11,12 +11,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Order extends Model
+
+class Order extends Model implements Auditable
 {
+
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'user_id',

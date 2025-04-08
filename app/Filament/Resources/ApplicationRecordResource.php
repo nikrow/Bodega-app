@@ -190,6 +190,7 @@ class ApplicationRecordResource extends Resource
 
                 Tables\Filters\SelectFilter::make('parcel.crop_id')
                     ->relationship('parcel.crop', 'especie')
+                    ->native(false)
                     ->label('Cultivo'),
 
                 Tables\Filters\Filter::make('fecha')
@@ -207,6 +208,7 @@ class ApplicationRecordResource extends Resource
                     }),
                 Tables\Filters\SelectFilter::make('orderNumber')
                     ->label('Número de orden')
+                    ->native(false)
                     ->searchable()
                     ->options(function () {
                         $tenantId = Filament::getTenant()->id;

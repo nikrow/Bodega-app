@@ -35,9 +35,9 @@ class MovimientoPolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ESTANQUERO->value,
+            RoleType::ADMIN,
+            RoleType::BODEGUERO,
+            RoleType::ESTANQUERO,
         ]);
     }
 
@@ -47,11 +47,11 @@ class MovimientoPolicy
     public function update(User $user, Movimiento $movimiento): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::ASISTENTE->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ESTANQUERO,
+            RoleType::ASISTENTE,
         ]);
     }
 
@@ -60,7 +60,7 @@ class MovimientoPolicy
      */
     public function delete(User $user, Movimiento $movimiento): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -68,7 +68,7 @@ class MovimientoPolicy
      */
     public function restore(User $user, Movimiento $movimiento): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -76,7 +76,7 @@ class MovimientoPolicy
      */
     public function forceDelete(User $user, Movimiento $movimiento): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -93,7 +93,7 @@ class MovimientoPolicy
     }
     public function canUseMovementType(User $user, MovementType $type): bool
     {
-        if ($user->role === RoleType::ESTANQUERO->value) {
+        if ($user->role === RoleType::ESTANQUERO) {
             return in_array($type, [MovementType::PREPARACION, MovementType::TRASLADO]);
         }
 
@@ -110,10 +110,10 @@ class MovimientoPolicy
     public function complete(User $user, Movimiento $movimiento): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
         ]);
     }
 }

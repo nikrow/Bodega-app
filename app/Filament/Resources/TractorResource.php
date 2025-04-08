@@ -41,6 +41,7 @@ class TractorResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('provider')
                     ->label('Proveedor')
+                    ->native(false)
                     ->options([
                         'Bemat' => 'Bemat',
                         'TractorAmarillo' => 'Tractor Amarillo',
@@ -60,6 +61,11 @@ class TractorResource extends Resource
                 Forms\Components\TextInput::make('qrcode')
                     ->label('Código QR')
                     ->disabled(),
+                Forms\Components\TextInput::make('hourometer')
+                    ->label('Horómetro actual')
+                    ->numeric(2, 2)
+                    ->disabled(fn($record) => $record !== null) 
+                    ->required(),
             ]);
     }
 

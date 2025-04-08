@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
-class MovimientoProducto extends Model
+class MovimientoProducto extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
+    
     protected $fillable = [
         'movimiento_id',
         'producto_id',

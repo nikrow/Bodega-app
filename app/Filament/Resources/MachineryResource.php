@@ -41,6 +41,7 @@ class MachineryResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('provider')
                     ->label('Proveedor')
+                    ->native(false)
                     ->options([
                         'Bemat' => 'Bemat',
                         'TractorAmarillo' => 'Tractor Amarillo',

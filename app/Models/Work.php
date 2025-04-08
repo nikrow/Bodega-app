@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CostType;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -11,16 +12,17 @@ class Work extends Model
     protected $fillable = [
         'name',
         'description',
-        'crop_id',
+        'cost_type',
         'created_by',
-        'updated_by',
+    ];
+    protected $casts = [
+        'cost_type' => CostType::class,
     ];
     protected static function booted()
     {
         static::creating(function ($work) {
 
             $work->created_by = Auth::id();
-            $work->updated_by = Auth::id();
         });
     }
     public function createdBy()
@@ -31,8 +33,12 @@ class Work extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-    public function crop()
+    public function machineries()
     {
-        return $this->belongsTo(Crop::class);
+        return $this->belongsToMany(Machinery::class, 'machinery_work', 'work_id', 'machinery_id');
+    }
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
     }
 }

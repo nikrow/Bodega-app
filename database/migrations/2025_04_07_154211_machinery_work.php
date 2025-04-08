@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('operators', function (Blueprint $table) {
+        Schema::create('machinery_work', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignId('field_id')->constrained('fields');
-            $table->smallInteger('code');
-            $table->string('RUT');
+            $table->foreignId('machinery_id')->constrained('machineries');
+            $table->foreignId('work_id')->constrained('works');
             $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('updated_by')->constrained('users');
             $table->timestamps();
         });
     }
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('operators');
+        Schema::dropIfExists('machinery_work');
     }
 };

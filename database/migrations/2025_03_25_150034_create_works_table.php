@@ -14,10 +14,9 @@ return new class extends Migration
         Schema::create('works', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('description');
-            $table->foreignId('crop_id')->constrained('crops');
+            $table->string('description')->nullable();
+            $table->string('cost_type');
             $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('updated_by')->constrained('users');
             $table->timestamps();
         });
     }

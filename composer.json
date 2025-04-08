@@ -15,6 +15,7 @@
         "codeat3/blade-phosphor-icons": "^2.2",
         "codeat3/blade-typicons": "*",
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
+        "edwink/filament-user-activity": "^1.0",
         "eightynine/filament-excel-import": "^3.1",
         "filament/filament": "^3.2.0",
         "google/apiclient": "^2.18",
@@ -29,6 +30,7 @@
         "livewire/livewire": "^3.5",
         "owen-it/laravel-auditing": "^13.6",
         "owenvoke/blade-fontawesome": "^2.6",
+        "pxlrbt/filament-activity-log": "^1.1",
         "pxlrbt/filament-excel": "^2.3",
         "rupadana/filament-api-service": "^3.3",
         "shuvroroy/filament-spatie-laravel-backup": "^2.2",
@@ -38,6 +40,7 @@
         "spatie/laravel-permission": "^6.16",
         "swisnl/filament-backgrounds": "^1.1",
         "tapp/filament-auditing": "^3.0",
+        "troccoli/blade-health-icons": "*",
         "webklex/laravel-imap": "^6.1"
     },
     "require-dev": {

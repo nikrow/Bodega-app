@@ -70,14 +70,7 @@ class UserResource extends Resource
                 Forms\Components\Select::make('role')
                     ->label('Rol')
                     ->preload()
-                    ->options([
-                        RoleType::ADMIN->value => 'admin',
-                        RoleType::AGRONOMO->value => 'agronomo',
-                        RoleType::USUARIO->value => 'usuario',
-                        RoleType::BODEGUERO->value => 'bodeguero',
-                        RoleType::ASISTENTE->value => 'asistente',
-                        RoleType::ESTANQUERO->value => 'estanquero',
-                    ])
+                    ->options(RoleType::class)
                     ->searchable()
                     ->required(),
                 Forms\Components\Select::make('warehouses')

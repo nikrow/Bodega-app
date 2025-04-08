@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\UpdateLastActivity::class,
             EnsureFrontendRequestsAreStateful::class,
             SubstituteBindings::class,
+            \Edwink\FilamentUserActivity\Http\Middleware\RecordUserActivity::class,
         ]);
     })
     ->withCommands([

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5da011ce4ae52d9faa79ac8b8e6e2924",
+    "content-hash": "4271e8efbd7a4db17b4ad99c14ae00dd",
     "packages": [
         {
             "name": "actb/blade-github-octicons",
@@ -1829,6 +1829,83 @@
                 }
             ],
             "time": "2024-10-09T13:47:03+00:00"
+        },
+        {
+            "name": "edwink/filament-user-activity",
+            "version": "1.0.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/edwink75/filament-user-activity.git",
+                "reference": "16a82b75ae0b55aaddeae1cb62970753eab1f3f1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/edwink75/filament-user-activity/zipball/16a82b75ae0b55aaddeae1cb62970753eab1f3f1",
+                "reference": "16a82b75ae0b55aaddeae1cb62970753eab1f3f1",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.0",
+                "illuminate/contracts": "^10.0|^11.0",
+                "php": "^8.1",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "conflict": {
+                "z3d0x/filament-logger": "*"
+            },
+            "require-dev": {
+                "nunomaduro/collision": "^7.9",
+                "orchestra/testbench": "^8.0",
+                "pestphp/pest": "^2.0",
+                "pestphp/pest-plugin-arch": "^2.0",
+                "pestphp/pest-plugin-laravel": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FilamentUserActivity": "Edwink\\FilamentUserActivity\\Facades\\FilamentUserActivity"
+                    },
+                    "providers": [
+                        "Edwink\\FilamentUserActivity\\FilamentUserActivityServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Edwink\\FilamentUserActivity\\": "src/",
+                    "Edwink\\FilamentUserActivity\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Edwin Krause",
+                    "email": "edwin@kitc.eu",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Tracks user activity and shows currently active users",
+            "homepage": "https://github.com/edwink75/filament-user-activity",
+            "keywords": [
+                "edwink",
+                "filament-user-activity",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/edwink75/filament-user-activity/issues",
+                "source": "https://github.com/edwink75/filament-user-activity"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/edwink",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-01-29T10:14:15+00:00"
         },
         {
             "name": "egulias/email-validator",
@@ -7124,6 +7201,69 @@
             "time": "2022-08-09T21:07:46+00:00"
         },
         {
+            "name": "pxlrbt/filament-activity-log",
+            "version": "v1.1.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pxlrbt/filament-activity-log.git",
+                "reference": "9956fa3ed645c46e94bbaf6bb3faecf34a41d200"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pxlrbt/filament-activity-log/zipball/9956fa3ed645c46e94bbaf6bb3faecf34a41d200",
+                "reference": "9956fa3ed645c46e94bbaf6bb3faecf34a41d200",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.0.5.0",
+                "php": "^8.0",
+                "spatie/laravel-activitylog": "^4.7"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "\\pxlrbt\\FilamentActivityLog\\FilamentActivityLogServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "pxlrbt\\FilamentActivityLog\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dennis Koch",
+                    "email": "info@pixelarbeit.de"
+                }
+            ],
+            "description": "Spatie's Laravel Activity Log integrated into Filament",
+            "keywords": [
+                "activity log",
+                "filament",
+                "laravel-filament"
+            ],
+            "support": {
+                "issues": "https://github.com/pxlrbt/filament-activity-log/issues",
+                "source": "https://github.com/pxlrbt/filament-activity-log/tree/v1.1.9"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/pxlrbt",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-02-02T05:26:01+00:00"
+        },
+        {
             "name": "pxlrbt/filament-excel",
             "version": "v2.4.2",
             "source": {
@@ -11168,6 +11308,64 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/v2.3.0"
             },
             "time": "2024-12-21T16:25:41+00:00"
+        },
+        {
+            "name": "troccoli/blade-health-icons",
+            "version": "v5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/troccoli/blade-health-icons.git",
+                "reference": "9f455c8d748fca050c46705ef7141dc54a38bf5a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/troccoli/blade-health-icons/zipball/9f455c8d748fca050c46705ef7141dc54a38bf5a",
+                "reference": "9f455c8d748fca050c46705ef7141dc54a38bf5a",
+                "shasum": ""
+            },
+            "require": {
+                "blade-ui-kit/blade-icons": "^1.6",
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2|^8.3|^8.4"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0",
+                "phpunit/phpunit": "^11.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Troccoli\\BladeHealthIcons\\BladeHealthIconsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Troccoli\\BladeHealthIcons\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Giulio Troccoli-Allard",
+                    "email": "giulio@troccoli.it"
+                }
+            ],
+            "description": "A package to easily make use of Health Icons in your Laravel Blade views.",
+            "keywords": [
+                "Healthicons",
+                "blade",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/troccoli/blade-health-icons/issues",
+                "source": "https://github.com/troccoli/blade-health-icons"
+            },
+            "time": "2025-03-01T15:42:49+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

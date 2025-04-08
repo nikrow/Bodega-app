@@ -14,11 +14,11 @@ class WarehousePolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -28,11 +28,11 @@ class WarehousePolicy
     public function view(User $user, Warehouse $warehouse): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -41,7 +41,7 @@ class WarehousePolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -49,7 +49,7 @@ class WarehousePolicy
      */
     public function update(User $user, Warehouse $warehouse): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -57,7 +57,7 @@ class WarehousePolicy
      */
     public function delete(User $user, Warehouse $warehouse): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -65,7 +65,7 @@ class WarehousePolicy
      */
     public function restore(User $user, Warehouse $warehouse): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -73,7 +73,7 @@ class WarehousePolicy
      */
     public function forceDelete(User $user, Warehouse $whrehouse): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**

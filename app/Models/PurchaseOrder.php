@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class PurchaseOrder extends Model
+class PurchaseOrder extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
+    
     protected $fillable = [
         'user_id',
         'field_id',

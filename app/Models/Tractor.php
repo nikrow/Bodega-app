@@ -16,10 +16,16 @@ class Tractor extends Model
         'price',
         'qrcode',
         'created_by',
+        'hourometer',
+        'operator_id',
+        'old_hourometer',
+        'last_hourometer_date',
+        'report_last_hourometer_id',
         'updated_by',
     ];
     protected $casts = [
         'price' => 'decimal:2',
+        
     ];
     protected static function booted()
     {

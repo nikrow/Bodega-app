@@ -13,12 +13,12 @@ class StockPolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -28,12 +28,12 @@ class StockPolicy
     public function view(User $user, Stock $stock): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -42,7 +42,7 @@ class StockPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -50,7 +50,7 @@ class StockPolicy
      */
     public function update(User $user, Stock $stock): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -58,7 +58,7 @@ class StockPolicy
      */
     public function delete(User $user, Stock $stock): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -66,7 +66,7 @@ class StockPolicy
      */
     public function restore(User $user, Stock $stock): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -74,6 +74,6 @@ class StockPolicy
      */
     public function forceDelete(User $user, Stock $stock): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 }

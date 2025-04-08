@@ -4,12 +4,17 @@ namespace App\Models;
 
 
 use Filament\Facades\Filament;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class MovimientoEnvase extends Model
+class MovimientoEnvase extends Model implements Auditable
 {
     use HasFactory;
+    use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'field_id',
@@ -17,6 +22,11 @@ class MovimientoEnvase extends Model
         'package_id',
         'cantidad_envases',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($movimientoEnvase) {

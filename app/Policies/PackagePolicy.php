@@ -11,12 +11,12 @@ class PackagePolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -26,12 +26,12 @@ class PackagePolicy
     public function view(User $user, Package $package): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::ESTANQUERO->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::ESTANQUERO,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -41,8 +41,8 @@ class PackagePolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 
@@ -52,8 +52,8 @@ class PackagePolicy
     public function update(User $user, Package $package): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 
@@ -62,7 +62,7 @@ class PackagePolicy
      */
     public function delete(User $user, Package $package): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -70,7 +70,7 @@ class PackagePolicy
      */
     public function restore(User $user, Package $package): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -78,18 +78,18 @@ class PackagePolicy
      */
     public function forceDelete(User $user, Package $package): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     public function restoreAudit(User $user, Package $package): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
     public function audit(User $user, Package $package): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 }

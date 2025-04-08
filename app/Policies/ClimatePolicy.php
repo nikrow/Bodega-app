@@ -14,11 +14,11 @@ class ClimatePolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -28,11 +28,11 @@ class ClimatePolicy
     public function view(User $user, Climate $climate): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -42,9 +42,9 @@ class ClimatePolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::ASISTENTE->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
         ]);
     }
 
@@ -54,9 +54,9 @@ class ClimatePolicy
     public function update(User $user, Climate $climate): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::ASISTENTE->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
         ]);
     }
 
@@ -65,7 +65,7 @@ class ClimatePolicy
      */
     public function delete(User $user, Climate $climate): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -73,7 +73,7 @@ class ClimatePolicy
      */
     public function restore(User $user, Climate $climate): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -81,7 +81,7 @@ class ClimatePolicy
      */
     public function forceDelete(User $user, Climate $climate): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -94,13 +94,13 @@ class ClimatePolicy
 
     public function restoreAudit(User $user, Climate $climate): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
     public function audit(User $user, Climate $climate): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 }

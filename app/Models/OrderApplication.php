@@ -3,15 +3,19 @@
 namespace App\Models;
 
 use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class OrderApplication extends Model
+class OrderApplication extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
+
     protected $fillable = [
         'order_id',
         'field_id',
@@ -38,8 +42,8 @@ class OrderApplication extends Model
     protected static function booted()
     {
         static::creating(function ($application) {
-            $application->created_by = auth()->id();
-            $application->updated_by = auth()->id();
+            $application->created_by = Auth::id();
+            $application->updated_by = Auth::id();
             $application->field_id = Filament::getTenant()->id;
             $order = $application->order;
             if ($order->status === 'Pendiente') {
@@ -48,7 +52,7 @@ class OrderApplication extends Model
         });
 
         static::updating(function ($application) {
-            $application->updated_by = auth()->id();
+            $application->updated_by = Auth::id();
         });
     }
 

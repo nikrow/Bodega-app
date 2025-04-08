@@ -60,6 +60,11 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => [
+            'timeout' => 60 * 10, // 10 minutos
+            'use_single_transaction' => true, // Reduce el impacto en la base de datos
+            'add_extra_option' => '--column-statistics=0', // Evita advertencias en versiones recientes de MySQL
+        ],
         ],
 
         'mariadb' => [

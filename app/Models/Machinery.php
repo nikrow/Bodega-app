@@ -3,11 +3,18 @@
 namespace App\Models;
 
 use Filament\Facades\Filament;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Machinery extends Model
+class Machinery extends Model implements Auditable
 {
+    use HasFactory;
+    use LogsActivity;
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'name',
         'field_id',
@@ -21,6 +28,11 @@ class Machinery extends Model
     protected $casts = [
         'price' => 'decimal:2',
     ];
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     protected static function booted()
     {
         static::creating(function ($machinery) {
@@ -48,5 +60,15 @@ class Machinery extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+    
+    public function works()
+    {
+        return $this->belongsToMany(Work::class, 'machinery_work', 'machinery_id', 'work_id');
+    }
+
+    public function operators()
+    {
+        return $this->belongsToMany(User::class, 'user_machinery', 'machinery_id', 'user_id');
     }
 }

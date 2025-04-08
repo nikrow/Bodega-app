@@ -13,13 +13,16 @@ return new class extends Migration
     {
         Schema::create('tractors', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name'); 
             $table->foreignId('field_id')->constrained('fields');
             $table->string('provider');
             $table->string('SapCode')->nullable();
             $table->decimal('price', 10, 2);
             $table->decimal('hourometer', 10, 2)->nullable();
+            $table->decimal('old_hourometer', 8, 2)->nullable();
+            $table->date('last_hourometer_date')->nullable();
             $table->string('qrcode')->unique()->nullable();
+            $table->foreignId('operator_id')->nullable()->constrained('users');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->constrained('users');
             $table->timestamps();

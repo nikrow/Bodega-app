@@ -14,11 +14,11 @@ class ApplicatorPolicy
     public function viewAny(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -28,11 +28,11 @@ class ApplicatorPolicy
     public function view(User $user, Applicator $applicator): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::BODEGUERO->value,
-            RoleType::ASISTENTE->value,
-            RoleType::USUARIO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::BODEGUERO,
+            RoleType::ASISTENTE,
+            RoleType::USUARIO,
         ]);
     }
 
@@ -42,9 +42,9 @@ class ApplicatorPolicy
     public function create(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::ASISTENTE->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
         ]);
     }
 
@@ -54,9 +54,9 @@ class ApplicatorPolicy
     public function update(User $user, Applicator $applicator): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
-            RoleType::ASISTENTE->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
         ]);
     }
 
@@ -65,7 +65,7 @@ class ApplicatorPolicy
      */
     public function delete(User $user, Applicator $applicator): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -73,7 +73,7 @@ class ApplicatorPolicy
      */
     public function restore(User $user, Applicator $applicator): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -81,7 +81,7 @@ class ApplicatorPolicy
      */
     public function forceDelete(User $user, Applicator $applicator): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -93,13 +93,13 @@ class ApplicatorPolicy
     }
     public function restoreAudit(User $user, Applicator $applicator): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
     public function audit(User $user,Applicator $applicator): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN->value,
-            RoleType::AGRONOMO->value,
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
         ]);
     }
 }

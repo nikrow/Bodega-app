@@ -13,7 +13,7 @@ class ActivityLogPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
@@ -21,7 +21,7 @@ class ActivityLogPolicy
      */
     public function view(User $user, Activity $activity): bool
     {
-        return $user->role === RoleType::ADMIN->value;
+        return $user->role === RoleType::ADMIN;
     }
 
     /**
