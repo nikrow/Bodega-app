@@ -172,7 +172,8 @@ class ReportResource extends Resource
             ])
             ->actions([
                 ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\EditAction::make()
+                        ->hidden(fn (Report $record) => $record->approved),
                     Action::make('approve_and_consolidate')
                         ->label('Aprobar y Consolidar')
                         ->icon('heroicon-o-check')
