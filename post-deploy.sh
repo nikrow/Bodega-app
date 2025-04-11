@@ -26,7 +26,7 @@ echo "PASO 2: Configuración y optimización"
 echo "-----------------------------------"
 # Ejecutamos migraciones
 echo "Ejecutando migraciones..."
-php artisan migrate --fresh
+php artisan migrate --refresh --force
 
 # Optimizaciones
 echo "Aplicando optimizaciones..."
