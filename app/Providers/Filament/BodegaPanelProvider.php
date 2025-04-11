@@ -8,6 +8,7 @@ use Filament\Panel;
 use App\Models\Field;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Backups;
 use Filament\Navigation\MenuItem;
 use Illuminate\Support\Facades\Auth;
 use Filament\Navigation\NavigationGroup;
@@ -62,6 +63,9 @@ class BodegaPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Bodega'),
                 NavigationGroup::make()
+                    ->label('Maquinaria')
+                    ->collapsed(),
+                NavigationGroup::make()
                     ->label('Anexos')
                     ->collapsed(),
                 NavigationGroup::make()
@@ -82,7 +86,8 @@ class BodegaPanelProvider extends PanelProvider
                     ),
                 ApiServicePlugin::make(),
                 FilamentSpatieLaravelBackupPlugin::make()
-                ->authorize(fn (): bool => Auth::user()->email === 'admin@admin.com'),
+                    ->authorize(fn (): bool => Auth::user()->email === 'admin@admin.com')
+                    ->usingPage(Backups::class)
                 
             ])
             ->authGuard('web')

@@ -2,16 +2,17 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\MachineryResource\Pages;
-use App\Filament\Resources\MachineryResource\RelationManagers;
-use App\Models\Machinery;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
+use App\Models\Machinery;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\MachineryResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\MachineryResource\RelationManagers;
 
 class MachineryResource extends Resource
 {
@@ -53,10 +54,17 @@ class MachineryResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('SapCode')
                     ->label('Código SAP')
-                    ->unique(),
+                    ->unique(Machinery::class, 'SapCode', ignoreRecord: true),
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
                     ->numeric(2, 2)
+                    ->required(),
+                Forms\Components\Select::make('works')
+                    ->label('Labores')
+                    ->multiple()
+                    ->relationship('works', 'name')
+                    ->preload()
+                    ->searchable()
                     ->required(),
             ]);
     }
@@ -79,6 +87,11 @@ class MachineryResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('price')
                     ->label('Precio')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('works.name')
+                    ->label('Labores')
+                    ->formatStateUsing(fn ($record) => $record->works()->pluck('name')->implode(', '))
                     ->searchable()
                     ->sortable(),
             ])

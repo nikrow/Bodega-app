@@ -25,10 +25,10 @@ enum CostType: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::cerezos => 'heroicon-o-sparkles',
-            self::paltos => 'heroicon-o-sparkles',
-            self::mandarinos => 'heroicon-o-sparkles',
-            self::general => 'heroicon-o-sparkles',
+            self::cerezos => 'phosphor-cherries-light',
+            self::paltos => 'phosphor-avocado-light',
+            self::mandarinos => 'phosphor-orange-light',
+            self::general => 'phosphor-road-horizon-light',
         };
     }
     public function getColor(): string|array|null

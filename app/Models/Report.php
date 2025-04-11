@@ -108,7 +108,7 @@ class Report extends Model implements Auditable
             }
         }
     }
-    public function generateConsolidatedReport()
+        public function generateConsolidatedReport()
     {
         if (!$this->approved) {
             return;
@@ -117,36 +117,50 @@ class Report extends Model implements Auditable
         $periodStart = $this->date->startOfMonth();
         $periodEnd = $this->date->endOfMonth();
 
-        ConsolidatedReport::create([
-            'tractor_id' => $this->tractor_id,
-            'machinery_id' => null,
-            'work_id' => $this->work_id,
-            'period_start' => $periodStart,
-            'period_end' => $periodEnd,
-            'tractor_hours' => $this->hours,
-            'tractor_total' => $this->tractor_total,
-            'machinery_hours' => 0,
-            'machinery_total' => 0,
-            'created_by' => Auth::id(),
-            'generated_at' => now(),
-        ]);
-        if ($this->machinery_id) {
-            ConsolidatedReport::create([
+        ConsolidatedReport::updateOrCreate(
+            [
+                'report_id' => $this->id, 
                 'tractor_id' => $this->tractor_id,
-                'machinery_id' => $this->machinery_id,
-                'work_id' => $this->work_id,
+                'machinery_id' => null,
                 'period_start' => $periodStart,
                 'period_end' => $periodEnd,
-                'tractor_hours' => 0,
-                'tractor_total' => 0,
-                'machinery_hours' => $this->hours,
-                'machinery_total' => $this->machinery_total,
+            ],
+            [
+                'tractor_hours' => $this->hours,
+                'tractor_total' => $this->tractor_total,
+                'machinery_hours' => 0,
+                'machinery_total' => 0,
                 'created_by' => Auth::id(),
                 'generated_at' => now(),
-            ]);
+            ]
+        );
+
+        if ($this->machinery_id) {
+            ConsolidatedReport::updateOrCreate(
+                [
+                    'report_id' => $this->id, 
+                    'tractor_id' => $this->tractor_id,
+                    'machinery_id' => $this->machinery_id,
+                    'period_start' => $periodStart,
+                    'period_end' => $periodEnd,
+                ],
+                [
+                    'tractor_hours' => 0,
+                    'tractor_total' => 0,
+                    'machinery_hours' => $this->hours,
+                    'machinery_total' => $this->machinery_total,
+                    'created_by' => Auth::id(),
+                    'generated_at' => now(),
+                ]
+            );
         }
     }
     
+    public function operator()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function field()
     {
         return $this->belongsTo(Field::class);
@@ -157,41 +171,24 @@ class Report extends Model implements Auditable
         return $this->belongsTo(Crop::class);
     }
 
-    public function machinery()
-    {
-        return $this->belongsTo(Machinery::class);
-    }
-
     public function tractor()
     {
         return $this->belongsTo(Tractor::class);
     }
 
-    public function operator()
+    public function machinery()
     {
-        return $this->belongsTo(User::class, 'operator_id');
+        return $this->belongsTo(Machinery::class);
     }
 
     public function work()
     {
         return $this->belongsTo(Work::class);
     }
-
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
-
     // Accesores para totales calculados
     public function getTractorTotalAttribute()
     {

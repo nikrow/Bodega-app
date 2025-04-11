@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('crop_id')->constrained('crops');
+
             $table->foreignId('field_id')->constrained('fields');
             $table->foreignId('machinery_id')->nullable()->constrained('machineries');
             $table->foreignId('tractor_id')->constrained('tractors');

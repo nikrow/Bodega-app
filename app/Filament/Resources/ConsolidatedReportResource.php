@@ -3,56 +3,97 @@
 namespace App\Filament\Resources;
 
 use Filament\Tables;
-use App\Models\ConsolidatedReport;
-use Filament\Resources\Resource;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use App\Models\ConsolidatedReport;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\ConsolidatedReportResource\Pages;
 
 class ConsolidatedReportResource extends Resource
 {
     protected static ?string $model = ConsolidatedReport::class;
+    protected static bool $isScopedToTenant = false;
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationGroup = 'Maquinaria';
-    protected static ?string $navigationLabel = 'Consolidated Reports';
-    protected static ?string $slug = 'consolidated-reports';
+    protected static ?string $navigationLabel = 'Reports consolidados';
+    protected static ?string $slug = 'reports-consolidados';
+    protected static ?string $modelLabel = 'Reporte consolidado';
+    protected static ?string $pluralModelLabel = 'Reportes consolidados';
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+    return parent::getEloquentQuery()->with(['report.work']);
+    }
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('period_start')
-                    ->date('d/m/Y')
-                    ->label('Inicio'),
-                Tables\Columns\TextColumn::make('period_end')
-                    ->date('d/m/Y')
-                    ->label('Fin'),
-                Tables\Columns\TextColumn::make('tractor.name')
-                    ->label('Máquina'),
-                Tables\Columns\TextColumn::make('machinery.name')
-                    ->label('Equipo'),
-                Tables\Columns\TextColumn::make('work.name')
-                    ->label('Labor'),
-                Tables\Columns\TextColumn::make('work.costCenter.name')
+
+                Tables\Columns\TextColumn::make('report.date')
+                    ->label('Fecha')
+                    ->date('d/m/Y'),
+
+                Tables\Columns\TextColumn::make('report.field.name')
+                    ->label('Campo'), 
+                    
+                Tables\Columns\TextColumn::make('report.operator.name')
+                    ->label('Operador'),
+
+                Tables\Columns\TextColumn::make('equipment')
+                    ->label('Equipo')
+                    ->getStateUsing(function ($record) {
+                        return $record->machinery_id 
+                            ? $record->machinery->name 
+                            : $record->tractor->name;
+                    }),
+
+                Tables\Columns\TextColumn::make('hours')
+                    ->label('Horas')
+                    ->getStateUsing(function ($record) {
+                        return $record->machinery_id 
+                            ? $record->machinery_hours 
+                            : $record->tractor_hours;
+                    }),
+
+                Tables\Columns\TextColumn::make('report.work.name')
+                    ->label('Labores'),
+
+                Tables\Columns\TextColumn::make('price')
+                    ->label('Precio')
+                    ->getStateUsing(function ($record) {
+                        return $record->machinery_id 
+                            ? $record->machinery->price 
+                            : $record->tractor->price;
+                    }),
+
+                Tables\Columns\TextColumn::make('report.work.cost_type')
                     ->label('Centro de Costo'),
-                Tables\Columns\TextColumn::make('tractor_hours')
-                    ->label('Horas Tractor'),
-                Tables\Columns\TextColumn::make('tractor_total')
-                    ->label('Total Tractor'),
-                Tables\Columns\TextColumn::make('machinery_hours')
-                    ->label('Horas Equipo'),
-                Tables\Columns\TextColumn::make('machinery_total')
-                    ->label('Total Equipo'),
-                Tables\Columns\TextColumn::make('createdBy.name')
-                    ->label('Creado por'),
+
+                Tables\Columns\TextColumn::make('total')
+                    ->label('Total')
+                    ->getStateUsing(function ($record) {
+                        return $record->machinery_id 
+                            ? $record->machinery_total 
+                            : $record->tractor_total;
+                    }),
+
+                Tables\Columns\TextColumn::make('report.approvedBy.name')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Aprovado por'),    
+                
                 Tables\Columns\TextColumn::make('generated_at')
                     ->dateTime()
-                        ->label('Generado'),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Generado'),
             ])
             ->filters([
-                //
+                // Puedes agregar filtros aquí si es necesario
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                
+            ])
+            ->bulkActions([
+                ExportBulkAction::make('export')
             ]);
     }
 

@@ -89,17 +89,19 @@ class TractorResource extends Resource
                     ->label('Precio')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('qrcode')
-                    ->label('Código QR')
+                Tables\Columns\TextColumn::make('hourometer')
+                    ->label('Horómetro actual')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updatedBy.name')
                     ->label('Actualizado por')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
             ])
             ->filters([

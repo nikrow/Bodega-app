@@ -17,7 +17,6 @@ class Tractor extends Model
         'qrcode',
         'created_by',
         'hourometer',
-        'operator_id',
         'old_hourometer',
         'last_hourometer_date',
         'report_last_hourometer_id',
@@ -44,9 +43,17 @@ class Tractor extends Model
     {
         return $this->belongsTo(Field::class);
     }
+    public function operators()
+    {
+        return $this->belongsToMany(User::class, 'tractor_user', 'tractor_id', 'user_id');
+    }
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
     }
     public function updatedBy()
     {

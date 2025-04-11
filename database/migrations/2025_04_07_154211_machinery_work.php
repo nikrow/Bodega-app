@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('machinery_id')->constrained('machineries');
             $table->foreignId('work_id')->constrained('works');
-            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
         });
     }

@@ -9,7 +9,6 @@ class ConsolidatedReport extends Model
     protected $fillable = [
         'tractor_id',
         'machinery_id',
-        'work_id',
         'period_start',
         'period_end',
         'tractor_hours',
@@ -18,6 +17,7 @@ class ConsolidatedReport extends Model
         'machinery_total',
         'created_by',
         'generated_at',
+        'report_id',
     ];
 
     protected $casts = [
@@ -45,12 +45,17 @@ class ConsolidatedReport extends Model
     {
         return $this->belongsTo(Machinery::class);
     }
-    public function work()
-    {
-        return $this->belongsTo(Work::class);
-    }
+    public function works()
+{
+    return $this->belongsToMany(Work::class, 'machinery_work', 'machinery_id', 'work_id');
+}
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    
+    public function report()
+    {
+        return $this->belongsTo(Report::class);
     }
 }

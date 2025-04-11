@@ -22,7 +22,6 @@ return new class extends Migration
             $table->decimal('old_hourometer', 8, 2)->nullable();
             $table->date('last_hourometer_date')->nullable();
             $table->string('qrcode')->unique()->nullable();
-            $table->foreignId('operator_id')->nullable()->constrained('users');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->constrained('users');
             $table->timestamps();

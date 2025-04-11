@@ -9,4 +9,8 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateTractor extends CreateRecord
 {
     protected static string $resource = TractorResource::class;
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
