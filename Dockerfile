@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.4-fpm
 
 WORKDIR /app
 
@@ -16,10 +16,9 @@ RUN apt-get update && apt-get install -y \
     npm \
     # Dependencias para intl
     libicu-dev \
-    # Agregamos default-mysql-client para mysqldump
-    default-mysql-client \
-    # Agregamos nano
     nano \
+    wget \
+    gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos extensiones PHP incluyendo intl
@@ -51,6 +50,18 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
+    
+# Agregamos el repositorio de MySQL
+RUN apt-get update \
+    && wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb \
+    && dpkg -i mysql-apt-config_0.8.29-1_all.deb \
+    && apt-get update
+
+# Instalamos el cliente de MySQL en lugar de default-mysql-client
+RUN apt-get install -y mysql-client
+
+# Verificamos la versión de mysqldump (opcional, para depuración)
+RUN mysqldump --version
 
 # Copiamos la aplicación
 COPY . /app
