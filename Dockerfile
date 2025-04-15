@@ -51,15 +51,15 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
 
-# Agregamos el repositorio de MySQL
-RUN apt-get update && apt-get install -y \
-    lsb-release \
-    && wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb \
-    && dpkg -i mysql-apt-config_0.8.29-1_all.deb \
-    && rm -rf /var/lib/apt/lists/*
+# Set DEBIAN_FRONTEND to noninteractive to avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Instalamos el cliente de MySQL
-RUN apt-get install -y mysql-client
+# Add MySQL repository and install MySQL client
+RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb \
+    && dpkg -i mysql-apt-config_0.8.29-1_all.deb \
+    && apt-get update \
+    && apt-get install -y mysql-client \
+    && rm -rf /var/lib/apt/lists/*
 
 # Verificamos la versión de mysqldump (opcional, para depuración)
 RUN mysqldump --version
