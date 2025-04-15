@@ -52,10 +52,11 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
 
 # Agregamos el repositorio de MySQL
-RUN apt-get update \
+RUN apt-get update && apt-get install -y \
+    lsb-release \
     && wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb \
     && dpkg -i mysql-apt-config_0.8.29-1_all.deb \
-    && apt-get update
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalamos el cliente de MySQL
 RUN apt-get install -y mysql-client
