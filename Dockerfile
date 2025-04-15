@@ -2,7 +2,7 @@ FROM php:8.4-fpm
 
 WORKDIR /app
 
-# Instalamos dependencias del sistema
+# Instalamos dependencias del sistema, incluyendo lsb-release
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -14,11 +14,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nodejs \
     npm \
-    # Dependencias para intl
     libicu-dev \
     nano \
     wget \
     gnupg \
+    lsb-release \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos extensiones PHP incluyendo intl
@@ -50,14 +50,14 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
-    
+
 # Agregamos el repositorio de MySQL
 RUN apt-get update \
     && wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb \
     && dpkg -i mysql-apt-config_0.8.29-1_all.deb \
     && apt-get update
 
-# Instalamos el cliente de MySQL en lugar de default-mysql-client
+# Instalamos el cliente de MySQL
 RUN apt-get install -y mysql-client
 
 # Verificamos la versión de mysqldump (opcional, para depuración)
