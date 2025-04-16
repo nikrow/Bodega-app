@@ -57,7 +57,6 @@ class UserResource extends Resource
                     ->password()
                     ->revealable()
                     ->minLength(8)
-                    ->hiddenOn('edit')
                     ->placeholder('Contraseña del usuario')
                     ->required(),
                 forms\Components\Select::make('fields')
@@ -104,7 +103,7 @@ class UserResource extends Resource
 
                         return $options;
                     })
-
+                
             ]);
     }
 
