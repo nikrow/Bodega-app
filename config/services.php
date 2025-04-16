@@ -30,7 +30,7 @@ return [
 
     'slack' => [
         'notifications' => [
-            'webhook_url' => env('SLACK_WEBHOOK_URL'),
+            'webhook_url' => env('SLACK_WEBHOOK_URL', null),
         ],
     ],
 ];

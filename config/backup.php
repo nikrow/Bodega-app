@@ -166,7 +166,7 @@ return [
         ],
         
         'slack' => [
-            'webhook_url' => env('SLACK_WEBHOOK_URL'),
+            'webhook_url' => env('SLACK_WEBHOOK_URL', null),
             'channel' => null,
             'username' => null,
             'icon' => null,
