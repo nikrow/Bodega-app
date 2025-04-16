@@ -142,59 +142,24 @@ return [
      */
     'notifications' => [
         'notifications' => [
-            \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => ['slack'],
-            \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => ['slack'],
-            \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => ['slack'],
-            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => ['slack'],
-            \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => ['slack'],
-            \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class => ['slack'],
-        ],
+        \App\Notifications\Backup\BackupHasFailedNotification::class => ['slack'],
+        \App\Notifications\Backup\UnhealthyBackupWasFoundNotification::class => ['slack'],
+        \App\Notifications\Backup\CleanupHasFailedNotification::class => ['slack'],
+        \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => ['slack'],
+        \App\Notifications\Backup\HealthyBackupWasFoundNotification::class => ['slack'],
+        \App\Notifications\Backup\CleanupWasSuccessfulNotification::class => ['slack'],
+    ],
+    
+        'notifiable' => \App\Notifications\BackupNotifiable::class,
 
-        /*
-         * Here you can specify the notifiable to which the notifications should be sent. The default
-         * notifiable will use the variables specified in this config file.
-         */
-        'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
+        // ... otras configuraciones ...
 
-        'mail' => [
-            'to' => 'your@example.com',
-
-            'from' => [
-                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-                'name' => env('MAIL_FROM_NAME', 'Example'),
-            ],
-        ],
-        
         'slack' => [
-            'webhook_url' => env('SLACK_WEBHOOK_URL', null),
-            'channel' => null,
-            'username' => null,
-            'icon' => null,
-
-            /*
-             * If this is set to null the default channel of the webhook will be used.
-             */
-            'channel' => env('SLACK_CHANNEL'),
-
-            'username' => null,
-
-            'icon' => null,
-        ],
-
-        'discord' => [
-            'webhook_url' => '',
-
-            /*
-             * If this is an empty string, the name field on the webhook will be used.
-             */
-            'username' => '',
-
-            /*
-             * If this is an empty string, the avatar on the webhook will be used.
-             */
-            'avatar_url' => '',
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    
 
     /*
      * Here you can specify which backups should be monitored.
