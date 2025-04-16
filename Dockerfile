@@ -1,8 +1,8 @@
-FROM php:8.4-fpm
+FROM php:8.4-fpm-alpine
 
 WORKDIR /app
 
-# Instalamos dependencias del sistema, incluyendo lsb-release
+# Instalamos dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -14,11 +14,12 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nodejs \
     npm \
+    # Dependencias para intl
     libicu-dev \
+    # Agregamos default-mysql-client para mysqldump
+    default-mysql-client \
+    # Agregamos nano
     nano \
-    wget \
-    gnupg \
-    lsb-release \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos extensiones PHP incluyendo intl
@@ -50,19 +51,6 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
-
-# Set DEBIAN_FRONTEND to noninteractive to avoid prompts
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Add MySQL repository and install MySQL client
-RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb \
-    && dpkg -i mysql-apt-config_0.8.29-1_all.deb \
-    && apt-get update \
-    && apt-get install -y mysql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-# Verificamos la versión de mysqldump (opcional, para depuración)
-RUN mysqldump --version
 
 # Copiamos la aplicación
 COPY . /app
