@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Models\Report;
 use App\Enums\RoleType;
 
 class ReportPolicy
@@ -64,4 +65,11 @@ class ReportPolicy
             
         ]);
     }   
+    public function approveAndConsolidate(User $user, Report $report): bool
+    {
+        return !$report->approved && in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::USUARIOMAQ,
+        ]);
+    }
 }

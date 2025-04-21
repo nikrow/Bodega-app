@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use Closure;
 use Filament\Forms;
+use App\Models\User;
 use App\Models\Work;
 use Filament\Tables;
 use App\Models\Report;
@@ -14,7 +15,9 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Query\Builder;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Enums\FiltersLayout;
 use App\Filament\Resources\ReportResource\Pages;
 
 class ReportResource extends Resource
@@ -123,6 +126,8 @@ class ReportResource extends Resource
             Forms\Components\TextInput::make('hours')
                 ->label('Horas Trabajadas')
                 ->numeric()
+                ->reactive()
+                ->hidden()
                 ->disabled()
                 ->dehydrated(true),
             Forms\Components\Textarea::make('observations')
@@ -163,13 +168,23 @@ class ReportResource extends Resource
                     ->label('Horómetro Inicial'),
                 Tables\Columns\TextColumn::make('hourometer')
                     ->label('Horómetro Final'),
+                Tables\Columns\IconColumn::make('approved')
+                    ->label('Aprobado')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('observations')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->label('Observaciones'),
             ])
             ->filters([
-                // Puedes agregar filtros aquí si es necesario
-            ])
+                Tables\Filters\SelectFilter::make('approved')
+                    ->label('Estado')
+                    ->default(0)
+                    ->options([
+                        1 => 'Completado',
+                        0 => 'Pendiente',
+                    ])
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\EditAction::make()
@@ -187,8 +202,12 @@ class ReportResource extends Resource
                             ]);
                             $record->generateConsolidatedReport();
                         })
-                        ->visible(fn (Report $record) => !$record->approved),
+                        ->visible(fn (Report $record) => !$record->approved && in_array(Auth::user()->role, [
+                            \App\Enums\RoleType::ADMIN,
+                            \App\Enums\RoleType::USUARIOMAQ,
+                        ])),
                 ]),
+                
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -46,6 +46,13 @@ class ConsolidatedReportResource extends Resource
                             ? $record->machinery->name 
                             : $record->tractor->name;
                     }),
+                Tables\Columns\TextColumn::make('report.initial_hourometer')
+                    ->label('Horómetro inicial')
+                    ->numeric(),
+                    
+                Tables\Columns\TextColumn::make('report.hourometer')
+                    ->label('Horómetro final')
+                    ->numeric(),
 
                 Tables\Columns\TextColumn::make('hours')
                     ->label('Horas')
