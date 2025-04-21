@@ -97,7 +97,7 @@ return [
              * The disk names on which the backups will be stored.
              */
             'disks' => [
-                'backups',
+                's3',
             ],
         ],
 
@@ -201,7 +201,7 @@ return [
     'monitor_backups' => [
         [
             'name' => env('APP_NAME', 'laravel-backup'),
-            'disks' => ['backups'],
+            'disks' => ['s3'],
             'health_checks' => [
                 \Spatie\Backup\Tasks\Monitor\HealthChecks\IsReachable::class,
             \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays::class => 1, // Alerta si el respaldo tiene más de 1 día
