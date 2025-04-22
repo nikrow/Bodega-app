@@ -27,6 +27,8 @@ class ConsolidatedReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
+            ->defaultPaginationPageOption('25')
             ->columns([
 
                 Tables\Columns\TextColumn::make('report.date')

@@ -3,11 +3,16 @@
 namespace App\Models;
 
 use Filament\Facades\Filament;
+use OwenIt\Auditing\Contracts\Auditable;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 
-class Tractor extends Model
+class Tractor extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
+    use \Spatie\Activitylog\Traits\LogsActivity;
+
     protected $fillable = [
         'name',
         'field_id',
@@ -38,6 +43,11 @@ class Tractor extends Model
         static::updating(function ($tractor) {
             $tractor->updated_by = Auth::id();
         });
+    }
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
     }
     public function field()
     {

@@ -19,6 +19,7 @@ use Illuminate\Database\Query\Builder;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\FiltersLayout;
 use App\Filament\Resources\ReportResource\Pages;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ReportResource extends Resource
 {
@@ -183,8 +184,7 @@ class ReportResource extends Resource
                         1 => 'Completado',
                         0 => 'Pendiente',
                     ])
-            ], layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(3)
+            ])
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\EditAction::make()
@@ -219,7 +219,7 @@ class ReportResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // Agrega relaciones si las necesitas
+            AuditsRelationManager::class
         ];
     }
 

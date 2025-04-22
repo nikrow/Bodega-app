@@ -14,6 +14,8 @@ use Filament\Resources\Resource;
 use App\Models\OperatorAssignment;
 use Illuminate\Support\Facades\Log;
 use App\Filament\Resources\OperatorAssignmentResource\Pages;
+use App\Filament\Resources\OperatorAssignmentResource\RelationManagers\ReportsRelationManager;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class OperatorAssignmentResource extends Resource
 {
@@ -26,10 +28,7 @@ class OperatorAssignmentResource extends Resource
     protected static ?string $pluralModelLabel = 'Asignaciones de Operarios';
     protected static ?string $slug = 'operator-assignments';
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-{
-    return parent::getEloquentQuery()->with(['user.assignedTractors', 'user.assignedMachineries']);
-}
+    
     public static function canCreate(): bool
     {
         return false;
@@ -41,20 +40,32 @@ class OperatorAssignmentResource extends Resource
                 Forms\Components\Select::make('user_id')
                     ->label('Operario')
                     ->options(User::where('role', RoleType::OPERARIO->value)->pluck('name', 'id'))
-                    ->required()
-                    ->disabled()
-                    ->dehydrated(false),
+                    ->dehydrated(false)
+                    ->disabled(),
 
                 Forms\Components\Select::make('tractors')
-                    ->label('Tractores Asignados')
+                    ->label('Tractores')
+                    ->options(Tractor::pluck('name', 'id'))
                     ->multiple()
-                    ->options(Tractor::pluck('name', 'id')->toArray())
-                    ->reactive(),
+                    ->preload()
+                    ->afterStateHydrated(function ($component, $state, $record) {
+                        if ($record && $record->user) {
+                            // Cargar los IDs de los tractores asignados al usuario
+                            $component->state($record->user->assignedTractors->pluck('id')->toArray());
+                        }
+                    }),
+
                 Forms\Components\Select::make('machineries')
-                    ->label('Equipos Asignados')
+                    ->label('Maquinarias')
+                    ->options(Machinery::pluck('name', 'id'))
                     ->multiple()
-                    ->options(Machinery::pluck('name', 'id')->toArray())
-                    ->reactive(),
+                    ->preload()
+                    ->afterStateHydrated(function ($component, $state, $record) {
+                        if ($record && $record->user) {
+                            // Cargar los IDs de las maquinarias asignadas al usuario
+                            $component->state($record->user->assignedMachineries->pluck('id')->toArray());
+                        }
+                    }),
             ]);
     }
     
@@ -65,30 +76,39 @@ class OperatorAssignmentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Operario'),
-                Tables\Columns\TextColumn::make('user.email')
-                    ->label('Correo'),
-                Tables\Columns\TextColumn::make('user.assignedTractors.name')
+                
+                    Tables\Columns\TextColumn::make('user.assignedTractors.name')
                     ->label('Tractores Asignados')
                     ->badge()
                     ->getStateUsing(function ($record) {
+                        if (!$record->user) return ['Sin operario asignado'];
                         $tractors = $record->user->assignedTractors->pluck('name')->toArray();
-                        Log::info('Tractores para OperatorAssignment', [
-                            'user_id' => $record->user_id,
-                            'tractors' => $tractors
-                        ]);
                         return $tractors ?: ['Sin tractores asignados'];
                     }),
+
                 Tables\Columns\TextColumn::make('user.assignedMachineries.name')
                     ->label('Equipos Asignados')
                     ->badge()
                     ->getStateUsing(function ($record) {
+                        if (!$record->user) return ['Sin operario asignado'];
                         $machineries = $record->user->assignedMachineries->pluck('name')->toArray();
-                        Log::info('Maquinarias para OperatorAssignment', [
-                            'user_id' => $record->user_id,
-                            'machineries' => $machineries
-                        ]);
                         return $machineries ?: ['Sin equipos asignados'];
                     }),
+                
+                    Tables\Columns\TextColumn::make('current_month_hours')
+                    ->label('Horas Mes Actual')
+                    ->badge()
+                    ->getStateUsing(function (OperatorAssignment $record): string {
+                        $totalHours = $record->reports()
+                            ->whereBetween('date', [
+                                now()->startOfMonth(),
+                                now()->endOfMonth(),
+                            ])
+                            ->sum('hours');
+                        return number_format($totalHours, 2);
+                    })
+                    ->sortable()
+                    ->searchable(),
             ])
             ->filters([
                 //
@@ -103,7 +123,14 @@ class OperatorAssignmentResource extends Resource
                 ]),
             ]);
     }
-
+    
+    public static function getRelations(): array
+    {
+        return [
+            ReportsRelationManager::class,
+            AuditsRelationManager::class
+        ];
+    }
     public static function getPages(): array
     {
         return [

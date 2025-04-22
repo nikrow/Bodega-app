@@ -2,64 +2,65 @@
 
 namespace App\Models;  
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\DB; 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;  
+use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class OperatorAssignment extends Model 
+class OperatorAssignment extends Model implements Auditable
 {     
+    use \OwenIt\Auditing\Auditable;
+    use \Spatie\Activitylog\Traits\LogsActivity;
+    
     protected $fillable = [
         'user_id',
-    ];
+        'tractor_id',
+        'machinery_id',
+        'created_by',
+        'updated_by',
+        'updated_at',
+    ];  
     
-    protected $table = 'operator_assignments';
     protected static function boot()
     {
         parent::boot();
-        
-        static::creating(function ($assignment) {
-            Log::info('Creando registro OperatorAssignment', ['user_id' => $assignment->user_id]);
-        });
-        
-        static::created(function ($assignment) {
-            Log::info('Registro OperatorAssignment creado exitosamente', ['id' => $assignment->id, 'user_id' => $assignment->user_id]);
-        });
-        
+
         static::updating(function ($assignment) {
-            $user = $assignment->user;
-            if ($user) {
-                Log::info('Actualizando OperatorAssignment', [
-                    'user_id' => $assignment->user_id,
-                    'tractors' => $assignment->getAttribute('tractors'),
-                    'machineries' => $assignment->getAttribute('machineries')
-                ]);
-                DB::transaction(function () use ($user, $assignment) {
-                    
-                    $tractors = $assignment->getAttribute('tractors') ?? $user->assignedTractors()->pluck('tractor_id')->toArray();
-                    $machineries = $assignment->getAttribute('machineries') ?? $user->assignedMachineries()->pluck('machinery_id')->toArray();
-                    
-                    
-                    $user->assignedTractors()->sync($tractors);
-                    $user->assignedMachineries()->sync($machineries);
-                });
-            }
-        });
-        
-        static::deleting(function ($assignment) {
-            $user = $assignment->user;
-            if ($user) {
-                Log::info('Eliminando OperatorAssignment', ['user_id' => $assignment->user_id]);
-                DB::transaction(function () use ($user) {
-                    $user->assignedTractors()->detach();
-                    $user->assignedMachineries()->detach();
-                });
-            }
+            
+            Log::info('Actualizando OperatorAssignment', [
+                'user_id' => $assignment->user_id,
+                'tractors' => $assignment->tractors()->pluck('tractors.id')->toArray(),
+                'machineries' => $assignment->machineries()->pluck('machineries.id')->toArray(),
+            ]);
         });
     }
-    
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable();
+    }
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+    public function assignedTractors(): BelongsToMany
+    {
+        return $this->belongsToMany(Tractor::class, 'tractor_user', 'user_id', 'tractor_id');
+    }
     
+    public function assignedMachineries(): BelongsToMany
+    {
+        return $this->belongsToMany(Machinery::class, 'user_machinery', 'user_id', 'machinery_id');
+    }
+    
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'operator_id', 'user_id');
+    }
 }

@@ -2,17 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\TractorResource\Pages;
-use App\Filament\Resources\TractorResource\RelationManagers;
-use App\Models\Tractor;
 use Filament\Forms;
-use Filament\Forms\Components\Tabs\Tab;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Tractor;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use OwenIt\Auditing\Contracts\Audit;
+use Filament\Forms\Components\Tabs\Tab;
+use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\TractorResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use App\Filament\Resources\TractorResource\RelationManagers;
+use Illuminate\Support\Facades\Auth;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class TractorResource extends Resource
 {
@@ -53,7 +58,11 @@ class TractorResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('SapCode')
                     ->label('Código SAP')
-                    ->unique(),
+                    ->rules(function (Forms\Get $get) {
+                        return Rule::unique('tractors', 'SapCode')
+                            ->ignore($get('id'));
+                    })
+                    ->required(),
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
                     ->numeric(2, 2)
@@ -64,7 +73,7 @@ class TractorResource extends Resource
                 Forms\Components\TextInput::make('hourometer')
                     ->label('Horómetro actual')
                     ->numeric(2, 2)
-                    ->disabled(fn($record) => $record !== null) 
+                    ->disabled(fn($record) => $record !== null && !Auth::user()->isAdmin()) 
                     ->required(),
             ]);
     }
@@ -93,6 +102,20 @@ class TractorResource extends Resource
                     ->label('Horómetro actual')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('current_month_hours')
+                    ->label('Horas Mes Actual')
+                    ->badge()
+                    ->getStateUsing(function (Tractor $record): string {
+                        $totalHours = $record->reports()
+                            ->whereBetween('date', [
+                                now()->startOfMonth(),
+                                now()->endOfMonth(),
+                            ])
+                            ->sum('hours');
+                        return number_format($totalHours, 2);
+                    })
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->searchable()
@@ -111,16 +134,15 @@ class TractorResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    ExportBulkAction::make('export'),
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ReportsRelationManager::class,
+            AuditsRelationManager::class,
         ];
     }
 
