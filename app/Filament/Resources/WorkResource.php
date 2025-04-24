@@ -62,7 +62,6 @@ class WorkResource extends Resource
                     ->label('Nombre'),
                 Tables\Columns\TextColumn::make('cost_type')
                     ->label('Centro Costo')
-                    ->color(CostType::class)
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('description')
@@ -77,7 +76,7 @@ class WorkResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    
                 ]),
             ]);
     }

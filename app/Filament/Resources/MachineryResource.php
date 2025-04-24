@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ProviderType;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
@@ -24,14 +25,14 @@ class MachineryResource extends Resource
 
     protected static ?int $navigationSort = 70;
 
-    protected static ?string $navigationLabel = 'Equipo';
+    protected static ?string $navigationLabel = 'Implemento';
 
-    protected static ?string $modelLabel = 'Equipo';
+    protected static ?string $modelLabel = 'Implemento';
 
-    protected static ?string $pluralModelLabel = 'Equipos';
+    protected static ?string $pluralModelLabel = 'Implementos';
 
-    protected static ?string $slug = 'equipo';
-
+    protected static ?string $slug = 'implemento';
+    
     public static function form(Form $form): Form
     {
         return $form
@@ -43,14 +44,7 @@ class MachineryResource extends Resource
                 Forms\Components\Select::make('provider')
                     ->label('Proveedor')
                     ->native(false)
-                    ->options([
-                        'Bemat' => 'Bemat',
-                        'TractorAmarillo' => 'Tractor Amarillo',
-                        'Fedemaq' => 'Fedemaq',
-                        'SchmditHermanos' => 'Schmdit Hermanos',
-                        'MayolYPiraino' => 'Mayol y Piraino',
-                        'Otro' => 'Otro',
-                    ])
+                    ->options(ProviderType::class)
                     ->required(),
                 Forms\Components\TextInput::make('SapCode')
                     ->label('Código SAP')
@@ -92,8 +86,7 @@ class MachineryResource extends Resource
                 Tables\Columns\TextColumn::make('works.name')
                     ->label('Labores')
                     ->formatStateUsing(fn ($record) => $record->works()->pluck('name')->implode(', '))
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),
             ])
             ->filters([
                 //

@@ -75,11 +75,14 @@ class OperatorAssignmentResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')
+                    ->searchable()
+                    ->sortable()
                     ->label('Operario'),
                 
                     Tables\Columns\TextColumn::make('user.assignedTractors.name')
                     ->label('Tractores Asignados')
                     ->badge()
+                    ->searchable()
                     ->getStateUsing(function ($record) {
                         if (!$record->user) return ['Sin operario asignado'];
                         $tractors = $record->user->assignedTractors->pluck('name')->toArray();
@@ -87,12 +90,13 @@ class OperatorAssignmentResource extends Resource
                     }),
 
                 Tables\Columns\TextColumn::make('user.assignedMachineries.name')
-                    ->label('Equipos Asignados')
+                    ->label('Implementos Asignados')
                     ->badge()
+                    ->searchable()
                     ->getStateUsing(function ($record) {
                         if (!$record->user) return ['Sin operario asignado'];
                         $machineries = $record->user->assignedMachineries->pluck('name')->toArray();
-                        return $machineries ?: ['Sin equipos asignados'];
+                        return $machineries ?: ['Sin implementos asignados'];
                     }),
                 
                     Tables\Columns\TextColumn::make('current_month_hours')
@@ -106,9 +110,7 @@ class OperatorAssignmentResource extends Resource
                             ])
                             ->sum('hours');
                         return number_format($totalHours, 2);
-                    })
-                    ->sortable()
-                    ->searchable(),
+                    }),
             ])
             ->filters([
                 //

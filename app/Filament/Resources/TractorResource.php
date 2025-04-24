@@ -2,21 +2,23 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ProviderType;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Tractor;
 use Filament\Forms\Form;
+use Filter\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Auth;
 use OwenIt\Auditing\Contracts\Audit;
 use Filament\Forms\Components\Tabs\Tab;
-use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\TractorResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\TractorResource\RelationManagers;
-use Illuminate\Support\Facades\Auth;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class TractorResource extends Resource
@@ -36,6 +38,8 @@ class TractorResource extends Resource
     protected static ?string $pluralModelLabel = 'Máquinas';
 
     protected static ?string $slug = 'maquinas';
+    
+    protected static bool $isScopedToTenant = false;
 
     public static function form(Form $form): Form
     {
@@ -47,14 +51,7 @@ class TractorResource extends Resource
                 Forms\Components\Select::make('provider')
                     ->label('Proveedor')
                     ->native(false)
-                    ->options([
-                        'Bemat' => 'Bemat',
-                        'TractorAmarillo' => 'Tractor Amarillo',
-                        'Fedemaq' => 'Fedemaq',
-                        'SchmditHermanos' => 'Schmdit Hermanos',
-                        'MayolYPiraino' => 'Mayol y Piraino',
-                        'Otro' => 'Otro',
-                    ])
+                    ->options(ProviderType::class)
                     ->required(),
                 Forms\Components\TextInput::make('SapCode')
                     ->label('Código SAP')
@@ -113,9 +110,7 @@ class TractorResource extends Resource
                             ])
                             ->sum('hours');
                         return number_format($totalHours, 2);
-                    })
-                    ->sortable()
-                    ->searchable(),
+                    }),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->searchable()
@@ -128,8 +123,20 @@ class TractorResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('provider')
+                    ->label('Proveedor')
+                    ->multiple()
+                    ->options([
+                        'Jorge Schmidt' => 'Jorge Schmidt',
+                        'Bemat' => 'Bemat',
+                        'TractorAmarillo' => 'Tractor Amarillo',
+                        'Fedemaq' => 'Fedemaq',
+                        'SchmditHermanos' => 'Schmdit Hermanos',
+                        'MayolYPiraino' => 'Mayol y Piraino',
+                        'Otro' => 'Otro',
+                    ]),
             ])
+        
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])

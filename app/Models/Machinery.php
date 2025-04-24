@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProviderType;
 use Filament\Facades\Filament;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +28,7 @@ class Machinery extends Model implements Auditable
     ];
     protected $casts = [
         'price' => 'decimal:2',
+        'provider' => ProviderType::class,
     ];
     public function getActivitylogOptions(): LogOptions
     {

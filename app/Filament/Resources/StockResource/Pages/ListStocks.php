@@ -30,7 +30,7 @@ class ListStocks extends ListRecords
 
         // Crear una pestaña para todas las bodegas que pertenecen al campo actual
         $tabs = [
-            'Todas' => ListRecords\Tab::make()
+            'Todas' => \Filament\Resources\Components\Tab::make()
                 ->label('Todas')
                 ->modifyQueryUsing(function ($query) use ($currentFieldId) {
                     // Mostrar todos los registros del field actual
@@ -40,7 +40,7 @@ class ListStocks extends ListRecords
 
         // Crear pestañas para cada bodega del campo actual
         foreach ($warehouses as $warehouse) {
-            $tabs[$warehouse->id] = ListRecords\Tab::make()
+            $tabs[$warehouse->id] = \Filament\Resources\Components\Tab::make()
                 ->label($warehouse->name)
                 ->modifyQueryUsing(function ($query) use ($warehouse, $currentFieldId) {
                     // Filtrar los registros por bodega y field actual

@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\ProviderType;
 use Filament\Facades\Filament;
-use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 
 class Tractor extends Model implements Auditable
 {
@@ -29,6 +30,7 @@ class Tractor extends Model implements Auditable
     ];
     protected $casts = [
         'price' => 'decimal:2',
+        'provider' => ProviderType::class,
         
     ];
     protected static function booted()
