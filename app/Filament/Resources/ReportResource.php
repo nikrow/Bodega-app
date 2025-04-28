@@ -13,6 +13,7 @@ use Filament\Forms\Form;
 use App\Models\Machinery;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\DB;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Query\Builder;
@@ -33,15 +34,22 @@ class ReportResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()->with([
-            'operator.assignedTractors',
-            'operator.assignedMachineries', 
-            'field',     
-            'tractor',  
-            'machinery', 
-            'work',     
-        ]);
+    $query = parent::getEloquentQuery()->with([
+        'operator.assignedTractors',
+        'operator.assignedMachineries', 
+        'field',     
+        'tractor',  
+        'machinery', 
+        'work',     
+    ]);
+
+    if (Auth::user()->isOperator()) {
+        $query->where('operator_id', Auth::id());
     }
+
+    return $query;
+    }
+
     public static function form(Form $form): Form
     {
         $user = Auth::user(); 
@@ -183,8 +191,22 @@ class ReportResource extends Resource
                     ->options([
                         1 => 'Completado',
                         0 => 'Pendiente',
-                    ])
-            ])
+                    ]),
+                Tables\Filters\SelectFilter::make('operator_id')
+                    ->label('Operador')
+                    ->visible(fn (Report $record) => in_array(Auth::user()->role, [
+                        \App\Enums\RoleType::ADMIN,
+                        \App\Enums\RoleType::USUARIOMAQ,
+                    ]))
+                    ->multiple()
+                    ->options(
+                        User::query()
+                            ->where('role', \App\Enums\RoleType::OPERARIO)
+                            ->pluck('name', 'id')
+                            ->toArray()
+                    ),
+                ], layout: FiltersLayout::AboveContent)
+                ->filtersFormColumns(3)
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\EditAction::make()
@@ -210,9 +232,44 @@ class ReportResource extends Resource
                 
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    Tables\Actions\BulkAction::make('approve_and_consolidate_bulk')
+                        ->label('Aprobar y Consolidar')
+                        ->icon('heroicon-o-check')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+                            $processed = 0;
+                            DB::transaction(function () use ($records, &$processed) {
+                                foreach ($records as $record) {
+                                    if (!$record->approved) {
+                                        $record->update([
+                                            'approved' => true,
+                                            'approved_by' => Auth::id(),
+                                            'approved_at' => now(),
+                                        ]);
+                                        $record->generateConsolidatedReport();
+                                        $processed++;
+                                    }
+                                }
+                            });
+                            if ($processed > 0) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Reports procesados')
+                                    ->body("Reports exitosamente consolidados $processed.")
+                                    ->success()
+                                    ->send();
+                            } else {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Reports ya aprobados')
+                                    ->body('No se encontraron reports para aprobar.')
+                                    ->warning()
+                                    ->send();
+                            }
+                        })
+                        ->authorize(fn () => in_array(Auth::user()->role, [
+                            \App\Enums\RoleType::ADMIN,
+                            \App\Enums\RoleType::USUARIOMAQ,
+                        ])),
             ]);
     }
 

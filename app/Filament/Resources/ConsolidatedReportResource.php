@@ -27,7 +27,7 @@ class ConsolidatedReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('id', 'desc')
             ->defaultPaginationPageOption('25')
             ->columns([
                 Tables\Columns\TextColumn::make('provider')
@@ -36,6 +36,11 @@ class ConsolidatedReportResource extends Resource
                         return $record->machinery_id 
                             ? $record->machinery->provider 
                             : $record->tractor->provider;
+                    }),
+                Tables\Columns\TextColumn::make('report.id')
+                    ->label('ID Report')
+                    ->getStateUsing(function ($record) {
+                        return $record->report->id;
                     }),
                 Tables\Columns\TextColumn::make('report.date')
                     ->label('Fecha')
