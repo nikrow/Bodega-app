@@ -56,7 +56,6 @@ class Report extends Model implements Auditable
         
         static::creating(function ($report) {
             $report->field_id = Filament::getTenant()->id;
-            $report->operator_id = Auth::id();
             $report->created_by = Auth::id();
             $report->updated_by = Auth::id();
             static::setInitialHourometer($report); 

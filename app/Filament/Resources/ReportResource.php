@@ -63,11 +63,18 @@ class ReportResource extends Resource
                 Forms\Components\Select::make('tractor_id')
                 ->label('Máquina')
                 ->native(false)
-                ->options(function () use ($user) {
+                ->options(function (callable $get) use ($user) {
                     if ($user->isOperator()) {
                         return $user->assignedTractors()->pluck('tractors.name', 'tractors.id')->toArray();
+                    } else {
+                        // Para otros roles, mostrar los tractores del operador seleccionado
+                        $operatorId = $get('operator_id');
+                        if ($operatorId) {
+                            $operator = User::find($operatorId);
+                            return $operator ? $operator->assignedTractors()->pluck('tractors.name', 'tractors.id')->toArray() : [];
+                        }
+                        return [];
                     }
-                    return Tractor::pluck('name', 'id')->toArray();
                 })
                 ->required()
                 ->reactive()
@@ -80,11 +87,19 @@ class ReportResource extends Resource
             Forms\Components\Select::make('machinery_id')
                 ->label('Equipo')
                 ->native(false)
-                ->options(function () use ($user) {
+                ->options(function (callable $get) use ($user) {
                     if ($user->isOperator()) {
                         return $user->assignedMachineries()->pluck('machineries.name', 'machineries.id')->toArray();
                     }
-                    return Machinery::pluck('name', 'id')->toArray();
+                    else {
+                        // Para otros roles, mostrar los equipos del operador seleccionado
+                        $operatorId = $get('operator_id');
+                        if ($operatorId) {
+                            $operator = User::find($operatorId);
+                            return $operator ? $operator->assignedMachineries()->pluck('machineries.name', 'machineries.id')->toArray() : [];
+                        }
+                        return [];
+                    }
                 })
                 ->nullable()
                 ->reactive()
@@ -143,14 +158,24 @@ class ReportResource extends Resource
                 ->label('Observaciones')
                 ->nullable(),
         ];
-
-        
+    // Condición para el campo operator_id
         if ($user->isOperator()) {
+            // Para operadores, el operator_id es oculto y se establece automáticamente
             array_unshift($schema, Forms\Components\Hidden::make('operator_id')->default($user->id));
+        } else {
+            // Para UsuarioMaquinaria y Admin, mostrar un select con todos los operadores
+            array_unshift($schema, Forms\Components\Select::make('operator_id')
+                ->label('Operador')
+                ->options(
+                    User::where('role', \App\Enums\RoleType::OPERARIO)->pluck('name', 'id')->toArray()
+                )
+                ->required()
+                ->reactive()
+            );
         }
 
-        return $form->schema($schema);
-    }
+    return $form->schema($schema);
+        }
 
     public static function table(Table $table): Table
     {
