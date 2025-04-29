@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Illuminate\Support\Facades\DB;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Query\Builder;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\FiltersLayout;
@@ -85,7 +86,7 @@ class ReportResource extends Resource
                     $set('work_id', null);
                 }),
             Forms\Components\Select::make('machinery_id')
-                ->label('Equipo')
+                ->label('Implemento')
                 ->native(false)
                 ->options(function (callable $get) use ($user) {
                     if ($user->isOperator()) {
@@ -129,6 +130,8 @@ class ReportResource extends Resource
             Forms\Components\TextInput::make('hourometer')
                 ->label('Horómetro Final')
                 ->numeric()
+                ->inputMode('decimal')
+                ->step(0.01)
                 ->required()
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     $initial = (float) $get('initial_hourometer') ?? 0;
@@ -138,12 +141,24 @@ class ReportResource extends Resource
                     'numeric',
                     fn ($get) => function (string $attribute, $value, Closure $fail) use ($get) {
                         $initial = (float) $get('initial_hourometer') ?? 0;
-                        $maxAllowed = $initial + 12;
-                        if ($value > $maxAllowed) {
-                            $fail("El horómetro final ({$value}) no puede superar las 12 horas del inicial ({$initial}). Máximo: {$maxAllowed}");
+                        $isEditing = $get('id') !== null; // Si id no es null, estamos editando
+                        $tractorId = $get('tractor_id');
+                        if ($tractorId && !$isEditing) { // Solo aplica en creación
+                            $tractor = Tractor::find($tractorId);
+                            $currentHourometer = $tractor->hourometer ?? 0;
+                            if ($initial != $currentHourometer) {
+                                $fail("El horómetro inicial no coincide, favor recargue la página.");
+                            }
+                            if ($value < $currentHourometer) {
+                                $fail("El horómetro final no puede ser menor que el horómetro actual del tractor ({$currentHourometer}).");
+                            }
                         }
                         if ($value < $initial) {
                             $fail("El horómetro final ({$value}) no puede ser menor al inicial ({$initial}).");
+                        }
+                        $maxAllowed = $initial + 15;
+                        if ($value > $maxAllowed) {
+                            $fail("El horómetro final ({$value}) no puede superar las 15 horas del inicial ({$initial}). Máximo: {$maxAllowed}");
                         }
                     },
                 ]),
@@ -180,6 +195,7 @@ class ReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('id', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
@@ -197,6 +213,7 @@ class ReportResource extends Resource
                 Tables\Columns\TextColumn::make('work.name')
                     ->label('Labor'),
                 Tables\Columns\TextColumn::make('hours')
+                    ->badge()
                     ->label('Horas'),
                 Tables\Columns\TextColumn::make('initial_hourometer')
                     ->label('Horómetro Inicial'),
@@ -225,10 +242,9 @@ class ReportResource extends Resource
                     ]))
                     ->multiple()
                     ->options(
-                        User::query()
-                            ->where('role', \App\Enums\RoleType::OPERARIO)
-                            ->pluck('name', 'id')
-                            ->toArray()
+                        Cache::remember('operators_list', 3600, function () {
+                            return User::where('role', \App\Enums\RoleType::OPERARIO)->pluck('name', 'id')->toArray();
+                        })
                     ),
                 ], layout: FiltersLayout::AboveContent)
                 ->filtersFormColumns(3)

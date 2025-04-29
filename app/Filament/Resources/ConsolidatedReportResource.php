@@ -78,19 +78,21 @@ class ConsolidatedReportResource extends Resource
                 Tables\Columns\TextColumn::make('report.work.name')
                     ->label('Labores'),
 
+                Tables\Columns\TextColumn::make('report.work.cost_type')
+                    ->label('Centro de Costo'),
+
                 Tables\Columns\TextColumn::make('price')
                     ->label('Precio')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(function ($record) {
                         return $record->machinery_id 
                             ? $record->machinery->price 
                             : $record->tractor->price;
                     }),
 
-                Tables\Columns\TextColumn::make('report.work.cost_type')
-                    ->label('Centro de Costo'),
-
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(function ($record) {
                         return $record->machinery_id 
                             ? $record->machinery_total 
@@ -99,7 +101,7 @@ class ConsolidatedReportResource extends Resource
 
                 Tables\Columns\TextColumn::make('report.approvedBy.name')
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Aprovado por'),    
+                    ->label('Aprobado por'),    
                 
                 Tables\Columns\TextColumn::make('generated_at')
                     ->dateTime()

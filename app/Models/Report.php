@@ -51,6 +51,36 @@ class Report extends Model implements Auditable
             ->logFillable();
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($report) {
+            // Encontrar el tractor que referencia este reporte
+            $tractor = Tractor::where('report_last_hourometer_id', $report->id)->first();
+
+            if ($tractor) {
+                // Buscar el reporte anterior para este tractor (si existe)
+                $previousReport = Report::where('tractor_id', $tractor->id)
+                    ->where('id', '<', $report->id) // Reportes anteriores
+                    ->orderBy('id', 'desc') // El más reciente antes del actual
+                    ->first();
+
+                if ($previousReport) {
+                    // Actualizar el horómetro del tractor al valor del reporte anterior
+                    $tractor->hourometer = $previousReport->hourometer;
+                    $tractor->report_last_hourometer_id = $previousReport->id;
+                } else {
+                    // Si no hay reporte anterior, establecer el horómetro a 0 o null y quitar la referencia
+                    $tractor->hourometer = 0; // O el valor inicial que desees
+                    $tractor->report_last_hourometer_id = null;
+                }
+
+                // Guardar los cambios en el tractor
+                $tractor->save();
+            }
+        });
+    }
     protected static function booted()
     {
         
