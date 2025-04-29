@@ -127,19 +127,27 @@ class ReportResource extends Resource
                     $final = (float) $get('hourometer') ?? 0;
                     $set('hours', $final > $state ? $final - $state : 0);
                 }),
-            Forms\Components\TextInput::make('hourometer')
+                Forms\Components\TextInput::make('hourometer')
                 ->label('Horómetro Final')
                 ->numeric()
-                ->inputMode('decimal')
+                ->inputMode('decimal') // Mantiene el teclado numérico con decimales
                 ->step(0.01)
                 ->required()
                 ->afterStateUpdated(function ($state, callable $set, $get) {
+                    // Normalizar el valor ingresado reemplazando coma por punto
+                    $state = str_replace(',', '.', $state);
                     $initial = (float) $get('initial_hourometer') ?? 0;
                     $set('hours', $state > $initial ? $state - $initial : 0);
+                })
+                ->formatStateUsing(function ($state) {
+                    // Normalizar el valor para visualización y procesamiento
+                    return str_replace(',', '.', $state);
                 })
                 ->rules([
                     'numeric',
                     fn ($get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                        // Normalizar el valor antes de validar
+                        $value = str_replace(',', '.', $value);
                         $initial = (float) $get('initial_hourometer') ?? 0;
                         $isEditing = $get('id') !== null; // Si id no es null, estamos editando
                         $tractorId = $get('tractor_id');
@@ -311,6 +319,7 @@ class ReportResource extends Resource
                             \App\Enums\RoleType::ADMIN,
                             \App\Enums\RoleType::USUARIOMAQ,
                         ])),
+                        Tables\Actions\DeleteBulkAction::make()   
             ]);
     }
 
