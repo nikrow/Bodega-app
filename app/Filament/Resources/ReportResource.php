@@ -129,9 +129,7 @@ class ReportResource extends Resource
                 }),
                 Forms\Components\TextInput::make('hourometer')
                 ->label('Horómetro Final')
-                ->numeric()
-                ->inputMode('decimal') // Mantiene el teclado numérico con decimales
-                ->step(0.01)
+                ->numeric(2, ',', '.')
                 ->required()
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     // Normalizar el valor ingresado reemplazando coma por punto

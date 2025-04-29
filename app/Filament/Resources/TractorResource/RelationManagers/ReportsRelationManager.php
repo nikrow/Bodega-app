@@ -22,7 +22,7 @@ class ReportsRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('id')
-            ->defaultSort('date', 'desc')
+            ->defaultSort('id', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
