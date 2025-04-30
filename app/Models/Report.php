@@ -50,7 +50,10 @@ class Report extends Model implements Auditable
         return LogOptions::defaults()
             ->logFillable();
     }
-
+    public function setHourometerAttribute($value)
+    {
+        $this->attributes['hourometer'] = str_replace(',', '.', $value);
+    }
     protected static function boot()
     {
         parent::boot();

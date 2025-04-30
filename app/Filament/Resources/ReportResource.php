@@ -55,7 +55,6 @@ class ReportResource extends Resource
     {
         $user = Auth::user(); 
 
-        // Definimos el esquema base
         $schema = [
             Forms\Components\DatePicker::make('date')
                 ->label('Fecha')
@@ -85,6 +84,7 @@ class ReportResource extends Resource
                     $set('machinery_id', null);
                     $set('work_id', null);
                 }),
+
             Forms\Components\Select::make('machinery_id')
                 ->label('Implemento')
                 ->native(false)
@@ -105,6 +105,7 @@ class ReportResource extends Resource
                 ->nullable()
                 ->reactive()
                 ->afterStateUpdated(fn (callable $set) => $set('work_id', null)),
+
             Forms\Components\Select::make('work_id')
                 ->label('Labor')
                 ->native(false)
@@ -127,29 +128,29 @@ class ReportResource extends Resource
                     $final = (float) $get('hourometer') ?? 0;
                     $set('hours', $final > $state ? $final - $state : 0);
                 }),
-                Forms\Components\TextInput::make('hourometer')
+
+            Forms\Components\TextInput::make('hourometer')
                 ->label('Horómetro Final')
-                ->numeric(2, ',', '.')
                 ->required()
+                ->step(0.01)
                 ->afterStateUpdated(function ($state, callable $set, $get) {
-                    // Normalizar el valor ingresado reemplazando coma por punto
                     $state = str_replace(',', '.', $state);
                     $initial = (float) $get('initial_hourometer') ?? 0;
                     $set('hours', $state > $initial ? $state - $initial : 0);
                 })
                 ->formatStateUsing(function ($state) {
-                    // Normalizar el valor para visualización y procesamiento
+                    return str_replace(',', '.', $state);
+                })
+                ->dehydrateStateUsing(function ($state) {
                     return str_replace(',', '.', $state);
                 })
                 ->rules([
-                    'numeric',
                     fn ($get) => function (string $attribute, $value, Closure $fail) use ($get) {
-                        // Normalizar el valor antes de validar
                         $value = str_replace(',', '.', $value);
                         $initial = (float) $get('initial_hourometer') ?? 0;
-                        $isEditing = $get('id') !== null; // Si id no es null, estamos editando
+                        $isEditing = $get('id') !== null;
                         $tractorId = $get('tractor_id');
-                        if ($tractorId && !$isEditing) { // Solo aplica en creación
+                        if ($tractorId && !$isEditing) {
                             $tractor = Tractor::find($tractorId);
                             $currentHourometer = $tractor->hourometer ?? 0;
                             if ($initial != $currentHourometer) {
@@ -179,12 +180,9 @@ class ReportResource extends Resource
                 ->label('Observaciones')
                 ->nullable(),
         ];
-    // Condición para el campo operator_id
         if ($user->isOperator()) {
-            // Para operadores, el operator_id es oculto y se establece automáticamente
             array_unshift($schema, Forms\Components\Hidden::make('operator_id')->default($user->id));
         } else {
-            // Para UsuarioMaquinaria y Admin, mostrar un select con todos los operadores
             array_unshift($schema, Forms\Components\Select::make('operator_id')
                 ->label('Operador')
                 ->options(
