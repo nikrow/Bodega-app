@@ -26,9 +26,9 @@ class Report extends Model implements Auditable
         'operator_id',
         'work_id',
         'date',
-        'initial_hourometer', // Nuevo campo para el horómetro inicial
-        'hourometer',        // Horómetro final
-        'hours',             // Horas trabajadas
+        'initial_hourometer',
+        'hourometer',
+        'hours',
         'created_by',
         'updated_by',
         'observations',
@@ -45,102 +45,96 @@ class Report extends Model implements Auditable
         'hourometer' => 'decimal:2',
         'hours' => 'decimal:2',
     ];
+
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logFillable();
+        return LogOptions::defaults()->logFillable();
     }
+
     public function setHourometerAttribute($value)
     {
         $this->attributes['hourometer'] = str_replace(',', '.', $value);
     }
+
     protected static function boot()
     {
         parent::boot();
 
         static::deleting(function ($report) {
-            // Encontrar el tractor que referencia este reporte
             $tractor = Tractor::where('report_last_hourometer_id', $report->id)->first();
-
             if ($tractor) {
-                // Buscar el reporte anterior para este tractor (si existe)
                 $previousReport = Report::where('tractor_id', $tractor->id)
-                    ->where('id', '<', $report->id) // Reportes anteriores
-                    ->orderBy('id', 'desc') // El más reciente antes del actual
+                    ->where('id', '<', $report->id)
+                    ->orderBy('id', 'desc')
                     ->first();
-
-                if ($previousReport) {
-                    // Actualizar el horómetro del tractor al valor del reporte anterior
-                    $tractor->hourometer = $previousReport->hourometer;
-                    $tractor->report_last_hourometer_id = $previousReport->id;
-                } else {
-                    // Si no hay reporte anterior, establecer el horómetro a 0 o null y quitar la referencia
-                    $tractor->hourometer = 0; // O el valor inicial que desees
-                    $tractor->report_last_hourometer_id = null;
-                }
-
-                // Guardar los cambios en el tractor
+                $tractor->hourometer = $previousReport ? $previousReport->hourometer : 0;
+                $tractor->report_last_hourometer_id = $previousReport ? $previousReport->id : null;
                 $tractor->save();
             }
         });
+
+        static::deleted(function ($report) {
+            // Encontrar el reporte anterior al eliminado
+            $previousReport = Report::where('tractor_id', $report->tractor_id)
+                ->where('id', '<', $report->id)
+                ->orderBy('id', 'desc')
+                ->first();
+        
+            // Determinar el valor inicial del horómetro para los reportes posteriores
+            $initialHourometer = $previousReport ? $previousReport->hourometer : Tractor::find($report->tractor_id)->hourometer ?? 0;
+        
+            // Obtener los reportes posteriores ordenados por id
+            $subsequentReports = Report::where('tractor_id', $report->tractor_id)
+                ->where('id', '>', $report->id)
+                ->orderBy('id')
+                ->get();
+        
+            // Actualizar cada reporte posterior en cascada
+            foreach ($subsequentReports as $subsequentReport) {
+                $subsequentReport->initial_hourometer = $initialHourometer;
+                $subsequentReport->hours = $subsequentReport->hourometer - $initialHourometer;
+                $subsequentReport->save();
+                $initialHourometer = $subsequentReport->hourometer;
+            }
+        });
     }
+
     protected static function booted()
     {
-        
         static::creating(function ($report) {
             $report->field_id = Filament::getTenant()->id;
             $report->created_by = Auth::id();
             $report->updated_by = Auth::id();
-            static::setInitialHourometer($report); 
+            static::setInitialHourometer($report);
             static::calculateHours($report);
         });
 
-        
-        static::created(function ($report) {
-            static::updateTractorData($report);
-        });
-
-        
         static::updating(function ($report) {
             $report->updated_by = Auth::id();
-            static::calculateHours($report); 
-            static::updateTractorData($report);
+            static::calculateHours($report);
         });
     }
 
-    // Establecer el horómetro inicial desde el tractor
     protected static function setInitialHourometer($report)
     {
         if ($report->tractor_id && !$report->initial_hourometer) {
-            $tractor = Tractor::find($report->tractor_id);
-            $report->initial_hourometer = $tractor->hourometer ?? 0;
+            $lastReport = Report::where('tractor_id', $report->tractor_id)
+                ->orderBy('id', 'desc')
+                ->first();
+            $report->initial_hourometer = $lastReport ? $lastReport->hourometer : Tractor::find($report->tractor_id)->hourometer ?? 0;
         }
     }
 
-    // Calcular las horas trabajadas
     protected static function calculateHours($report)
     {
         if ($report->hourometer && $report->initial_hourometer) {
             $report->hours = $report->hourometer - $report->initial_hourometer;
         } else {
-            $report->hours = 0; 
+            $report->hours = 0;
         }
     }
 
-    protected static function updateTractorData($report)
-    {
-        if ($report->tractor_id && $report->hourometer) {
-            $tractor = Tractor::find($report->tractor_id);
-            if ($tractor) {
-                $tractor->old_hourometer = $tractor->hourometer;
-                $tractor->hourometer = $report->hourometer;
-                $tractor->last_hourometer_date = $report->date;
-                $tractor->report_last_hourometer_id = $report->id;
-                $tractor->save();
-            }
-        }
-    }
-        public function generateConsolidatedReport()
+    public function generateConsolidatedReport()
     {
         if (!$this->approved) {
             return;
@@ -151,7 +145,7 @@ class Report extends Model implements Auditable
 
         ConsolidatedReport::updateOrCreate(
             [
-                'report_id' => $this->id, 
+                'report_id' => $this->id,
                 'tractor_id' => $this->tractor_id,
                 'machinery_id' => null,
                 'period_start' => $periodStart,
@@ -170,7 +164,7 @@ class Report extends Model implements Auditable
         if ($this->machinery_id) {
             ConsolidatedReport::updateOrCreate(
                 [
-                    'report_id' => $this->id, 
+                    'report_id' => $this->id,
                     'tractor_id' => $this->tractor_id,
                     'machinery_id' => $this->machinery_id,
                     'period_start' => $periodStart,
@@ -185,6 +179,16 @@ class Report extends Model implements Auditable
                     'generated_at' => now(),
                 ]
             );
+        }
+
+        // Actualizar el tractor solo al aprobar el reporte
+        $tractor = $this->tractor;
+        if ($tractor) {
+            $tractor->old_hourometer = $tractor->hourometer;
+            $tractor->hourometer = $this->hourometer;
+            $tractor->last_hourometer_date = $this->date;
+            $tractor->report_last_hourometer_id = $this->id;
+            $tractor->save();
         }
     }
     

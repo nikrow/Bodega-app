@@ -55,12 +55,14 @@ class ReportResource extends Resource
     {
         $user = Auth::user(); 
 
+        // Definimos el esquema base
         $schema = [
             Forms\Components\DatePicker::make('date')
                 ->label('Fecha')
                 ->default(now())
                 ->required(),
-                Forms\Components\Select::make('tractor_id')
+            
+            Forms\Components\Select::make('tractor_id')
                 ->label('Máquina')
                 ->native(false)
                 ->options(function (callable $get) use ($user) {
@@ -77,10 +79,14 @@ class ReportResource extends Resource
                     }
                 })
                 ->required()
+                ->preload()
                 ->reactive()
                 ->afterStateUpdated(function ($state, callable $set) {
-                    $tractor = Tractor::find($state);
-                    $set('initial_hourometer', $tractor?->hourometer ?? 0);
+                    $lastReport = Report::where('tractor_id', $state)
+                    ->orderBy('id', 'desc')
+                    ->first();
+                $initialHourometer = $lastReport ? $lastReport->hourometer : Tractor::find($state)->hourometer ?? 0;
+                $set('initial_hourometer', $initialHourometer);
                     $set('machinery_id', null);
                     $set('work_id', null);
                 }),
@@ -105,7 +111,6 @@ class ReportResource extends Resource
                 ->nullable()
                 ->reactive()
                 ->afterStateUpdated(fn (callable $set) => $set('work_id', null)),
-
             Forms\Components\Select::make('work_id')
                 ->label('Labor')
                 ->native(false)
@@ -122,7 +127,7 @@ class ReportResource extends Resource
             Forms\Components\TextInput::make('initial_hourometer')
                 ->label('Horómetro Inicial')
                 ->numeric()
-                ->disabled()
+                ->readOnly()
                 ->reactive()
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     $final = (float) $get('hourometer') ?? 0;
@@ -132,11 +137,16 @@ class ReportResource extends Resource
             Forms\Components\TextInput::make('hourometer')
                 ->label('Horómetro Final')
                 ->required()
+                ->numeric()
                 ->step(0.01)
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     $state = str_replace(',', '.', $state);
                     $initial = (float) $get('initial_hourometer') ?? 0;
-                    $set('hours', $state > $initial ? $state - $initial : 0);
+                    $hours = $state > $initial ? $state - $initial : 0;
+                    $set('hours', $hours);
+                    if ($hours == 0) {
+                        $set('hours', null); 
+                    }
                 })
                 ->formatStateUsing(function ($state) {
                     return str_replace(',', '.', $state);
@@ -148,27 +158,35 @@ class ReportResource extends Resource
                     fn ($get) => function (string $attribute, $value, Closure $fail) use ($get) {
                         $value = str_replace(',', '.', $value);
                         $initial = (float) $get('initial_hourometer') ?? 0;
-                        $isEditing = $get('id') !== null;
                         $tractorId = $get('tractor_id');
+                        $isEditing = $get('id') !== null;
+
+                        if ($value <= $initial) {
+                            $fail("El horómetro final debe ser mayor que el inicial para registrar horas trabajadas.");
+                        }
+
                         if ($tractorId && !$isEditing) {
-                            $tractor = Tractor::find($tractorId);
-                            $currentHourometer = $tractor->hourometer ?? 0;
-                            if ($initial != $currentHourometer) {
-                                $fail("El horómetro inicial no coincide, favor recargue la página.");
+                            $lastReport = Report::where('tractor_id', $tractorId)
+                                ->orderBy('id', 'desc')
+                                ->first();
+                            $expectedInitial = $lastReport ? $lastReport->hourometer : Tractor::find($tractorId)->hourometer ?? 0;
+
+                            if ($initial != $expectedInitial) {
+                                $fail("El horómetro inicial no coincide con el último valor ingresado. Por favor, recargue la página.");
                             }
-                            if ($value < $currentHourometer) {
-                                $fail("El horómetro final no puede ser menor que el horómetro actual del tractor ({$currentHourometer}).");
+
+                            if ($value < $expectedInitial) {
+                                $fail("El horómetro final no puede ser menor que el último horómetro ingresado ({$expectedInitial}).");
                             }
                         }
-                        if ($value < $initial) {
-                            $fail("El horómetro final ({$value}) no puede ser menor al inicial ({$initial}).");
-                        }
+
                         $maxAllowed = $initial + 15;
                         if ($value > $maxAllowed) {
                             $fail("El horómetro final ({$value}) no puede superar las 15 horas del inicial ({$initial}). Máximo: {$maxAllowed}");
                         }
                     },
                 ]),
+
             Forms\Components\TextInput::make('hours')
                 ->label('Horas Trabajadas')
                 ->numeric()
@@ -176,13 +194,17 @@ class ReportResource extends Resource
                 ->hidden()
                 ->disabled()
                 ->dehydrated(true),
+
             Forms\Components\Textarea::make('observations')
                 ->label('Observaciones')
                 ->nullable(),
         ];
+
         if ($user->isOperator()) {
+            // Para operadores, el operator_id es oculto y se establece automáticamente
             array_unshift($schema, Forms\Components\Hidden::make('operator_id')->default($user->id));
         } else {
+            // Para UsuarioMaquinaria y Admin, mostrar un select con todos los operadores
             array_unshift($schema, Forms\Components\Select::make('operator_id')
                 ->label('Operador')
                 ->options(
