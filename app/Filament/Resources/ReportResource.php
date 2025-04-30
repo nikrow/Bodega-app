@@ -137,7 +137,6 @@ class ReportResource extends Resource
             Forms\Components\TextInput::make('hourometer')
                 ->label('Horómetro Final')
                 ->required()
-                ->numeric()
                 ->step(0.01)
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     $state = str_replace(',', '.', $state);
