@@ -90,6 +90,7 @@ class TractorResource extends Resource
                 Tables\Columns\TextColumn::make('SapCode')
                     ->label('Código SAP')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('price')
                     ->label('Precio')

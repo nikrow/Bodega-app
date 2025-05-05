@@ -39,6 +39,7 @@ class ConsolidatedReportResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('report.id')
                     ->label('ID Report')
+                    ->sortable()
                     ->getStateUsing(function ($record) {
                         return $record->report->id;
                     }),
@@ -61,11 +62,15 @@ class ConsolidatedReportResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('report.initial_hourometer')
                     ->label('Horómetro inicial')
-                    ->numeric(),
+                    ->formatStateUsing(function ($state) {
+                        return number_format((float) $state, 1, ',', '.');
+                    }),
                     
                 Tables\Columns\TextColumn::make('report.hourometer')
                     ->label('Horómetro final')
-                    ->numeric(),
+                    ->formatStateUsing(function ($state) {
+                        return number_format((float) $state, 1, ',', '.');
+                    }),
 
                 Tables\Columns\TextColumn::make('hours')
                     ->label('Horas')
