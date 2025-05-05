@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Tractor;
+use App\Models\ConsolidatedReport;
 use Filament\Facades\Filament;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
@@ -11,10 +13,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Testing\Fluent\Concerns\Has;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Report extends Model implements Auditable
 {
     use HasFactory;
+    use SoftDeletes;
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
     

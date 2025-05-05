@@ -21,6 +21,7 @@ use Illuminate\Database\Query\Builder;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\FiltersLayout;
 use App\Filament\Resources\ReportResource\Pages;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ReportResource extends Resource
@@ -336,7 +337,9 @@ class ReportResource extends Resource
                             \App\Enums\RoleType::ADMIN,
                             \App\Enums\RoleType::USUARIOMAQ,
                         ])),
-                        Tables\Actions\DeleteBulkAction::make()   
+                        Tables\Actions\DeleteBulkAction::make(),   
+                        ExportBulkAction::make()
+                        ->label('Exportar')
             ]);
     }
 
