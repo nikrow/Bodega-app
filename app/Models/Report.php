@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Report extends Model implements Auditable
 {
     use HasFactory;
-    use SoftDeletes;
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
     
