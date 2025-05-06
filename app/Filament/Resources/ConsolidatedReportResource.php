@@ -21,13 +21,16 @@ class ConsolidatedReportResource extends Resource
     protected static ?string $pluralModelLabel = 'Reportes consolidados';
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-    {
-    return parent::getEloquentQuery()->with(['report.work']);
-    }
+{
+    return parent::getEloquentQuery()
+        ->join('reports', 'consolidated_reports.report_id', '=', 'reports.id')
+        ->select('consolidated_reports.*') 
+        ->with(['report.work']);
+}
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('id', 'desc')
+            ->defaultSort('reports.id', 'desc')
             ->defaultPaginationPageOption('25')
             ->columns([
                 Tables\Columns\TextColumn::make('provider')
