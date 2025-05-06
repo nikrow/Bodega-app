@@ -41,7 +41,7 @@ class ConsolidatedReportResource extends Resource
                     ->label('ID Report')
                     ->sortable()
                     ->getStateUsing(function ($record) {
-                        return $record->report->id;
+                        return $record->report ? $record->report->id : 'Sin reporte';
                     }),
                 Tables\Columns\TextColumn::make('report.date')
                     ->label('Fecha')
@@ -55,6 +55,7 @@ class ConsolidatedReportResource extends Resource
 
                 Tables\Columns\TextColumn::make('equipment')
                     ->label('Equipo')
+                    ->limit(30)
                     ->getStateUsing(function ($record) {
                         return $record->machinery_id 
                             ? $record->machinery->name 

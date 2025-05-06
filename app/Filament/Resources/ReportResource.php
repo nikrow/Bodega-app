@@ -233,8 +233,10 @@ class ReportResource extends Resource
                 Tables\Columns\TextColumn::make('operator.name')
                     ->label('Operador'),
                 Tables\Columns\TextColumn::make('tractor.name')
+                    ->limit(30)
                     ->label('Máquina'),
                 Tables\Columns\TextColumn::make('machinery.name')
+                    ->limit(30)
                     ->label('Equipo'),
                 Tables\Columns\TextColumn::make('work.name')
                     ->label('Labor'),
