@@ -4,38 +4,40 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class FertilizationProduct extends Model
+class FertilizerMapping extends Model
 {
-    protected $table = 'fertilization_product';
+    protected $table = 'fertilizer_mappings';
 
     protected $fillable = [
-        'fertilization_id',
+        'excel_column_name',
         'product_id',
-        'created_by',
-        'updated_by',
+        'dilution_factor',
+        'fertilizer_name',
     ];
-    
-    protected $casts = [
-        'fertilization_id' => 'integer',
+
+    protected $casts = [    
         'product_id' => 'integer',
-        'created_by' => 'integer',
-        'updated_by' => 'integer',
+        'dilution_factor' => 'decimal:2',
+        'fertilizer_name' => 'string',
     ];
-    public function fertilization() 
+
+    public function fertilization()
     {
         return $this->belongsTo(Fertilization::class);
     }
+
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id');
     }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-    
 }

@@ -104,15 +104,6 @@ class ProductResource extends Resource
                     ->numeric()
                     ->reactive(),
 
-                    /* Forms\Components\Select::make('packages')
-                    ->label('Envases')
-                    ->relationship('packages', 'name')
-                    ->multiple()
-                    ->required()
-                    ->preload()
-                    ->options(Package::all()->pluck('name', 'id'))
-                    ->placeholder('Seleccione uno o más envases'),
-                 */
                 Forms\Components\Toggle::make('requires_batch_control')
                     ->label('Requiere Control de Lote')
                     ->onColor('success')
@@ -132,10 +123,12 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('active_ingredients')
                     ->label('Ingredientes activos')
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('family')
                     ->label('Grupo')
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('SAP_code')
                     ->label('Código SAP')
@@ -152,15 +145,10 @@ class ProductResource extends Resource
                     ->icon('heroicon-o-clipboard-document-list')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('packages.name')
-                    ->label('Envases')
-                    ->badge()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('price')
+                
+                Tables\Columns\TextInputColumn::make('price')
                     ->label('Precio USD')
                     ->sortable()
-                    ->numeric(decimalPlaces: 2, decimalSeparator: ',', thousandsSeparator: '.')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\ToggleColumn::make('requires_batch_control')

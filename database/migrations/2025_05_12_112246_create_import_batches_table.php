@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('machinery_work', function (Blueprint $table) {
+        Schema::create('import_batches', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('machinery_id')->constrained('machineries')->onDelete('cascade');
-            $table->foreignId('work_id')->constrained('works');
+            $table->string('tenant')->nullable();
+            $table->date('import_date')->nullable();
+            $table->integer('total_records')->nullable();
+            $table->integer('success_count')->nullable();
+            $table->integer('failed_count')->nullable();
             $table->timestamps();
         });
     }
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('machinery_work');
+        Schema::dropIfExists('import_batches');
     }
 };

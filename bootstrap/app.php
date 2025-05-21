@@ -28,8 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         UpdateActiveMinutesCommand::class,
     ])
     ->withSchedule(function (Illuminate\Console\Scheduling\Schedule $schedule) {
-        $schedule->command('users:update-active-minutes')->hourly();
-        $schedule->command('inspire')->hourly();
+        
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

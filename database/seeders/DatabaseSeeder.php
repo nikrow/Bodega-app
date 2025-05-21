@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use FertilizerMappingSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,11 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
-            UserSeeder::class,
-            FieldsTableSeeder::class,
-            CropSeeder::class,
-            UserFieldSeeder::class,
-            RoleSeeder::class,
+            FertilizerMappingSeeder::class,
         ]);
     }
 }
