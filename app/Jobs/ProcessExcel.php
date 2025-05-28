@@ -41,11 +41,11 @@ class ProcessExcel implements ShouldQueue
         }
 
         $batch = ImportBatch::create([
-        'tenant' => $this->tenant,
-        'import_date' => now(),
-        'total_records' => 0,
-        'success_count' => 0,
-        'failed_count' => 0,
+            'tenant' => $this->tenant,
+            'import_date' => now(),
+            'total_records' => 0,
+            'success_count' => 0,
+            'failed_count' => 0,
         ]);
 
         Log::info('Procesando archivo', ['path' => $fullPath]);
@@ -60,73 +60,80 @@ class ProcessExcel implements ShouldQueue
         ImportedEvent::where('tenant', $this->tenant)
             ->where('status', 'pending')
             ->chunk(100, function ($events) use ($mappings, &$totalRecords, &$successCount, &$failedCount) {
-            DB::transaction(function () use ($events, $mappings, &$totalRecords, &$successCount, &$failedCount) {
-                foreach ($events as $event) {
-                    $totalRecords++;
-                    try {
-                        if (!$this->validateEvent($event)) {
-                            $event->update([
-                                'status' => 'failed',
-                                'error_message' => 'Datos inválidos en el evento.'
+                DB::transaction(function () use ($events, $mappings, &$totalRecords, &$successCount, &$failedCount) {
+                    foreach ($events as $event) {
+                        $totalRecords++;
+                        try {
+                            if (!$this->validateEvent($event)) {
+                                $event->update([
+                                    'status' => 'failed',
+                                    'error_message' => 'Datos inválidos en el evento.'
+                                ]);
+                                $failedCount++;
+                                continue;
+                            }
+
+                            $irrigation = Irrigation::create([
+                                'parcel_id' => $this->getParcelId($event->description),
+                                'field_id' => $this->getFieldId($event->tenant),
+                                'date' => $event->date_time->format('Y-m-d'),
+                                'time' => $event->date_time->format('H:i:s'),
+                                'duration' => $event->duration,
+                                'quantity_m3' => $event->quantity_m3,
+                                'type' => 'Riego',
                             ]);
-                            $failedCount++;
-                            continue;
-                        }
 
-                        $irrigation = Irrigation::create([
-                            'parcel_id' => $this->getParcelId($event->description),
-                            'field_id' => $this->getFieldId($event->tenant),
-                            'date' => $event->date_time->format('Y-m-d'),
-                            'time' => $event->date_time->format('H:i:s'),
-                            'duration' => $event->duration,
-                            'quantity_m3' => $event->quantity_m3,
-                            'type' => 'Riego',
-                        ]);
+                            if (!empty($event->fertilizers)) {
+                                $parcel = Parcel::find($irrigation->parcel_id);
+                                $surface = $parcel ? $parcel->surface : 0;
 
-                        if (!empty($event->fertilizers)) {
-                            $parcel = Parcel::find($irrigation->parcel_id);
-                            $surface = $parcel ? $parcel->surface : 0;
+                                foreach ($event->fertilizers as $column => $quantity_solution) {
+                                    $mapping = $mappings->get($column);
+                                    if ($mapping) {
+                                        $dilution_factor = $mapping->dilution_factor;
+                                        $quantity_product = $quantity_solution * $dilution_factor;
+                                        $product = $mapping->product;
+                                        $product_price = $product ? $product->price : null;
+                                        $total_cost = $product_price ? $quantity_product * $product_price : null;
 
-                            foreach ($event->fertilizers as $column => $quantity_solution) {
-                                $mapping = $mappings->get($column);
-                                if ($mapping) {
-                                    $dilution_factor = $mapping->dilution_factor;
-                                    $quantity_product = $quantity_solution * $dilution_factor;
-
-                                    Fertilization::create([
-                                        'irrigation_id' => $irrigation->id,
-                                        'parcel_id' => $irrigation->parcel_id,
-                                        'field_id' => $irrigation->field_id,
-                                        'date' => $event->date_time->format('Y-m-d'),
-                                        'product_id' => $mapping->product_id,
-                                        'surface' => $surface,
-                                        'quantity_solution' => $quantity_solution,
-                                        'dilution_factor' => $dilution_factor,
-                                        'quantity_product' => $quantity_product,
-                                        'unit' => $mapping->unit,
-                                    ]);
-                                } else {
-                                    Log::warning("Columna '$column' no mapeada.", ['event_id' => $event->id]);
+                                        Fertilization::create([
+                                            'irrigation_id' => $irrigation->id,
+                                            'parcel_id' => $irrigation->parcel_id,
+                                            'field_id' => $irrigation->field_id,
+                                            'date' => $event->date_time->format('Y-m-d'),
+                                            'product_id' => $mapping->product_id,
+                                            'fertilizer_mapping_id' => $mapping->id,
+                                            'surface' => $surface,
+                                            'quantity_solution' => $quantity_solution,
+                                            'dilution_factor' => $dilution_factor,
+                                            'quantity_product' => $quantity_product,
+                                            'unit' => $mapping->unit,
+                                            'product_price' => $product_price,
+                                            'total_cost' => $total_cost,
+                                            'application_method' => 'ICC',
+                                        ]);
+                                    } else {
+                                        Log::warning("Columna '$column' no mapeada.", ['event_id' => $event->id]);
+                                    }
                                 }
                             }
+
+                            $event->update(['status' => 'processed']);
+                            $successCount++;
+                        } catch (\Exception $e) {
+                            $event->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+                            Log::error('Error procesando evento.', ['event_id' => $event->id, 'error' => $e->getMessage()]);
+                            $failedCount++;
                         }
-
-                        $event->update(['status' => 'processed']);
-                        $successCount++;
-                    } catch (\Exception $e) {
-                        $event->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
-                        Log::error('Error procesando evento.', ['event_id' => $event->id, 'error' => $e->getMessage()]);
-                        $failedCount++;
                     }
-                }
+                });
             });
-        });
 
-    $batch->update([
-        'total_records' => $totalRecords,
-        'success_count' => $successCount,
-        'failed_count' => $failedCount,
-    ]);
+        $batch->update([
+            'total_records' => $totalRecords,
+            'success_count' => $successCount,
+            'failed_count' => $failedCount,
+        ]);
     }
 
     protected function validateEvent(ImportedEvent $event): bool
@@ -144,10 +151,9 @@ class ProcessExcel implements ShouldQueue
         }
 
         // Validar duración
-
-        if ($event->duration < 0 ) {
-        return false;
-    }
+        if ($event->duration < 0) {
+            return false;
+        }
 
         // Validar fertilizantes
         if (!empty($event->fertilizers)) {
@@ -174,11 +180,11 @@ class ProcessExcel implements ShouldQueue
 
     protected function getFieldId($tenant)
     {
-    $field = Field::where('id', $tenant)->first();
-    if (!$field) {
-        Log::error('Field no encontrado para tenant.', ['tenant' => $tenant]);
-        return null;
-    }
-    return $field->id;
+        $field = Field::where('id', $this->tenant)->first();
+        if (!$field) {
+            Log::error('Field no encontrado para tenant.', ['tenant' => $this->tenant]);
+            return null;
+        }
+        return $field->id;
     }
 }

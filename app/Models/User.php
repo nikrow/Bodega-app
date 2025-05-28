@@ -4,17 +4,18 @@ namespace App\Models;
 
 use Filament\Panel;
 use App\Enums\RoleType;
-use App\Models\OperatorAssignment;
+use Laravel\Sanctum\HasApiTokens;
 use OwenIt\Auditing\Models\Audit;
+use App\Models\OperatorAssignment;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Contracts\Auditable;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Models\Contracts\FilamentUser;
-use Laravel\Sanctum\Contracts\HasApiTokens;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -22,7 +23,7 @@ use Edwink\FilamentUserActivity\Traits\UserActivityTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 
-class User extends Authenticatable implements Auditable, HasTenants, FilamentUser, HasApiTokens
+class User extends Authenticatable implements Auditable, HasTenants, FilamentUser
 {
     use HasFactory, Notifiable;
     use \Laravel\Sanctum\HasApiTokens;

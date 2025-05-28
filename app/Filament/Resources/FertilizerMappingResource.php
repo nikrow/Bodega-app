@@ -19,11 +19,12 @@ class FertilizerMappingResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Anexos';
-    protected static ?string $navigationLabel = 'Fertilizer Mappings';
-    protected static ?string $label = 'Fertilizer Mapping';
-    protected static ?string $pluralLabel = 'Fertilizer Mappings';
+    protected static ?string $navigationLabel = 'Mapping Fertilizantes';
+    protected static ?string $label = 'Mapping Fertilizante';
+    protected static ?string $title = 'Mapping Fertilizante';
+    protected static ?string $description = 'Mapping de fertilizantes para la carga de datos en ICC';
     protected static ?string $slug = 'fertilizer-mappings';
-    protected static ?string $modelLabel = 'Fertilizer Mapping';
+    protected static ?string $modelLabel = 'Mapping fertilizante';
     protected static bool $isScopedToTenant = false;
 
     public static function form(Form $form): Form
@@ -71,8 +72,8 @@ class FertilizerMappingResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('excel_column_name')
-                    ->label('Nombre ICC')
+                Tables\Columns\TextColumn::make('fertilizer_name')
+                    ->label('Producto ICC')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('product.product_name')
@@ -80,25 +81,22 @@ class FertilizerMappingResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('dilution_factor')
-                    ->label('factor de dilución')
-                    ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('fertilizer_name')
-                    ->label('Nombre del Fertilizante')
+                    ->label('Factor de Dilución')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Creado el')
-                    ->dateTime()
+                    ->date('d/m/Y')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Actualizado el')
-                    ->dateTime()
+                    ->date('d/m/Y')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
             ])->filters([
                 //
             ])->headerActions([
-                Tables\Actions\CreateAction::make(),
             ])->actions([
                 //
             ])->bulkActions([

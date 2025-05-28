@@ -13,7 +13,18 @@ class EditIrrigation extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
-        ];
+            Actions\DeleteAction::make()
+                ->hidden(fn ($record) => $record->deleted_at !== null)
+                ->before(function ($action, $record) {
+                    if ($record->fertilization()->exists()) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('No se puede eliminar')
+                            ->body('Se debe eliminar la fertilización primero.')
+                            ->danger()
+                            ->send();
+                        $action->cancel();
+                    }
+                }),
+                    ];
     }
 }

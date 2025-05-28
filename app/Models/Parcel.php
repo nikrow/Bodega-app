@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
+use ApiPlatform\Metadata\ApiResource;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+//#[ApiResource]
 class Parcel extends Model implements Auditable
 {
     use HasFactory;
@@ -26,7 +28,7 @@ class Parcel extends Model implements Auditable
     protected $fillable = [
         'name',
         'field_id',
-        'crops_id',
+        'crop_id',
         'planting_year',
         'plants',
         'surface',
@@ -51,7 +53,6 @@ class Parcel extends Model implements Auditable
             $parcel->user_id = Auth::id();
             $parcel->created_by = Auth::id();
             $parcel->updated_by = Auth::id();
-            $parcel->field_id = Filament::getTenant()->id;
             $parcel->is_active = true;
             // Generar un slug único
             $originalSlug = Str::slug($parcel->name);

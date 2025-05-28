@@ -84,7 +84,6 @@ class BodegaPanelProvider extends PanelProvider
                         MyImages::make()
                             ->directory('/img/backgrounds')
                     ),
-                ApiServicePlugin::make(),
                 FilamentSpatieLaravelBackupPlugin::make()
                     ->authorize(fn (): bool => Auth::user()->email === 'admin@admin.com')
                     ->usingPage(Backups::class)

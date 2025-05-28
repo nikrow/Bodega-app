@@ -10,15 +10,17 @@ use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+
 class Crop extends Model implements Auditable
 {
+
+    
     use HasFactory;
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
     protected $table = 'crops';
     protected $fillable = [
         'especie',
-        'variedad',
         'created_by',
         'updated_by',
     ];

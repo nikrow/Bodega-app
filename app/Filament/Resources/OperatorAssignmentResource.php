@@ -40,8 +40,26 @@ class OperatorAssignmentResource extends Resource
                 Forms\Components\Select::make('user_id')
                     ->label('Operario')
                     ->options(User::where('role', RoleType::OPERARIO->value)->pluck('name', 'id'))
-                    ->dehydrated(false)
-                    ->disabled(),
+                    ->disabled()
+                    ->required()
+                    ->afterStateHydrated(function ($component, $state, $record) {
+                        if ($record && $record->user_id) {
+                            $component->state($record->user_id);
+                        }
+                    }),
+
+                Forms\Components\Select::make('fields')
+                    ->label('Campos')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->options(\App\Models\Field::pluck('name', 'id'))
+                    ->afterStateHydrated(function ($component, $state, $record) {
+                        if ($record && $record->user) {
+                            $component->state($record->user->fields->pluck('id')->toArray());
+                        }
+                    }),
+
 
                 Forms\Components\Select::make('tractors')
                     ->label('Tractores')
@@ -78,6 +96,18 @@ class OperatorAssignmentResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->label('Operario'),
+                
+                Tables\Columns\TextColumn::make('user.fields.name')
+                    ->label('Campos Asignados')
+                    ->badge()
+                    ->separator(',')
+                    ->sortable()
+                    ->searchable()
+                    ->getStateUsing(function ($record) {
+                        if (!$record->user) return ['Sin operario asignado'];
+                        $fields = $record->user->fields->pluck('name')->toArray();
+                        return $fields ?: ['Sin campos asignados'];
+                    }),
                 
                 Tables\Columns\TextColumn::make('user.assignedTractors.name')
                     ->label('Tractores Asignados')

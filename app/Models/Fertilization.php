@@ -22,6 +22,10 @@ class Fertilization extends Model implements Auditable
         'field_id',
         'irrigation_id',
         'product_id',
+        'fertilizer_mapping_id',
+        'product_price',
+        'total_cost',
+        'application_method',
         'surface',
         'quantity_solution',
         'dilution_factor',
@@ -48,13 +52,20 @@ class Fertilization extends Model implements Auditable
         static::creating(function ($fertilization) {
             $fertilization->created_by = Auth::id();
             $fertilization->updated_by = Auth::id();
+            
+            if ($fertilization->irrigation_id) {
+                $irrigation = Irrigation::find($fertilization->irrigation_id);
+                if ($irrigation) {
+                    $fertilization->parcel_id = $irrigation->parcel_id;
+                    $fertilization->field_id = $irrigation->field_id;
+                }
+            }
         });
 
         static::updating(function ($fertilization) {
             $fertilization->updated_by = Auth::id();
         });
     }
-
     public function parcel()
     {
         return $this->belongsTo(Parcel::class, 'parcel_id');
@@ -77,6 +88,10 @@ class Fertilization extends Model implements Auditable
     public function field()
     {
         return $this->belongsTo(Field::class, 'field_id');
+    }
+    public function fertilizerMapping()
+    {
+        return $this->belongsTo(FertilizerMapping::class, 'fertilizer_mapping_id');
     }
     public function irrigation()
     {

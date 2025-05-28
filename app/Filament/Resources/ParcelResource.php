@@ -11,11 +11,14 @@ use App\Models\Parcel;
 use App\Enums\RoleType;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Facades\Filament;
 use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Auth;
 use OwenIt\Auditing\Contracts\Audit;
+use App\Filament\Imports\ParcelImporter;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\ImportAction;
 use App\Filament\Resources\ParcelResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
@@ -86,6 +89,8 @@ class ParcelResource extends Resource
                     ->label('Dada de baja por')
                     ->visible(fn($record) => $record !== null && !$record->is_active)
                     ->disabled(),
+                Forms\Components\Hidden::make('Field_id')
+                    ->default(Filament::getTenant()->id),
             ]);
     }
 
@@ -148,6 +153,7 @@ class ParcelResource extends Resource
                     ->searchable(true)
                     ->options(Crop::all()->pluck('especie', 'id')->toArray()),
             ])
+            
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make()

@@ -270,8 +270,8 @@ class OrderResource extends Resource
                                 Log::error("Error al guardar la orden: {$e->getMessage()}");
                             }
                         })                     
-                        ->hidden(fn(Order $record) => $record->is_completed),
-                        
+                        ->hidden(fn(Order $record) => $record->is_completed)
+                        ->visible(fn(Order $record) => Auth::user()->can('complete', $record)),
                     Tables\Actions\DeleteAction::make()
                         ->visible(fn(Order $record) => $record->orderLines()->count() === 0),
                     Actions\Action::make('downloadPdf')

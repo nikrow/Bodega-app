@@ -6,6 +6,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Models\ConsolidatedReport;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Forms\Components\DatePicker;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\ConsolidatedReportResource\Pages;
 
@@ -118,8 +121,21 @@ class ConsolidatedReportResource extends Resource
                     ->label('Generado'),
             ])
             ->filters([
-                // Puedes agregar filtros aquí si es necesario
-            ])
+                Tables\Filters\Filter::make('fecha')
+                    ->columns(2)
+                    ->form([
+                        DatePicker::make('start_date')->label('Fecha Inicio'),
+                        DatePicker::make('end_date')
+                            ->default(now())
+                            ->label('Fecha Fin'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['start_date'], fn ($q) => $q->whereDate('reports.date', '>=', $data['start_date']))
+                            ->when($data['end_date'], fn ($q) => $q->whereDate('reports.date', '<=', $data['end_date']));
+                    }),
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->actions([
                 
             ])

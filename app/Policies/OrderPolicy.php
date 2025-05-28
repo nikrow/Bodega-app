@@ -55,6 +55,7 @@ class OrderPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
         ]);
     }
 
@@ -80,5 +81,13 @@ class OrderPolicy
     public function forceDelete(User $user, Order $order): bool
     {
         return $user->role === RoleType::ADMIN;
+    }
+
+    public function complete(User $user, Order $order): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+        ]);
     }
 }

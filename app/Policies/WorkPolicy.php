@@ -29,7 +29,6 @@ class WorkPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE
         ]);
     }
     public function update(User $user): bool
@@ -37,7 +36,6 @@ class WorkPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE
         ]);
     }
     public function delete(User $user): bool

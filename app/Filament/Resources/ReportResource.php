@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Query\Builder;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\FiltersLayout;
+use Filament\Forms\Components\DatePicker;
 use App\Filament\Resources\ReportResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
@@ -34,6 +35,7 @@ class ReportResource extends Resource
     protected static ?string $pluralModelLabel = 'Reports';
     protected static ?string $slug = 'reports';
 
+    
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
     $query = parent::getEloquentQuery()->with([
@@ -274,6 +276,19 @@ class ReportResource extends Resource
                             return User::where('role', \App\Enums\RoleType::OPERARIO)->pluck('name', 'id')->toArray();
                         })
                     ),
+                Tables\Filters\Filter::make('fecha')
+                    ->columns(2)
+                    ->form([
+                        DatePicker::make('start_date')->label('Fecha Inicio'),
+                        DatePicker::make('end_date')
+                            ->default(now())
+                            ->label('Fecha Fin'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['start_date'], fn ($q) => $q->whereDate('created_at', '>=', $data['start_date']))
+                            ->when($data['end_date'], fn ($q) => $q->whereDate('created_at', '<=', $data['end_date']));
+                    }),
                 ], layout: FiltersLayout::AboveContent)
                 ->filtersFormColumns(3)
             ->actions([

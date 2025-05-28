@@ -38,4 +38,14 @@ class EditOperatorAssignment extends EditRecord
 
         return $data;
     }
+    protected function afterSave(): void
+    {
+        $record = $this->record;
+
+        if ($record->user && filled($this->form->getState()['fields'])) {
+            $record->user->fields()->sync($this->form->getState()['fields']);
+        }
+    }
+
+    
 }

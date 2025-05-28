@@ -51,7 +51,6 @@ class MovimientoPolicy
             RoleType::AGRONOMO,
             RoleType::BODEGUERO,
             RoleType::ESTANQUERO,
-            RoleType::ASISTENTE,
         ]);
     }
 

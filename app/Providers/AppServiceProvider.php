@@ -5,25 +5,27 @@ namespace App\Providers;
 
 
 
-use App\Console\Commands\UpdateMissingOrderApplicationUsage;
-use App\Listeners\UpdateLoginTime;
+use Livewire\Livewire;
 use App\Models\Movimiento;
-use App\Models\MovimientoProducto;
+use App\Models\Fertilization;
+use App\Services\StockService;
 use App\Models\OrderApplication;
 
-use App\Observers\MovimientoObserver;
-use App\Observers\MovimientoProductoObserver;
-use App\Observers\OrderApplicationObserver;
-use App\Policies\ActivityLogPolicy;
-use App\Services\StockService;
 use Illuminate\Auth\Events\Login;
+use App\Listeners\UpdateLoginTime;
+use App\Models\MovimientoProducto;
 use Illuminate\Auth\Events\Logout;
+use App\Policies\ActivityLogPolicy;
 use Illuminate\Support\Facades\URL;
-use Livewire\Livewire;
-use Spatie\Activitylog\Models\Activity;
-use App\Listeners\UpdateActiveMinutesOnLogout;
 use Illuminate\Support\Facades\Gate;
+use App\Observers\MovimientoObserver;
+use App\Policies\FertilizationPolicy;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Activitylog\Models\Activity;
+use App\Observers\OrderApplicationObserver;
+use App\Observers\MovimientoProductoObserver;
+use App\Listeners\UpdateActiveMinutesOnLogout;
+use App\Console\Commands\UpdateMissingOrderApplicationUsage;
 
 
 
@@ -59,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Fertilization::class, FertilizationPolicy::class);
         Movimiento::observe(MovimientoObserver::class);
         MovimientoProducto::observe(MovimientoProductoObserver::class);
         OrderApplication::observe(OrderApplicationObserver::class);

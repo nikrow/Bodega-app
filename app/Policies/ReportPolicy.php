@@ -13,7 +13,6 @@ class ReportPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE,
             RoleType::OPERARIO
         ]);
     }
@@ -24,7 +23,6 @@ class ReportPolicy
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
             RoleType::OPERARIO,
-            RoleType::ASISTENTE
         ]);
     }
     public function create(User $user): bool
@@ -33,7 +31,6 @@ class ReportPolicy
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
             RoleType::OPERARIO,
-            RoleType::ASISTENTE
         ]);
     }
     public function update(User $user): bool
@@ -41,7 +38,6 @@ class ReportPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE
         ]);
     }
     public function delete(User $user): bool
@@ -69,7 +65,6 @@ class ReportPolicy
     {
         return !$report->approved && in_array($user->role, [
             RoleType::ADMIN,
-            RoleType::USUARIOMAQ,
         ]);
     }
 }

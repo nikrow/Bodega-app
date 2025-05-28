@@ -10,11 +10,14 @@ use OwenIt\Auditing\Models\Audit;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Patch;
 use Illuminate\Testing\Fluent\Concerns\Has;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+//#[ApiResource]
 class Report extends Model implements Auditable
 {
     use HasFactory;
