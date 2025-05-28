@@ -4,26 +4,62 @@ namespace App\Imports;
 
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use App\Models\Parcel;
 use App\Models\Field;
 use App\Models\Crop;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
-class ParcelImport implements ToModel, WithHeadingRow, WithValidation
+class ParcelImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     protected $processedParcels = [];
     protected $createdCount = 0;
     protected $updatedCount = 0;
     protected $deactivatedCount = 0;
-    protected $rowDetails = []; 
+    protected $rowDetails = [];
 
     /**
      * Procesar cada fila del archivo subido.
      */
     public function model(array $row)
     {
+        // Validar la fila manualmente
+        $validator = Validator::make($row, $this->rules());
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            $this->rowDetails[] = [
+                'row' => $row,
+                'status' => 'error',
+                'message' => "Errores de validación: " . implode(', ', $errors),
+            ];
+            Log::warning("Errores de validación en la fila: " . json_encode($row) . " - " . implode(', ', $errors));
+            return null; // Continuar con la siguiente fila
+        }
+
+        // Procesar plantas_productivas
+        $plantas = $row['plantas_productivas'];
+        if (is_numeric($plantas)) {
+            $row['plantas_productivas'] = (int) round($plantas);
+            if ($plantas != $row['plantas_productivas']) {
+                $this->rowDetails[] = [
+                    'row' => $row,
+                    'status' => 'warning',
+                    'message' => "Plantas productivas redondeadas de {$plantas} a {$row['plantas_productivas']}",
+                ];
+            }
+        } else {
+            $this->rowDetails[] = [
+                'row' => $row,
+                'status' => 'error',
+                'message' => "Plantas productivas no es un número: {$plantas}",
+            ];
+            Log::warning("Plantas productivas no es un número en la fila: " . json_encode($row));
+            return null; // Continuar con la siguiente fila
+        }
+
         try {
             // Buscar el predio (Field)
             $field = Field::where('name', $row['predio'])->first();
@@ -60,7 +96,7 @@ class ParcelImport implements ToModel, WithHeadingRow, WithValidation
                     'crop_id' => $crop->id,
                     'planting_year' => $row['ano'],
                     'surface' => $row['superficie'] ?? null,
-                    'plants' => $row['plantas_productivas'] ?? 0,
+                    'plants' => $row['plantas_productivas'],
                     'updated_by' => Auth::id(),
                 ]);
                 $this->rowDetails[] = [
@@ -78,7 +114,7 @@ class ParcelImport implements ToModel, WithHeadingRow, WithValidation
                     'crop_id' => $crop->id,
                     'planting_year' => $row['ano'],
                     'surface' => $row['superficie'] ?? null,
-                    'plants' => $row['plantas_productivas'] ?? 0,
+                    'plants' => $row['plantas_productivas'],
                     'created_by' => Auth::id(),
                     'updated_by' => Auth::id(),
                     'is_active' => true,
@@ -178,7 +214,15 @@ class ParcelImport implements ToModel, WithHeadingRow, WithValidation
             'cuartel' => 'required',
             'ano' => 'nullable|integer',
             'superficie' => 'nullable|numeric',
-            'plantas_productivas' => 'required|integer',
+            'plantas_productivas' => 'required|numeric', 
         ];
+    }
+
+    /**
+     * Definir el tamaño del chunk para procesar el archivo.
+     */
+    public function chunkSize(): int
+    {
+        return 100; 
     }
 }

@@ -96,20 +96,6 @@ class ListParcels extends ListRecords
 
                         if (!empty($processedParcelsList) && !empty($fieldIds)) {
                             $import->deactivateMissingParcels($fieldIds);
-                        } else {
-                            if (empty($processedParcelsList)) {
-                                Notification::make()
-                                    ->title('Importación sin resultados')
-                                    ->body('Ninguna fila del archivo fue procesada. Verifique que el archivo no esté vacío y que las columnas "Predio", "Cultivo" y "Cuartel" existan y contengan datos válidos.')
-                                    ->warning()
-                                    ->duration(8000)
-                                    ->send();
-                                DB::commit();
-                                return;
-                            }
-                            if (empty($fieldIds)) {
-                                Log::error("Processed parcels found, but no fieldIds could be extracted.");
-                            }
                         }
 
                         DB::commit();
@@ -123,26 +109,7 @@ class ListParcels extends ListRecords
 
                         // Construir el cuerpo de la notificación con una tabla
                         $body = "Resumen: Creados: {$summary['created']}, Actualizados: {$summary['updated']}, Desactivados: {$summary['deactivated']}.";
-                        $body .= "<br><br><strong>Detalles de la importación:</strong><br>";
-                        $body .= '<table style="width:100%; border-collapse: collapse; font-size: 14px;">';
-                        $body .= '<thead><tr style="background-color: #f1f1f1;"><th style="border: 1px solid #ddd; padding: 8px;">Predio</th><th style="border: 1px solid #ddd; padding: 8px;">Cuartel</th><th style="border: 1px solid #ddd; padding: 8px;">Cultivo</th><th style="border: 1px solid #ddd; padding: 8px;">Estado</th><th style="border: 1px solid #ddd; padding: 8px;">Mensaje</th></tr></thead>';
-                        $body .= '<tbody>';
-                        foreach ($rowDetails as $detail) {
-                            $predio = $detail['row']['predio'] ?? ($detail['row']['predio'] ?? '-');
-                            $cuartel = $detail['row']['cuartel'] ?? ($detail['row']['cuartel'] ?? '-');
-                            $cultivo = $detail['row']['cultivo'] ?? '-';
-                            $status = match ($detail['status']) {
-                                'created' => 'Creado',
-                                'updated' => 'Actualizado',
-                                'deactivated' => 'Desactivado',
-                                'error' => 'Error',
-                                default => $detail['status'],
-                            };
-                            $message = $detail['message'];
-                            $body .= "<tr><td style=\"border: 1px solid #ddd; padding: 8px;\">$predio</td><td style=\"border: 1px solid #ddd; padding: 8px;\">$cuartel</td><td style=\"border: 1px solid #ddd; padding: 8px;\">$cultivo</td><td style=\"border: 1px solid #ddd; padding: 8px;\">$status</td><td style=\"border: 1px solid #ddd; padding: 8px;\">$message</td></tr>";
-                        }
-                        $body .= '</tbody></table>';
-
+                        
                         Notification::make()
                             ->title('Importación de Cuarteles completada')
                             ->body($body)
@@ -156,35 +123,9 @@ class ListParcels extends ListRecords
                             ])
                             ->persistent()
                             ->send();
-
-                    } catch (ValidationException $e) {
-                        DB::rollBack();
-                        $failures = $e->failures();
-                        $body = "Errores de validación encontrados:";
-                        $errorCount = 0;
-                        foreach ($failures as $failure) {
-                            $attribute = $failure->attribute();
-                            $value = $failure->values()[$attribute] ?? '[Valor no encontrado/vacío]';
-                            $body .= "\n- Fila {$failure->row()}: {$failure->errors()[0]} (Columna: \"{$attribute}\", Valor: '{$value}')";
-                            $errorCount++;
-                            if (strlen($body) > 500 || $errorCount >= 5) {
-                                $body .= "\n... y otros errores (" . (count($failures) - $errorCount) . " más).";
-                                break;
-                            }
-                        }
-                        Log::error("Error de validación durante la importación: " . $e->getMessage(), ['failures' => $failures]);
-
-                        Notification::make()
-                            ->title('Error de validación en la importación')
-                            ->body($body)
-                            ->danger()
-                            ->duration(15000)
-                            ->send();
-
                     } catch (\Exception $e) {
                         DB::rollBack();
                         Log::error("Error inesperado durante la importación: " . $e->getMessage(), ['exception' => $e]);
-
                         Notification::make()
                             ->title('Error durante la importación')
                             ->body('Ocurrió un error inesperado: ' . $e->getMessage())
