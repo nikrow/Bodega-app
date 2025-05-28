@@ -41,6 +41,21 @@ php artisan filament:optimize
 echo "Generando enlaces simbólicos..."
 php artisan storage:link
 
+# PASO 3: Configurar parámetros PHP mediante .user.ini
+echo "PASO 3: Configurar parámetros PHP mediante .user.ini"
+echo "---------------------------------------------------"
+# Crear o sobrescribir .user.ini con parámetros PHP personalizados
+cat <<EOT > .user.ini
+[PHP]
+upload_max_filesize = 10M
+post_max_size = 10M
+max_execution_time = 300
+max_input_time = 300
+memory_limit = 256M
+EOT
+
+echo "Archivo .user.ini creado o actualizado con parámetros PHP personalizados."
+
 echo "==========================================="
 echo "Comandos post-despliegue ejecutados con éxito"
 echo "==========================================="
