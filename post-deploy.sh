@@ -52,6 +52,8 @@ post_max_size = 10M
 max_execution_time = 300
 max_input_time = 300
 memory_limit = 256M
+client_max_body_size = 100M
+post_max_size = 100M
 EOT
 
 echo "Archivo .user.ini creado o actualizado con parámetros PHP personalizados."
