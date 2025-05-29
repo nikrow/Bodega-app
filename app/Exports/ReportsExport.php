@@ -18,8 +18,8 @@ class ReportsExport implements FromCollection, WithHeadings
                     'Operador' => $report->operator->name ?? 'N/A',
                     'Campo' => $report->field->name ?? 'N/A',
                     'Proveedor' => $report->machinery_id 
-                        ? ($report->machinery->provider ?? 'N/A') 
-                        : ($report->tractor->provider ?? 'N/A'),
+                        ? ($report->machinery->provider->getLabel() ?? 'N/A') 
+                        : ($report->tractor->provider->getLabel() ?? 'N/A'),
                     'Centro de costo' => $report->work->cost_type->getLabel()?? 'N/A',
                     'Tractor' => $report->tractor->name ?? 'N/A',
                     'Maquinaria' => $report->machinery->name ?? 'N/A',
