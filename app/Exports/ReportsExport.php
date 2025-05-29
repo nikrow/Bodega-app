@@ -14,7 +14,7 @@ class ReportsExport implements FromCollection, WithHeadings
             ->map(function ($report) {
                 return [
                     'ID' => $report->id,
-                    'Fecha' => $report->date->format('Y-m-d'),
+                    'Fecha' => $report->date->format('d/m/Y'),
                     'Operador' => $report->operator->name ?? 'N/A',
                     'Campo' => $report->field->name ?? 'N/A',
                     'Proveedor' => $report->machinery_id 
