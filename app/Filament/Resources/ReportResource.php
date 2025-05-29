@@ -12,6 +12,7 @@ use App\Models\Tractor;
 use Filament\Forms\Form;
 use App\Models\Machinery;
 use Filament\Tables\Table;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\DB;
 use Filament\Tables\Actions\Action;
@@ -22,6 +23,7 @@ use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Forms\Components\DatePicker;
 use App\Filament\Resources\ReportResource\Pages;
+use Google\Service\Forms\Resource\Forms as ResourceForms;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
@@ -60,6 +62,13 @@ class ReportResource extends Resource
 
         // Definimos el esquema base
         $schema = [
+            Forms\Components\Select::make('field_id')
+                ->label('Campo')
+                ->options(function () {
+                    return Filament::getTenant()->pluck('name', 'id')->toArray();
+                })
+                ->default(Filament::getTenant()->id)
+                ->disabled(fn($record) => $record === null),
             Forms\Components\DatePicker::make('date')
                 ->label('Fecha')
                 ->default(now())

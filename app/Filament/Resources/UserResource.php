@@ -2,16 +2,19 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Forms;
+use App\Models\User;
+use Filament\Tables;
 use App\Enums\RoleType;
+use Filament\Forms\Form;
+use App\Models\Warehouse;
+use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Hash;
+use Filament\Notifications\Notification;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
-use App\Models\User;
-use App\Models\Warehouse;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class UserResource extends Resource
@@ -58,7 +61,8 @@ class UserResource extends Resource
                     ->revealable()
                     ->minLength(8)
                     ->placeholder('Contraseña del usuario')
-                    ->required(fn($record) => $record === null),
+                    ->required(fn($record) => $record === null)
+                    ->visible(fn($record) => $record === null),
                 forms\Components\Select::make('fields')
                     ->label('Campos')
                     ->searchable()
@@ -166,7 +170,32 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-            ])
+                Action::make('change_password')
+                ->label('Contraseña')
+                ->icon('heroicon-o-key')
+                ->color('secondary')
+                ->form([
+                    Forms\Components\TextInput::make('new_password')
+                        ->label('Nueva Contraseña')
+                        ->password()
+                        ->required()
+                        ->minLength(8),
+                    Forms\Components\TextInput::make('new_password_confirmation')
+                        ->label('Confirmar Nueva Contraseña')
+                        ->password()
+                        ->required()
+                        ->same('new_password'),
+                ])
+                ->action(function (User $record, array $data) {
+                    $record->password = Hash::make($data['new_password']);
+                    $record->save();
+                    Notification::make()
+                        ->success()
+                        ->title('Contraseña cambiada')
+                        ->body('La contraseña para ' . $record->name . ' ha sido actualizada.')
+                        ->send();
+                }),
+        ])
             ->bulkActions([
 
             ]);
