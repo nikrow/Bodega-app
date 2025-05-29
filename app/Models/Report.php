@@ -25,7 +25,6 @@ class Report extends Model implements Auditable
     use \OwenIt\Auditing\Auditable;
     
     protected $fillable = [
-        'crop_id',
         'field_id',
         'machinery_id',
         'tractor_id',

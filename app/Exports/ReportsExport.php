@@ -9,7 +9,7 @@ class ReportsExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        return Report::with(['tractor', 'machinery', 'operator', 'field', 'crop', 'work'])
+        return Report::with(['tractor', 'machinery', 'operator', 'field', 'work'])
             ->get()
             ->map(function ($report) {
                 return [
@@ -17,7 +17,10 @@ class ReportsExport implements FromCollection, WithHeadings
                     'Fecha' => $report->date->format('Y-m-d'),
                     'Operador' => $report->operator->name ?? 'N/A',
                     'Campo' => $report->field->name ?? 'N/A',
-                    'Cultivo' => $report->crop->especie ?? 'N/A',
+                    'Proveedor' => $report->machinery_id 
+                        ? ($report->machinery->provider ?? 'N/A') 
+                        : ($report->tractor->provider ?? 'N/A'),
+                    'Centro de costo' => $report->work->cost_type->getLabel()?? 'N/A',
                     'Tractor' => $report->tractor->name ?? 'N/A',
                     'Maquinaria' => $report->machinery->name ?? 'N/A',
                     'Trabajo' => $report->work->name ?? 'N/A',
@@ -40,7 +43,8 @@ class ReportsExport implements FromCollection, WithHeadings
             'Fecha',
             'Operador',
             'Campo',
-            'Cultivo',
+            'Proveedor',
+            'Centro de Costo',
             'Tractor',
             'Maquinaria',
             'Trabajo',
