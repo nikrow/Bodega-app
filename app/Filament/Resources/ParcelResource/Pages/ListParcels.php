@@ -67,7 +67,7 @@ class ListParcels extends ListRecords
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                             'text/csv',
                         ])
-                        ->storeFiles(false),
+                        ->storeFiles(true),
                 ])
                 ->action(function (array $data) {
                     $file = $data['file'];
