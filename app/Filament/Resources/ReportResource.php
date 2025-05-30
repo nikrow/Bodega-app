@@ -120,7 +120,7 @@ class ReportResource extends Resource
                         return [];
                     }
                 })
-                ->nullable()
+                ->required()
                 ->reactive()
                 ->afterStateUpdated(fn (callable $set) => $set('work_id', null)),
             Forms\Components\Select::make('work_id')

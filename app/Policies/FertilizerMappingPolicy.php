@@ -2,8 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\FertilizerMapping;
 use App\Models\User;
+use App\Enums\RoleType;
+use App\Models\FertilizerMapping;
 use Illuminate\Auth\Access\Response;
 
 class FertilizerMappingPolicy
@@ -13,7 +14,9 @@ class FertilizerMappingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+        ]);
     }
 
     /**
@@ -21,7 +24,9 @@ class FertilizerMappingPolicy
      */
     public function view(User $user, FertilizerMapping $fertilizerMapping): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+        ]);
     }
 
     /**
@@ -29,7 +34,9 @@ class FertilizerMappingPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+        ]);
     }
 
     /**
@@ -37,7 +44,9 @@ class FertilizerMappingPolicy
      */
     public function update(User $user, FertilizerMapping $fertilizerMapping): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+        ]);
     }
 
     /**
@@ -45,7 +54,9 @@ class FertilizerMappingPolicy
      */
     public function delete(User $user, FertilizerMapping $fertilizerMapping): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+        ]);
     }
 
     /**
@@ -53,7 +64,9 @@ class FertilizerMappingPolicy
      */
     public function restore(User $user, FertilizerMapping $fertilizerMapping): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+        ]);
     }
 
     /**

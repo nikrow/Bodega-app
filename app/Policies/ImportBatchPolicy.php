@@ -2,8 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\ImportBatch;
 use App\Models\User;
+use App\Enums\RoleType;
+use App\Models\ImportBatch;
 use Illuminate\Auth\Access\Response;
 
 class ImportBatchPolicy
@@ -13,7 +14,11 @@ class ImportBatchPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
+        ]);
     }
 
     /**
@@ -21,7 +26,10 @@ class ImportBatchPolicy
      */
     public function view(User $user, ImportBatch $importBatch): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+
+        ]);
     }
 
     /**
@@ -37,7 +45,9 @@ class ImportBatchPolicy
      */
     public function update(User $user, ImportBatch $importBatch): bool
     {
-        return false;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+        ]);
     }
 
     /**
