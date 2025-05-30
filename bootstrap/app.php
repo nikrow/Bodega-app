@@ -1,11 +1,12 @@
 <?php
 
 
-use App\Console\Commands\UpdateActiveMinutesCommand;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Console\Commands\UpdateActiveMinutesCommand;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -22,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureFrontendRequestsAreStateful::class,
             SubstituteBindings::class,
             \Edwink\FilamentUserActivity\Http\Middleware\RecordUserActivity::class,
+        ]);
+        $middleware->web(append: [
+            VerifyCsrfToken::class,
         ]);
     })
     ->withCommands([
