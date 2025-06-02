@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
         $middleware->group('auth', [
             // Otros middleware de autenticación si los tienes
             \App\Http\Middleware\UpdateLastActivity::class,
