@@ -35,6 +35,7 @@
         "maatwebsite/excel": "^3.1",
         "owen-it/laravel-auditing": "^13.6",
         "owenvoke/blade-fontawesome": "^2.6",
+        "predis/predis": "^3.0",
         "pxlrbt/filament-activity-log": "^1.1",
         "pxlrbt/filament-excel": "^2.3",
         "rupadana/filament-api-service": "^3.4",

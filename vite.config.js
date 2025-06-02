@@ -11,8 +11,11 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@': '/resources/js',
+            '@': path.resolve(__dirname, 'resources/js'),
             'vendor': path.resolve(__dirname, 'vendor'),
         },
+    },
+    build: {
+        minify: 'esbuild',
     },
 });

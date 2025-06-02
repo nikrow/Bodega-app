@@ -114,7 +114,6 @@ class IrrigationResource extends Resource
                     ->getStateUsing(function ($record) {
                         return $record->fertilization()->count();
                     })
-                    ->sortable()
                     ->toggleable()
                     ->tooltip(function ($record) {
                         // Obtener las fertilizaciones asociadas al registro

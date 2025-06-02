@@ -51,14 +51,15 @@ class FertilizationResource extends Resource
                     ->label('Cuartel')
                     ->options(function () {
                         $tenantId = Filament::getTenant()->id;
-                        return Parcel::whereHas('field', function ($query) use ($tenantId) {
-                            $query->where('field_id', $tenantId);
-                        })
-                        ->pluck('name', 'id')
-                        ->toArray();
+                        return cache()->remember("parcels_for_tenant_{$tenantId}", 3600, function () use ($tenantId) {
+                            return Parcel::whereHas('field', function ($query) use ($tenantId) {
+                                $query->where('field_id', $tenantId);
+                            })
+                            ->pluck('name', 'id')
+                            ->toArray();
+                        });
                     })
                     ->searchable()
-                    ->preload()
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(function (callable $set, $state) {
@@ -136,6 +137,7 @@ class FertilizationResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->reactive()
+                    ->debounce(500)
                     ->afterStateUpdated(function (callable $set, $state, $get) {
                         $dilution_factor = $get('dilution_factor');
                         $product_price = $get('product_price');
@@ -171,6 +173,9 @@ class FertilizationResource extends Resource
         return $table
             ->recordTitleAttribute('id')
             ->defaultSort('date', 'desc')
+            ->modifyQueryUsing(function (Builder $query) {
+                $query->with(['parcel', 'fertilizerMapping.product']);
+            })
             ->groups([
                 Group::make('date')
                     ->label('Fecha')
