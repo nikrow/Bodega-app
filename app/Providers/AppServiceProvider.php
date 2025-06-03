@@ -43,34 +43,6 @@ class AppServiceProvider extends ServiceProvider
             return new StockService();
         });
         Gate::policy(Activity::class, ActivityLogPolicy::class);
-
-        // Define macros to override signature verification
-        URL::macro('alternateHasCorrectSignature', function (Request $request, $absolute = true, array $ignoreQuery = []) {
-            $ignoreQuery[] = 'signature';
-
-            // Use url() helper to respect forced scheme and root URL
-            $absoluteUrl = url($request->path());
-            $url = $absolute ? $absoluteUrl : '/' . $request->path();
-
-            $queryString = collect(explode('&', (string) $request->server->get('QUERY_STRING')))
-                ->reject(fn ($parameter) => in_array(Str::before($parameter, '='), $ignoreQuery))
-                ->join('&');
-
-            $original = rtrim($url . '?' . $queryString, '?');
-
-            // Generate signature using the application key
-            $signature = hash_hmac('sha256', $original, call_user_func($this->keyResolver));
-            return hash_equals($signature, (string) $request->query('signature', ''));
-        });
-
-        URL::macro('alternateHasValidSignature', function (Request $request, $absolute = true, array $ignoreQuery = []) {
-            return URL::alternateHasCorrectSignature($request, $absolute, $ignoreQuery)
-                && URL::signatureHasNotExpired($request);
-        });
-
-        Request::macro('hasValidSignature', function ($absolute = true, array $ignoreQuery = []) {
-            return URL::alternateHasValidSignature($this, $absolute, $ignoreQuery);
-        });
     }
     protected $listen = [
         Login::class => [
