@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\User;
 use App\Models\Report;
 use App\Enums\RoleType;
+use App\Models\Role;
 
 class ReportPolicy
 {
@@ -44,7 +45,7 @@ class ReportPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
-            
+            RoleType::USUARIOMAQ,
         ]);
     }
     public function restore(User $user): bool

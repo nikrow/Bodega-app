@@ -22,6 +22,7 @@ class Report extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
+    use SoftDeletes;
     use \OwenIt\Auditing\Auditable;
     
     protected $fillable = [
@@ -40,6 +41,7 @@ class Report extends Model implements Auditable
         'approved',
         'approved_by',
         'approved_at',
+        'deleted_at',
     ];
 
     protected $casts = [
