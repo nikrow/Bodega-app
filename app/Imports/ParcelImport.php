@@ -2,15 +2,17 @@
 
 namespace App\Imports;
 
+use App\Models\Crop;
+use App\Models\Field;
+use App\Models\Parcel;
+use Illuminate\Support\Facades\Log;
+use App\Events\ImportCompletedEvent;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use App\Models\Parcel;
-use App\Models\Field;
-use App\Models\Crop;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class ParcelImport implements ToModel, WithHeadingRow, WithChunkReading
 {
@@ -20,6 +22,27 @@ class ParcelImport implements ToModel, WithHeadingRow, WithChunkReading
     protected $deactivatedCount = 0;
     protected $rowDetails = [];
 
+    public static function registerEvents(): array
+    {
+        return [
+            AfterImport::class => [self::class, 'handleAfterImport'],
+        ];
+    }
+
+    public static function handleAfterImport(AfterImport $event)
+    {
+        $import = $event->getConcernable();
+        $processedParcelsList = $import->getProcessedParcels();
+        $fieldIds = collect($processedParcelsList)->pluck('field_id')->unique()->toArray();
+
+        if (!empty($processedParcelsList) && !empty($fieldIds)) {
+            $import->deactivateMissingParcels($fieldIds);
+        }
+
+        $summary = $import->getSummary();
+        $rowDetails = $import->getRowDetails();
+        event(new ImportCompletedEvent($summary, $rowDetails));
+    }
     /**
      * Procesar cada fila del archivo subido.
      */
@@ -129,9 +152,13 @@ class ParcelImport implements ToModel, WithHeadingRow, WithChunkReading
             }
 
             // Registrar la parcela procesada
-            $this->processedParcels[] = ['name' => $row['cuartel'], 'field_id' => $field->id];
-
+            $this->processedParcels[] = [
+                'name' => $row['cuartel'],
+                'field_id' => $field->id,
+                'parcel_id' => $parcel->id,
+            ];
             return $parcel;
+            
         } catch (\Exception $e) {
             $this->rowDetails[] = [
                 'row' => $row,
@@ -146,34 +173,39 @@ class ParcelImport implements ToModel, WithHeadingRow, WithChunkReading
     /**
      * Desactivar parcelas que no están en el archivo subido.
      */
-    public function deactivateMissingParcels(array $fieldIds)
+    public function deactivateMissingParcels(array $fieldIds): array
     {
-        $existingParcels = Parcel::whereIn('field_id', $fieldIds)
-            ->where('is_active', true)
+        $processedParcelIds = collect($this->processedParcels)->pluck('parcel_id')->toArray();
+
+        $parcelsToDeactivate = \App\Models\Parcel::query()
+            ->whereIn('field_id', $fieldIds)
+            ->whereNotIn('id', $processedParcelIds)
             ->get();
 
-        foreach ($existingParcels as $parcel) {
-            $isProcessed = collect($this->processedParcels)->contains(function ($processed) use ($parcel) {
-                return $processed['name'] === $parcel->name && $processed['field_id'] === $parcel->field_id;
-            });
+        foreach ($parcelsToDeactivate as $parcel) {
+            $this->deactivatedCount++;
+            $parcel->update(['activo' => false]);
 
-            if (!$isProcessed) {
-                $parcel->update([
-                    'is_active' => false,
-                    'deactivated_at' => now(),
-                    'deactivated_by' => Auth::id(),
-                    'deactivation_reason' => 'Desactivado durante la importación',
-                ]);
-                $this->rowDetails[] = [
-                    'row' => ['cuartel' => $parcel->name, 'predio' => $parcel->field->name],
-                    'status' => 'deactivated',
-                    'message' => "Cuartel desactivado: {$parcel->name}",
-                ];
-                Log::info("Cuartel desactivado: {$parcel->name}");
-                $this->deactivatedCount++;
-            }
+            // Agregar al log
+            $this->processedParcels[] = [
+                'field_id' => $parcel->field_id,
+                'parcel_id' => $parcel->id,
+                'status' => 'deactivated',
+                'row' => [
+                    'predio' => $parcel->field->name ?? '',
+                    'cuartel' => $parcel->name,
+                    'cultivo' => $parcel->crop->especie ?? '',
+                    'ano' => $parcel->year,
+                    'superficie' => $parcel->superficie,
+                    'plantas_productivas' => $parcel->plantas_productivas,
+                ],
+                'message' => 'Cuartel desactivado por ausencia en el archivo.',
+            ];
         }
+
+        return $parcelsToDeactivate->toArray();
     }
+
 
     /**
      * Obtener el resumen de la importación.

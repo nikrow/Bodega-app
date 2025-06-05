@@ -5,9 +5,9 @@ namespace App\Filament\Resources\ParcelResource\Pages;
 use App\Models\Crop;
 use Filament\Actions;
 use App\Imports\ParcelImport;
+use EightyNine\ExcelImport\ExcelImportAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
 use Filament\Resources\Components\Tab;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
@@ -57,104 +57,63 @@ class ListParcels extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('import')
-                ->label('Importar Cuarteles')
-                ->form([
-                    FileUpload::make('file')
-                        ->label('Archivo Excel o CSV')
-                        ->required()
-                        ->acceptedFileTypes([
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            'text/csv',
-                        ])
-                        ->storeFiles(true),
-                ])
-                ->action(function (array $data) {
-                    $file = $data['file'];
+            /* ExcelImportAction::make()
+                ->use(ParcelImport::class)
+                ->afterImport(function (array $data, $livewire) {
+                    /** @var ParcelImport $import */
+                    /* $import = $data['import'] ?? null;
 
-                    if (!($file instanceof \Illuminate\Http\UploadedFile)) {
-                        Notification::make()
-                            ->title('Error de archivo')
-                            ->body('El archivo subido no es válido.')
-                            ->danger()
-                            ->send();
+                    if (!$import) {
+                        Log::warning('No se pudo obtener la instancia del import.');
                         return;
                     }
 
-                    $import = new ParcelImport();
+                    $processedParcels = $import->getProcessedParcels();
+                    $fieldIds = collect($processedParcels)->pluck('field_id')->unique()->toArray();
 
-                    DB::beginTransaction();
-
-                    try {
-                        Excel::import($import, $file);
-
-                        $processedParcelsList = $import->getProcessedParcels();
-                        $fieldIds = collect($processedParcelsList)
-                            ->pluck('field_id')
-                            ->unique()
-                            ->toArray();
-
-                        if (!empty($processedParcelsList) && !empty($fieldIds)) {
-                            $import->deactivateMissingParcels($fieldIds);
-                        }
-
-                        DB::commit();
-
-                        $summary = $import->getSummary();
-                        $rowDetails = $import->getRowDetails();
-
-                        // Generar el archivo CSV
-                        $csvPath = $this->generateImportLogCsv($rowDetails);
-                        $csvUrl = Storage::url($csvPath);
-
-                        // Construir el cuerpo de la notificación con una tabla
-                        $body = "Resumen: Creados: {$summary['created']}, Actualizados: {$summary['updated']}, Desactivados: {$summary['deactivated']}.";
-                        
-                        Notification::make()
-                            ->title('Importación de Cuarteles completada')
-                            ->body($body)
-                            ->success()
-                            ->actions([
-                                Action::make('download_log')
-                                    ->label('Descargar Log (CSV)')
-                                    ->url($csvUrl)
-                                    ->openUrlInNewTab()
-                                    ->icon('bi-download'),
-                            ])
-                            ->persistent()
-                            ->send();
-                    } catch (\Exception $e) {
-                        DB::rollBack();
-                        Log::error("Error inesperado durante la importación: " . $e->getMessage(), ['exception' => $e]);
-                        Notification::make()
-                            ->title('Error durante la importación')
-                            ->body('Ocurrió un error inesperado: ' . $e->getMessage())
-                            ->danger()
-                            ->duration(15000)
-                            ->send();
+                    if (!empty($fieldIds)) {
+                        $import->deactivateMissingParcels($fieldIds);
                     }
-                })
-                ->icon('bi-upload'),
+
+                    // Generar log
+                    $csvPath = $this->generateImportLogCsv($import->getProcessedParcels());
+
+                    Notification::make()
+                        ->title('Importación completada')
+                        ->success()
+                        ->body('Se importaron correctamente los cuarteles.')
+                        ->actions([
+                            Action::make('Ver Log')
+                                ->url(Storage::disk('public')->url($csvPath), true)
+                                ->label('Descargar reporte'),
+                        ])
+                        ->send(); */
+
             Actions\CreateAction::make(),
         ];
     }
 
     /**
      * Generar un archivo CSV con el log de la importación.
+     * Uses fputcsv for proper CSV formatting.
      */
-    protected function generateImportLogCsv(array $rowDetails): string
+    /* protected function generateImportLogCsv(array $rowDetails): string
     {
         $filename = 'import_log_' . now()->format('Ymd_His') . '_' . Str::random(8) . '.csv';
         $path = 'imports/' . $filename;
 
         $headers = ['Predio', 'Cuartel', 'Cultivo', 'Año', 'Superficie', 'Plantas Productivas', 'Estado', 'Mensaje'];
-        $rows = [];
+
+        $handle = fopen('php://temp', 'r+');
+
+        fputcsv($handle, $headers);
 
         foreach ($rowDetails as $detail) {
-            $rows[] = [
+
+            $row = [
                 $detail['row']['predio'] ?? '-',
                 $detail['row']['cuartel'] ?? '-',
-                $detail['row']['cultivo'] ?? '-',   
+                $detail['row']['cultivo'] ?? '-',
                 $detail['row']['ano'] ?? '-',
                 $detail['row']['superficie'] ?? '-',
                 $detail['row']['plantas_productivas'] ?? '-',
@@ -163,21 +122,27 @@ class ListParcels extends ListRecords
                     'updated' => 'Actualizado',
                     'deactivated' => 'Desactivado',
                     'error' => 'Error',
+                    'warning' => 'Advertencia',
                     default => $detail['status'],
                 },
                 $detail['message'],
             ];
+            fputcsv($handle, $row);
         }
 
-        // Generar el contenido del CSV
-        $content = implode(',', $headers) . "\n";
-        foreach ($rows as $row) {
-            $content .= implode(',', array_map('strval', $row)) . "\n";
-        }
+        // Rewind the handle to the beginning
+        rewind($handle);
 
-        // Guardar el archivo en el almacenamiento
+        // Read the content
+        $content = stream_get_contents($handle);
+
+        // Close the handle
+        fclose($handle);
+
+        // Save the content to storage
         Storage::disk('public')->put($path, $content);
 
         return $path;
     }
+ */
 }

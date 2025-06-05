@@ -31,10 +31,13 @@ class ImportBatchResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('import_date', 'desc')
+            ->defaultPaginationPageOption('25')
             ->columns([
                 TextColumn::make('field.name')
                     ->label('Campo'),
                 TextColumn::make('import_date')
+                    ->sortable()
                     ->label('Fecha de Importación'),
                 TextColumn::make('total_records')
                     ->label('Total Registros'),
