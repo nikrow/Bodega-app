@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
+use App\Services\WiseconnService;
+use OwenIt\Auditing\Models\Audit;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Models\Contracts\HasAvatar;
+use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use OwenIt\Auditing\Contracts\Auditable;
-use OwenIt\Auditing\Models\Audit;
 
 class Field extends Model implements Auditable
 {
@@ -19,7 +22,34 @@ class Field extends Model implements Auditable
     protected $fillable = [
         'name',
         'created_by',
+        'api_key',
+        'wiseconn_farm_id',
     ];
+    // Encriptar la clave API al guardarla
+    public function setApiKeyAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['api_key'] = Crypt::encryptString($value);
+        } else {
+            $this->attributes['api_key'] = null; // Asegura que no se guarde un valor vacío
+        }
+    }
+
+    // Desencriptar la clave API al recuperarla
+    public function getApiKeyAttribute($value)
+    {
+        if (is_null($value)) {
+            return null; // Retorna null si el valor no está definido
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            // Maneja casos donde el valor no es un payload encriptado válido
+            return null; // O registra el error si es necesario
+        }
+    }
+
 
     public function getFilamentAvatarUrl(): ?string
     {
@@ -31,6 +61,16 @@ class Field extends Model implements Auditable
 
             $field->created_by = Auth::id();
             $field->slug = Str::slug($field->name);
+        });
+        static::saved(function ($field) {
+
+            if ($field->wasRecentlyCreated || $field->isDirty('wiseconn_farm_id') || $field->isDirty('api_key')) {
+                
+                Log::info("Evento 'saved' detectado para Field ID: {$field->id}. Lanzando syncFarmData.");
+                if ($field->wiseconn_farm_id && $field->api_key) {
+                    app(WiseconnService::class)->syncFarmData($field);
+                }
+            }
         });
     }
     public function createdBy()
@@ -105,7 +145,10 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(Report::class);
     }
-    
+    public function zones()
+    {
+        return $this->hasMany(Zone::class, 'field_id');
+    }
 
 }
 

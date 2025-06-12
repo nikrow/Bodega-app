@@ -1,0 +1,13 @@
+[90m= [39m[34;4mApp\Models\Field[39;24m {#8648
+    [34mid[39m: [35m1[39m,
+    [34mname[39m: "[32mLas Palmas[39m",
+    [34mcreated_by[39m: [36mnull[39m,
+    [34mcreated_at[39m: "[32m2024-12-17 17:53:59[39m",
+    [34mupdated_at[39m: "[32m2025-06-05 16:48:32[39m",
+    [34mslug[39m: "[32mlas-palmas[39m",
+    [34mapi_key[39m: "[32meyJpdiI6Ik11cTFSRThkaVVHZVZjRkVwaWVlRXc9PSIsInZhbHVlIjoiSmhZajMwTzFabitVL25HQnBzM0I4c2JBT2VQa1ZIMHBQNFpqQ0NYZ25ZVT0iLCJtYWMiOiIxYzgxZjNhODNlYjhlNWY2YWVlYmNhZDRkZDU0MDdiZTk3NDhiZGY5N2M3NDc0YzdjNDE2OTMzZWEyMTA2ZTk0IiwidGFnIjoiIn0=[39m",
+    [34mlatitude[39m: [36mnull[39m,
+    [34mlongitude[39m: [36mnull[39m,
+    [34mwiseconn_farm_id[39m: [35m42229[39m,
+  }
+

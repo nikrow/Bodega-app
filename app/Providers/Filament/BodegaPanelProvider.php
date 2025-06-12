@@ -75,7 +75,7 @@ class BodegaPanelProvider extends PanelProvider
             ->unsavedChangesAlerts()
             ->pages([
                 Pages\Dashboard::class,
-
+                
             ])
             ->plugins([
                 FilamentBackgroundsPlugin::make()

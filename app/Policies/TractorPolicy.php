@@ -12,6 +12,7 @@ class TractorPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::MAQUINARIA,
         ]);
     }
 

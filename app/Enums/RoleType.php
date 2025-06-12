@@ -16,6 +16,7 @@ enum RoleType: string implements HasColor, HasIcon, HasLabel
     case USUARIO = 'usuario';
     case OPERARIO = 'operario';
     case USUARIOMAQ = 'usuarioMaquinaria';
+    case MAQUINARIA = 'maquinaria';
 
     public function getLabel(): string
     {
@@ -28,6 +29,7 @@ enum RoleType: string implements HasColor, HasIcon, HasLabel
             self::USUARIO => __('usuario'),
             self::OPERARIO => __('operario'),
             self::USUARIOMAQ => __('usuarioMaquinaria'),
+            self::MAQUINARIA => __('maquinaria'),
         };
     }
     public function getIcon(): ?string
@@ -41,6 +43,7 @@ enum RoleType: string implements HasColor, HasIcon, HasLabel
             self::USUARIO => 'heroicon-o-user-group',
             self::OPERARIO => 'heroicon-o-user-group',
             self::USUARIOMAQ => 'heroicon-o-user-group',
+            self::MAQUINARIA => 'heroicon-o-user-group',
         };
     }
     public function getColor(): string|array|null
@@ -54,6 +57,7 @@ enum RoleType: string implements HasColor, HasIcon, HasLabel
             self::USUARIO => 'danger',
             self::OPERARIO => 'success',
             self::USUARIOMAQ => 'success',
+            self::MAQUINARIA => 'success',
         };
     }
 }

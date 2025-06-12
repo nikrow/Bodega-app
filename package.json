@@ -11,6 +11,8 @@
         "vite": "^5.0"
     },
     "dependencies": {
+        "chart.js": "^4.4.9",
+        "leaflet": "^1.9.4",
         "puppeteer": "^23.11.1"
     }
 }

@@ -20,6 +20,7 @@
         "edwink/filament-user-activity": "^1.0",
         "eightynine/filament-excel-import": "^3.1",
         "filament/filament": "^3.2.0",
+        "filament/notifications": "^3.3",
         "google/apiclient": "^2.18",
         "hasnayeen/blade-eva-icons": "^2.0",
         "joaopaulolndev/filament-pdf-viewer": "^1.0",

@@ -15,7 +15,8 @@ class ConsolidatedReportPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE
+            RoleType::ASISTENTE,
+            RoleType::MAQUINARIA
         ]);
     }
 
@@ -24,7 +25,8 @@ class ConsolidatedReportPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE
+            RoleType::ASISTENTE,
+            RoleType::MAQUINARIA
         ]);
     }
     
