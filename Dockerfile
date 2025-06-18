@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Node.js (actualizamos a la versión 18.x o superior para compatibilidad con Puppeteer)
+# Instalar Node.js (actualizamos a la versión 18.x o superior)
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
@@ -57,42 +57,50 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Instalar Puppeteer globalmente
 RUN npm install -g puppeteer
 
-# --- CAMBIO CRÍTICO AQUÍ ---
-# Asegura que *todo* el directorio /app sea propiedad de www-data
-# Esto debe hacerse DESPUÉS de COPY . /app y ANTES de USER www-data
-RUN chown -R www-data:www-data /app
-# --- FIN CAMBIO CRÍTICO ---
+# --- INICIO CAMBIOS PARA NPM ---
 
-# Configuramos permisos específicos para storage y cache (aunque ya cubierto por el chown de /app,
-# mantenerlo es una buena práctica para asegurar permisos adecuados, ej. 775 para grupos)
+# Crear y dar permisos al directorio de caché de npm antes de cualquier operación npm
+# Esto resuelve el error EACCES en /var/www/.npm
+# Utilizamos www-data:www-data (GID:UID 33:33) para que coincida con el usuario www-data
+RUN mkdir -p /var/www/.npm && chown -R 33:33 /var/www/.npm
+
+# Asegurarse de que *todo* el directorio /app sea propiedad de www-data
+# Esto es crucial para Composer y cualquier otra operación de escritura en la aplicación.
+RUN chown -R www-data:www-data /app
+
+# Establecer permisos específicos para storage y cache (siempre buena práctica)
 RUN chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Cambiar al usuario www-data para ejecutar Composer e npm ci/npm run build
+# Cambiar al usuario www-data para instalar dependencias de Composer
 USER www-data
-
-# Instalar dependencias de Composer (ahora debería tener permisos de escritura en /app/vendor)
 RUN composer install --no-dev --optimize-autoloader --no-plugins
 
+# Vuelve a root temporalmente para las operaciones de npm si hay problemas
+# con la instalación como www-data, aunque `chown /var/www/.npm` debería ayudar.
+# Si el problema persiste, considera mover npm ci/npm run build a un usuario root.
+# Por ahora, lo mantenemos como www-data para mayor seguridad.
+
 # Instalar dependencias de npm y construir assets
+# Con el chown de /var/www/.npm, esto debería funcionar como www-data
 RUN npm ci && npm run build
 
 # Opcional: Eliminar node_modules para reducir el tamaño de la imagen
 RUN rm -rf node_modules
 
-# Asegura que el script post-deploy.sh tenga permisos de ejecución
-# Y que pertenezca a www-data si se va a ejecutar bajo ese usuario.
-# Si el script `post-deploy.sh` necesita ejecutar comandos como `php artisan migrate` o `php artisan storage:link`,
-# y esos comandos se ejecutan bajo `www-data` (lo cual es una buena práctica),
-# este chmod y chown son importantes.
-USER root # Vuelve a root temporalmente para asegurar el chown si fuera necesario.
+# --- FIN CAMBIOS PARA NPM ---
+
+
+# Asegura que el script post-deploy.sh tenga permisos de ejecución y pertenezca a www-data
+# Vuelve a root para esta operación, para garantizar que se apliquen los permisos.
+USER root
 RUN chmod +x /app/post-deploy.sh \
     && chown www-data:www-data /app/post-deploy.sh
-USER www-data # Vuelve a www-data para el ENTRYPOINT si quieres que se ejecute como este usuario.
 
+# Vuelve al usuario www-data para la ejecución del ENTRYPOINT.
+# Esta es una buena práctica de seguridad en producción.
+USER www-data
 
-# Exponer el puerto
+# ENTRYPOINT corregido
+ENTRYPOINT ["/bin/bash", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp --host=0.0.0.0 --port=${PORT:-8000}"]
+
 EXPOSE 8000
-
-# Establecer el punto de entrada para iniciar Octane con FrankenPHP
-# Aseguramos que Octane escuche en 0.0.0.0 y el puerto definido por la plataforma o 8000 por defecto.
-ENTRYPOINT ["/app/post-deploy.sh", "&&", "php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=${PORT:-8000}"]
