@@ -1,4 +1,12 @@
+# Usa la imagen oficial de FrankenPHP como base
 FROM dunglas/frankenphp
+
+# Establece el directorio de trabajo
+WORKDIR /app
+
+# Copia todos los archivos de la aplicación *primero* para establecer la base de los permisos
+# Esto asegura que el directorio /app exista y sea accesible antes de cambiar de usuario.
+COPY . /app
 
 # Instalar dependencias del sistema necesarias para las extensiones PHP, Node.js y Puppeteer
 RUN apt-get update && apt-get install -y \
@@ -26,13 +34,17 @@ RUN apt-get update && apt-get install -y \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libgtk-3-0 \
+    # Limpia el caché de apt después de instalar
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Node.js (versión 16.x, ajusta según tus necesidades)
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs
+# Instalar Node.js (actualizamos a la versión 18.x o superior para compatibilidad con Puppeteer)
+# La imagen base de FrankenPHP es Debian-based, así que este método es válido.
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    # Limpia el caché de apt
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar extensiones PHP
+# Instalar extensiones PHP (install-php-extensions es un script de FrankenPHP/PHP base)
 RUN install-php-extensions \
     pdo_mysql \
     mbstring \
@@ -43,36 +55,49 @@ RUN install-php-extensions \
     zip \
     intl
 
-# Instalar Puppeteer globalmente
-RUN npm install -g puppeteer
-
 # Instalar Composer
+# No es necesario copiarlo desde otra imagen, puedes instalarlo directamente.
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Establecer el directorio de trabajo
-WORKDIR /app
+# Instalar Puppeteer globalmente si es necesario para el build.
+# Si Puppeteer solo se usa en runtime, puedes considerar instalarlo con npm ci después de cambiar a www-data.
+# Sin embargo, dado que está en tu logs, lo mantendremos aquí.
+RUN npm install -g puppeteer
 
-# Copiar todos los archivos necesarios para Composer primero, incluyendo artisan
-COPY . .
+# Asegurar que los directorios de cache y storage sean propiedad de www-data *antes* de cambiar de usuario
+# para que Composer y Octane puedan escribir en ellos.
+# Hacemos esto como root, que tiene los permisos necesarios.
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Cambiar al usuario www-data para evitar ejecutar Composer como root
+# Cambiar al usuario www-data para ejecutar Composer e npm ci/npm run build.
+# Esto es una buena práctica de seguridad y para asegurar que los archivos generados tengan los permisos correctos.
 USER www-data
 
 # Instalar dependencias de Composer (sin dev para producción)
+# El directorio /app/vendor ahora debería ser escribible por www-data gracias al chown anterior.
 RUN composer install --no-dev --optimize-autoloader --no-plugins
 
-# Cambiar de vuelta al usuario root para las siguientes operaciones
-USER root
-
-# Instalar dependencias de npm y construir assets (si aplica)
+# Instalar dependencias de npm y construir assets
 RUN npm ci && npm run build
 
-# Configurar permisos para storage y cache
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
-RUN chmod -R 775 /app/storage /app/bootstrap/cache
+# Opcional: Eliminar node_modules para reducir el tamaño de la imagen si ya no son necesarios en runtime
+RUN rm -rf node_modules
 
-# Exponer el puerto (Octane utiliza el 8000 por defecto)
+# Vuelve a root si necesitas realizar operaciones con permisos elevados después
+# Pero para FrankenPHP y Octane, www-data suele ser suficiente para el CMD.
+# USER root
+
+# Asegura que el script post-deploy.sh tenga permisos de ejecución
+# Y que pertenezca a www-data si se va a ejecutar bajo ese usuario.
+RUN chmod +x /app/post-deploy.sh \
+    && chown www-data:www-data /app/post-deploy.sh
+
+# Exponer el puerto que Octane/FrankenPHP escuchará.
+# DigitalOcean App Platform se encargará de mapear el tráfico externo.
 EXPOSE 8000
 
 # Establecer el punto de entrada para iniciar Octane con FrankenPHP
-ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
+# La variable de entorno PORT es utilizada por DigitalOcean App Platform.
+# Aseguramos que Octane escuche en 0.0.0.0 y el puerto definido por la plataforma o 8000 por defecto.
+ENTRYPOINT ["/app/post-deploy.sh", "&&", "php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=${PORT:-8000}"]
