@@ -1,4 +1,5 @@
 <?php
+use App\Models\Zone;
 use App\Models\Field;
 use App\Services\WiseconnService;
 use Illuminate\Support\Facades\Log;
@@ -31,5 +32,21 @@ Schedule::job(new ProcessEmailAttachments())->dailyAt('08:05')
     });
 Schedule::call(function () {
     $field = Field::find(1); 
-    app(WiseconnService::class)->syncZones($field);
-})->hourly();
+    if ($field) {
+                app(WiseconnService::class)->syncZones($field);
+            } else {
+                Log::warning('No se encontro ningun campo para sincronizar zonas.');
+            }
+        })->hourly();
+
+Schedule::call(function () {
+    $field = Field::first(); // O ajusta según tu lógica
+            if ($field) {
+                $zones = Zone::where('field_id', $field->id)->get(); // Itera sobre todas las zonas (todas son Weather)
+                foreach ($zones as $zone) {
+                    app(WiseconnService::class)->updateMeasures($field, $zone);
+                }
+            } else {
+                Log::warning('No se encontro ningun campo para actualizar medidas.');
+            }
+        })->everyFiveMinutes();

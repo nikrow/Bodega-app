@@ -41,6 +41,11 @@ class Parcel extends Model implements Auditable
         'deactivated_by',
         'deactivation_reason',
     ];
+    
+    protected $casts = [
+        'is_active' => 'boolean',
+        'deactivated_at' => 'datetime',
+    ];
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

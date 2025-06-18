@@ -11,10 +11,13 @@ use App\Models\Warehouse;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Illuminate\Support\Facades\Hash;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
+use Filament\Tables\Filters\Filter;
+use Google\Service\Area120Tables\Resource\Tables as ResourceTables;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class UserResource extends Resource
@@ -119,10 +122,17 @@ class UserResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->searchable(),
+                
                 Tables\Columns\TextColumn::make('name')
                     ->sortable()
                     ->searchable()
                     ->label('Nombre'),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label('Activo')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('email')
                     ->sortable()
                     ->copyable()
@@ -166,9 +176,13 @@ class UserResource extends Resource
                     ->label('Modificado el'),
             ])
             ->filters([
-
+                Filter::make('is_active')
+                    ->label('Usuarios activos')
+                    ->query(fn ($query) => $query->where('is_active', true))
+                    ->default(),
             ])
             ->actions([
+                ActionGroup::make([
                 Tables\Actions\EditAction::make(),
                 Action::make('change_password')
                 ->label('Contraseña')
@@ -195,6 +209,20 @@ class UserResource extends Resource
                         ->body('La contraseña para ' . $record->name . ' ha sido actualizada.')
                         ->send();
                 }),
+                Action::make('toggle_active')
+                ->label(fn ($record) => $record->is_active ? 'Desactivar' : 'Activar')
+                ->icon(fn ($record) => $record->is_active ? 'heroicon-o-user-minus' : 'heroicon-o-user-plus')
+                ->color(fn ($record) => $record->is_active ? 'danger' : 'success')
+                ->action(function (User $record) {
+                    $record->is_active = !$record->is_active;
+                    $record->save();
+                    Notification::make()
+                        ->success()
+                        ->title($record->is_active ? 'Usuario activado' : 'Usuario desactivado')
+                        ->body('El estado del usuario ' . $record->name . ' ha sido actualizado.')
+                        ->send();
+                }),
+                ])
         ])
             ->bulkActions([
 

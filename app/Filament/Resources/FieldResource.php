@@ -70,12 +70,13 @@ class FieldResource extends Resource
             ])
             ->actions([
                 Tables\Actions\Action::make('sync_zones')
-                    ->label('Sincronizar Zonas')
-                    ->action(function (Field $record) {
-                        app(WiseconnService::class)->syncZones($record);
+                    ->label('Sincronizar Estaciones')
+                    ->action(function (Field $field) {
+                        $controller = app(\App\Http\Controllers\ZoneSyncController::class);
+                        $controller->sync($field);
                     })
                     ->requiresConfirmation()
-                    ->successNotificationTitle('Zonas sincronizadas exitosamente'),
+                    ->icon('heroicon-o-arrow-path'),
             ])
             ->bulkActions([
                 

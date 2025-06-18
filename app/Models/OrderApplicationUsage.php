@@ -31,25 +31,19 @@ class OrderApplicationUsage extends Model implements Auditable
         'created_at',
         'updated_at',
     ];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logFillable();
     }
-    protected static function boot()
-    {
-        parent::boot();
 
-        static::creating(function ($model) {
-
-            $model->field_id = Filament::getTenant()->id;
-        });
-
-    }
+    // Consolidamos la lógica de boot en un solo método booted()
     protected static function booted()
     {
-        static::creating(function ($usage) {
-            $usage->calculatePriceAndTotalCost();
+        static::creating(function ($model) {
+            $model->field_id = Filament::getTenant()->id;
+            $model->calculatePriceAndTotalCost(); 
         });
 
         static::updating(function ($usage) {
@@ -59,9 +53,7 @@ class OrderApplicationUsage extends Model implements Auditable
 
     public function calculatePriceAndTotalCost()
     {
-        // Obtener el precio del producto
-        $product = Product::find($this->product_id);
-        $price = $product->price ?? 0;
+        $price = optional($this->product)->price ?? 0;
 
         $this->price = $price;
         $this->total_cost = $price * $this->product_usage;
@@ -76,10 +68,12 @@ class OrderApplicationUsage extends Model implements Auditable
     {
         return $this->belongsTo(Parcel::class, 'parcel_id');
     }
+
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse_id');
@@ -98,35 +92,35 @@ class OrderApplicationUsage extends Model implements Auditable
 
     public function getApplicatorsDetailsAttribute()
     {
-        if ($this->orderApplication && $this->orderApplication->applicators) {
-            return $this->orderApplication->applicators->map(function ($applicator) {
-                $details = [];
-
-                // Nombre del aplicador
-                $details[] = $applicator->name ?? 'Nombre desconocido';
-
-                // Tractor del aplicador
-                if (!empty($applicator->tractor)) {
-                    $details[] = $applicator->tractor;
-                } else {
-                    $details[] = 'Sin tractor';
-                }
-
-                // Equipamiento del aplicador
-                if (!empty($applicator->equipment)) {
-                    // Si 'equipment' es un array, lo convertimos a cadena
-                    $equipment = is_array($applicator->equipment) ? implode(', ', $applicator->equipment) : $applicator->equipment;
-                    $details[] = $equipment;
-                } else {
-                    $details[] = 'Sin equipamiento';
-                }
-
-                // Unir los detalles del aplicador con comas
-                return implode(', ', $details);
-            })->implode(' - ');
+        // Verificar si orderApplication y applicators existen
+        if (!$this->orderApplication || !$this->orderApplication->applicators) {
+            return 'N/A';
         }
-        return null;
+
+        return $this->orderApplication->applicators->map(function ($applicator) {
+            // Asegurarnos de que $applicator sea un objeto
+            if (!$applicator || !is_object($applicator)) {
+                return 'Aplicador inválido';
+            }
+
+            $details = [];
+
+            // Nombre del aplicador
+            $details[] = $applicator->name ?? 'Nombre desconocido';
+
+            // Tractor del aplicador
+            $details[] = !empty($applicator->tractor) ? $applicator->tractor : 'Sin tractor';
+
+            // Equipamiento del aplicador
+            if (!empty($applicator->equipment)) {
+                $equipment = is_array($applicator->equipment) ? implode(', ', $applicator->equipment) : $applicator->equipment;
+                $details[] = $equipment;
+            } else {
+                $details[] = 'Sin equipamiento';
+            }
+
+            // Unir los detalles con comas
+            return implode(', ', $details);
+        })->implode(' - ');
     }
-
-
 }

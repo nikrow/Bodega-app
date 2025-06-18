@@ -24,4 +24,8 @@ class Zone extends Model
     {
         return $this->belongsTo(Field::class);
     }
+    public function measures()
+    {
+        return $this->hasMany(Measure::class);
+    }
 }
