@@ -19,8 +19,7 @@ RUN install-php-extensions \
     gd \
     zip \
     intl
-# Install Puppeteer globally
-RUN npm install -g puppeteer
+
 # Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
@@ -38,7 +37,8 @@ COPY . .
 
 # Instalar dependencias de npm y construir assets (si aplica)
 RUN npm ci && npm run build
-
+# Install Puppeteer globally
+RUN npm install -g puppeteer
 # Configurar permisos para storage y cache
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 RUN chmod -R 775 /app/storage /app/bootstrap/cache
