@@ -1,11 +1,11 @@
-
 services:
     frankenphp:
         build:
             context: .
-        entrypoint: php artisan octane:frankenphp --workers=4 --max-requests=4
+            dockerfile: Dockerfile.frankenphp  
+        entrypoint: php artisan octane:frankenphp --workers=1
         ports:
-            - "8000:8000"
+            - "8000:8000"  # Mapea el puerto 8000 del contenedor al host
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
@@ -13,7 +13,7 @@ services:
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
-            - '.:/var/www/html'
+            - '.:/app'  # Monta el directorio del proyecto en /app
         restart: unless-stopped
         networks:
             - sail
@@ -47,6 +47,7 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+
     redis:
         image: 'redis:alpine'
         ports:
@@ -62,6 +63,7 @@ services:
                 - ping
             retries: 3
             timeout: 5s
+
     meilisearch:
         image: 'getmeili/meilisearch:latest'
         ports:
@@ -81,6 +83,7 @@ services:
                 - 'http://127.0.0.1:7700/health'
             retries: 3
             timeout: 5s
+
     mailpit:
         image: 'axllent/mailpit:latest'
         ports:
@@ -88,6 +91,7 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
+
     selenium:
         image: selenium/standalone-chrome
         extra_hosts:
@@ -96,9 +100,11 @@ services:
             - '/dev/shm:/dev/shm'
         networks:
             - sail
+
 networks:
     sail:
         driver: bridge
+
 volumes:
     sail-mysql:
         driver: local
@@ -106,4 +112,3 @@ volumes:
         driver: local
     sail-meilisearch:
         driver: local
-
