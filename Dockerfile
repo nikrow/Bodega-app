@@ -1,95 +1,75 @@
-# Usa la imagen oficial de FrankenPHP como base
-FROM dunglas/frankenphp:latest-php8.3
+FROM php:8.3-fpm
 
-# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia todos los archivos de la aplicación *primero* para establecer la base de los permisos
-# Esto es crucial para aprovechar el cache de Docker.
-COPY . /app
-
-# Instalar dependencias del sistema necesarias
-# Unificamos la instalación para ser más eficiente.
-# Se han eliminado las dependencias de Puppeteer.
+# Instalamos dependencias del sistema
 RUN apt-get update && apt-get install -y \
+    git \
     curl \
-    gnupg \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm \
+    # Dependencias para intl
     libicu-dev \
-    libpq-dev \
-    libsodium-dev \
-    libexif-dev \
-    procps \
-    # Añadimos el cliente de MySQL (o MariaDB si aplica)
+    # Agregamos default-mysql-client para mysqldump
     default-mysql-client \
-    && apt-get clean \
+    # Agregamos nano
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Node.js (versión 18.x o superior)
-# Usamos un comando más robusto para la instalación de Node.js y limpiamos el caché.
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Instalar extensiones PHP
-# Asegúrate de incluir 'pdo_pgsql' si usas PostgreSQL.
-RUN install-php-extensions \
+# Instalamos extensiones PHP incluyendo intl
+RUN docker-php-ext-configure intl \
+    && docker-php-ext-install \
     pdo_mysql \
-    pdo_pgsql \
     mbstring \
     exif \
     pcntl \
     bcmath \
     gd \
     zip \
-    intl \
-    sodium \
-    pgsql # Agrega pgsql si es necesario
+    intl
 
-# Instalar Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Establecemos variables de entorno
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV PATH="$PATH:/root/.composer/vendor/bin"
 
-# Crear y dar permisos al directorio de caché de npm
-# Ya no necesitamos el directorio de caché de Puppeteer si no se usa.
-RUN mkdir -p /var/www/.npm && chown -R www-data:www-data /var/www/.npm
+# Instalamos Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Asegurarse de que *todo* el directorio /app sea propiedad de www-data
-# Esto es crucial para que la aplicación funcione correctamente como el usuario www-data.
-RUN chown -R www-data:www-data /app
+# Configuramos PHP para producción
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Establecer permisos específicos para storage y cache
-# Mantener estos permisos es vital para la operación de Laravel.
-RUN chmod -R 775 /app/storage /app/bootstrap/cache
+# Optimizamos OPCache
+RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
 
-# Vuelve al usuario root temporalmente para configurar el script post-deploy.sh
-USER root
-# Asegura que el script post-deploy.sh tenga permisos de ejecución y pertenezca a www-data
-RUN chmod +x /app/post-deploy.sh \
-    && chown www-data:www-data /app/post-deploy.sh
+# Copiamos la aplicación
+COPY . /app
 
-# Cambiar al usuario www-data para las instalaciones de Composer y NPM
-USER www-data
+# Instalamos dependencias
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
+    && npm ci \
+    && npm run build \
+    && rm -rf node_modules
 
-# Instalar dependencias de Composer
-# `composer dump-autoload --optimize` es mejor para producción.
-RUN composer install --no-dev --optimize-autoloader --no-plugins
+# Configuramos permisos
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Instalar dependencias de npm y construir assets
-RUN npm ci && npm run build
+# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
+RUN chmod +x /app/post-deploy.sh
 
-# Opcional: Eliminar node_modules para reducir el tamaño de la imagen
-# Esto es una buena práctica para imágenes de producción más pequeñas.
-RUN rm -rf node_modules
+# Exponemos el puerto
+EXPOSE 8080
 
-# Vuelve al usuario www-data para la ejecución del ENTRYPOINT
-USER www-data
-
-# ENTRYPOINT corregido para ejecutar el script y luego FrankenPHP
-# Usamos `exec` para asegurar que la señal de apagado se pase correctamente a FrankenPHP.
-ENTRYPOINT ["/bin/bash", "-c", "exec /app/post-deploy.sh && exec php artisan octane:frankenphp --host=0.0.0.0 --port=${PORT:-8000}"]
-
-EXPOSE 8000
+# Configuración para ejecutar el script post-deploy y luego iniciar el servidor
+CMD /app/post-deploy.sh && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
