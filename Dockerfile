@@ -7,7 +7,7 @@ WORKDIR /app
 # Copia todos los archivos de la aplicación *primero* para establecer la base de los permisos
 COPY . /app
 
-# Instalar dependencias del sistema necesarias para las extensiones PHP, Node.js y Puppeteer
+# Instalar dependencias del sistema necesarias para las extensiones PHP, Node.js, Puppeteer y MySQL
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
@@ -33,13 +33,11 @@ RUN apt-get update && apt-get install -y \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libgtk-3-0 \
-    # Añadimos un navegador como chromium-browser o google-chrome-stable si Puppeteer no lo descarga
-    # o si quieres usar el del sistema. Para Puppeteer, a menudo es mejor que lo descargue él mismo.
-    # Si esta es la causa, prueba a añadir "chromium" aquí:
-    # chromium \ # Descomentar si quieres instalar un navegador del sistema
+    # Añadimos el cliente de MySQL (o MariaDB si aplica)
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Node.js (actualizamos a la versión 18.x o superior)
+# Instalar Node.js (versión 18.x o superior)
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
@@ -58,12 +56,10 @@ RUN install-php-extensions \
 # Instalar Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# --- INICIO CAMBIOS PARA PUPPETEER Y NPM ---
-
-# Crear y dar permisos al directorio de caché de npm (ya lo teníamos, lo confirmamos)
+# Crear y dar permisos al directorio de caché de npm
 RUN mkdir -p /var/www/.npm && chown -R 33:33 /var/www/.npm
 
-# *** NUEVA LÍNEA CLAVE PARA PUPPETEER: Crear y dar permisos al directorio de caché de Puppeteer ***
+# Crear y dar permisos al directorio de caché de Puppeteer
 RUN mkdir -p /var/www/.cache && chown -R 33:33 /var/www/.cache
 
 # Asegurarse de que *todo* el directorio /app sea propiedad de www-data
@@ -72,8 +68,7 @@ RUN chown -R www-data:www-data /app
 # Establecer permisos específicos para storage y cache
 RUN chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Cambiar al usuario www-data para las instalaciones.
-# Al haber dado permisos a /var/www/.npm y /var/www/.cache, npm debería poder operar.
+# Cambiar al usuario www-data para las instalaciones
 USER www-data
 
 # Instalar dependencias de Composer
@@ -85,14 +80,12 @@ RUN npm ci && npm run build
 # Opcional: Eliminar node_modules para reducir el tamaño de la imagen
 RUN rm -rf node_modules
 
-# --- FIN CAMBIOS PARA PUPPETEER Y NPM ---
-
 # Asegura que el script post-deploy.sh tenga permisos de ejecución y pertenezca a www-data
 USER root
 RUN chmod +x /app/post-deploy.sh \
     && chown www-data:www-data /app/post-deploy.sh
 
-# Vuelve al usuario www-data para la ejecución del ENTRYPOINT.
+# Vuelve al usuario www-data para la ejecución del ENTRYPOINT
 USER www-data
 
 # ENTRYPOINT corregido
