@@ -76,10 +76,6 @@ RUN chmod -R 775 /app/storage /app/bootstrap/cache
 # Al haber dado permisos a /var/www/.npm y /var/www/.cache, npm debería poder operar.
 USER www-data
 
-# Instalar Puppeteer globalmente (ahora debería poder escribir en .cache)
-# Si aún falla, considera añadir ENV PUPPETEER_SKIP_DOWNLOAD=true antes de esta línea
-RUN npm install -g puppeteer
-
 # Instalar dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader --no-plugins
 
