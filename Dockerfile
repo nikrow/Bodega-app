@@ -48,10 +48,9 @@ RUN ls -la /app/public/index.php
 
 # Configura Nginx
 COPY nginx.conf /etc/nginx/sites-available/default
-
 RUN chmod 644 /etc/nginx/sites-available/default && chown www-data:www-data /etc/nginx/sites-available/default
 
-# Configura Supervisor
+# Configura Supervisor (NO se usará en esta fase de depuración directa de Nginx)
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Permisos para todo /app y subdirectorios
@@ -62,4 +61,9 @@ RUN chown www-data:www-data /var/log
 
 EXPOSE 8080
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# --- LÍNEA TEMPORAL PARA DEPURAR NGINX DIRECTAMENTE ---
+# Esto ejecutará Nginx en primer plano con logs de depuración para ver por qué falla.
+# ¡RECUERDA RESTAURAR LA LÍNEA ORIGINAL DESPUÉS DE LA DEPURACIÓN!
+CMD ["nginx", "-g", "daemon off; error_log /dev/stderr debug;"]
+# --- LÍNEA ORIGINAL (PARA RESTAURAR DESPUÉS) ---
+# CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
