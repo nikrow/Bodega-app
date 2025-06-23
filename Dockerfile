@@ -61,9 +61,4 @@ RUN chown www-data:www-data /var/log
 
 EXPOSE 8080
 
-# --- LÍNEA TEMPORAL PARA DEPURAR NGINX DIRECTAMENTE ---
-# Esto ejecutará Nginx en primer plano con logs de depuración para ver por qué falla.
-# ¡RECUERDA RESTAURAR LA LÍNEA ORIGINAL DESPUÉS DE LA DEPURACIÓN!
-CMD ["nginx", "-g", "daemon off; error_log /dev/stderr debug;"]
-# --- LÍNEA ORIGINAL (PARA RESTAURAR DESPUÉS) ---
-# CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
