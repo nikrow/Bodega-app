@@ -27,7 +27,13 @@ RUN which php-fpm && which nginx
 # Copia composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copia composer.json y composer.lock primero para aprovechar el caché
+# Copia todo el código (incluyendo artisan) antes de composer install
+COPY . /app
+
+# Verifica que artisan exista
+RUN ls -la /app/artisan
+
+# Copia composer.json y composer.lock para aprovechar el caché
 COPY composer.json composer.lock /app/
 
 # Verifica que composer.json y composer.lock existan
@@ -36,9 +42,6 @@ RUN ls -la /app/composer.json /app/composer.lock
 # Instala dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && ls -la /app/vendor/autoload.php
-
-# Copia el resto del código
-COPY . /app
 
 # Verifica que index.php exista
 RUN ls -la /app/public/index.php
