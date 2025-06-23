@@ -27,7 +27,7 @@ RUN which php-fpm && which nginx
 # Copia composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copia todo el código (incluyendo artisan) antes de composer install
+# Copia todo el código (incluyendo artisan)
 COPY . /app
 
 # Verifica que artisan exista
@@ -52,10 +52,10 @@ COPY nginx.conf /etc/nginx/sites-available/default
 # Configura Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Permisos
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
-    && chmod -R 775 /app/storage /app/bootstrap/cache
+# Permisos para todo /app y subdirectorios
+RUN chown -R www-data:www-data /app \
+    && chmod -R 775 /app
 
 EXPOSE 8080
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
