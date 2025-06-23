@@ -49,6 +49,8 @@ RUN ls -la /app/public/index.php
 # Configura Nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 
+RUN chmod 644 /etc/nginx/sites-available/default && chown www-data:www-data /etc/nginx/sites-available/default
+
 # Configura Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
