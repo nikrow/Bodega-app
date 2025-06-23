@@ -56,6 +56,8 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chown -R www-data:www-data /app \
     && chmod -R 775 /app
 
+RUN chown www-data:www-data /var/log
+
 EXPOSE 8080
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
