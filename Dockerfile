@@ -60,6 +60,6 @@ RUN chown -R www-data:www-data /app && chmod -R 775 /app
 
 RUN chown www-data:www-data /var/log
 
-EXPOSE 8080
+EXPOSE 8000
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
