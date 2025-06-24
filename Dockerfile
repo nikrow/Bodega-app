@@ -2,64 +2,74 @@ FROM php:8.3-fpm
 
 WORKDIR /app
 
-# Instala dependencias (eliminado nginx)
+# Instalamos dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    supervisor \
-    curl \
     git \
-    unzip \
-    zip \
-    nodejs \
-    npm \
+    curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm \
+    # Dependencias para intl
     libicu-dev \
+    # Agregamos default-mysql-client para mysqldump
     default-mysql-client \
-    && docker-php-ext-install pdo_mysql mbstring bcmath exif pcntl gd zip intl \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    # Agregamos nano
+    nano \
+    && rm -rf /var/lib/apt/lists/*
 
-# Verifica rutas de binarios (eliminado which nginx)
-RUN which php-fpm
+# Instalamos extensiones PHP incluyendo intl
+RUN docker-php-ext-configure intl \
+    && docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    intl
 
-# Copia composer
+# Establecemos variables de entorno
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV PATH="$PATH:/root/.composer/vendor/bin"
+
+# Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copia todo el código (incluyendo artisan)
+# Configuramos PHP para producción
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# Optimizamos OPCache
+RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
+
+# Copiamos la aplicación
 COPY . /app
 
-# Verifica que artisan exista
-RUN ls -la /app/artisan
+# Instalamos dependencias
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
+    && npm ci \
+    && npm run build \
+    && rm -rf node_modules
 
-# Copia composer.json y composer.lock para aprovechar el caché
-COPY composer.json composer.lock /app/
+# Configuramos permisos
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Verifica que composer.json y composer.lock existan
-RUN ls -la /app/composer.json /app/composer.lock
+# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
+RUN chmod +x /app/post-deploy.sh
 
-# Instala dependencias de Composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction \
-    && ls -la /app/vendor/autoload.php
+# Exponemos el puerto
+EXPOSE 8080
 
-# Verifica que index.php exista
-RUN ls -la /app/public/index.php
-
-# Configura Supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Crea el directorio de logs para Supervisor si no existe y asegura permisos
-RUN mkdir -p /var/log/supervisor && \
-    chown -R www-data:www-data /var/log/supervisor && \
-    chmod -R 755 /var/log/supervisor
-
-# Permisos para todo /app y subdirectorios
-RUN chown -R www-data:www-data /app && chmod -R 775 /app
-
-# Asegura que /var/log tenga los permisos correctos para que los workers escriban logs
-RUN chown www-data:www-data /var/log && chmod 775 /var/log
-
-EXPOSE 8000
-
-# El comando de inicio sigue siendo supervisord
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Configuración para ejecutar el script post-deploy y luego iniciar el servidor
+CMD ["sh", "-c", "/app/post-deploy.sh && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
