@@ -49,14 +49,14 @@ RUN ls -la /app/public/index.php
 # Configura Nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 RUN chmod 644 /etc/nginx/sites-available/default && chown www-data:www-data /etc/nginx/sites-available/default
-RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+RUN rm -f /etc/nginx/sites-enabled/default && \
+    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-# Configura Supervisor (NO se usará en esta fase de depuración directa de Nginx)
+# Configura Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Permisos para todo /app y subdirectorios
-RUN chown -R www-data:www-data /app \
-    && chmod -R 775 /app
+RUN chown -R www-data:www-data /app && chmod -R 775 /app
 
 RUN chown www-data:www-data /var/log
 
