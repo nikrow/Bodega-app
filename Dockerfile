@@ -18,6 +18,7 @@ RUN apt-get update \
     zip libzip-dev gnupg gosu curl ca-certificates unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano chromium fonts-liberation libgbm-dev libnss3 \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions

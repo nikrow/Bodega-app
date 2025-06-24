@@ -36,7 +36,7 @@ class BodegaPanelProvider extends PanelProvider
     {
         return $panel
             ->id('campo')
-            ->path('/gestion')
+            ->path('/campo')
             ->login()
             ->profile()
             ->colors([
