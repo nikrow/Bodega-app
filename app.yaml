@@ -1,4 +1,5 @@
 name: sea-lion-app
+
 services:
   - name: web
     dockerfile_path: Dockerfile
@@ -13,7 +14,7 @@ services:
       - path: /
     source_dir: /
     health_check:
-      http_path: /
+      http_path: /health
       port: 8080
     envs:
       - key: APP_NAME
@@ -58,3 +59,49 @@ services:
       - key: COMPOSER_ALLOW_SUPERUSER
         scope: BUILD_TIME
         value: "1"
+
+workers:
+  - name: worker-bodega-app
+    dockerfile_path: Dockerfile
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: nikrow/Bodega-app
+    run_command: >
+      sh -c "php artisan queue:work --tries=3 --timeout=90 --no-interaction & while true; do php artisan schedule:run; sleep 60; done"
+    instance_count: 1
+    instance_size_slug: basic-xs
+    envs:
+      - key: APP_NAME
+        scope: RUN_TIME
+        value: Laravel
+      - key: APP_ENV
+        scope: RUN_TIME
+        value: production
+      - key: APP_KEY
+        scope: RUN_TIME
+        value: ${APP_KEY}
+      - key: APP_DEBUG
+        scope: RUN_TIME
+        value: "false"
+      - key: APP_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
+      - key: DB_CONNECTION
+        scope: RUN_TIME
+        value: mysql
+      - key: DB_HOST
+        scope: RUN_TIME
+        value: ${DB_HOST}
+      - key: DB_PORT
+        scope: RUN_TIME
+        value: ${DB_PORT}
+      - key: DB_DATABASE
+        scope: RUN_TIME
+        value: ${DB_DATABASE}
+      - key: DB_USERNAME
+        scope: RUN_TIME
+        value: ${DB_USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_TIME
+        value: ${DB_PASSWORD}

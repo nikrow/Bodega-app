@@ -8,6 +8,9 @@ use App\Http\Controllers\ZoneSyncController;
 use App\Http\Controllers\ParcelExportController;
 use App\Http\Controllers\ReportExportController;
 
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});
 Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{order}/download-pdf', [OrderController::class, 'downloadPdf'])->name('orders.downloadPdf');
     Route::get('/orders/{order}/bodega-pdf', [OrderController::class, 'bodegaPdf'])->name('orders.bodegaPdf');
