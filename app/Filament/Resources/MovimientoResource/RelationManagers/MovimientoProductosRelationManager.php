@@ -128,9 +128,11 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->label('Cantidad')
                     ->numeric(2)
                     ->live()
+                    ->debounce(500)
                     ->reactive(),
                 Forms\Components\TextInput::make('cantidad')
                     ->required()
+                    ->debounce(500)
                     ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo && $this->ownerRecord->tipo->value !== 'entrada')
                     ->label('Cantidad')
                     ->numeric(2)

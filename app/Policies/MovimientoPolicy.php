@@ -106,13 +106,30 @@ class MovimientoPolicy
         }
     }
 
+    /**
+     * Determinar si el usuario puede cerrar un movimiento.
+     */
     public function complete(User $user, Movimiento $movimiento): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN,
-            RoleType::AGRONOMO,
-            RoleType::BODEGUERO,
-            RoleType::ASISTENTE,
+            RoleType::ADMIN->value,
+            RoleType::AGRONOMO->value,
+            RoleType::BODEGUERO->value,
+            RoleType::ASISTENTE->value,
         ]);
+    }
+
+    /**
+     * Determinar si el usuario puede despachar un movimiento.
+     */
+    public function despachar(User $user, Movimiento $movimiento): bool
+    {
+        return $movimiento->tipo === MovementType::TRASLADO_CAMPOS->value &&
+                !$movimiento->is_completed &&
+                in_array($user->role, [
+                    RoleType::ADMIN->value,
+                    RoleType::AGRONOMO->value,
+                    RoleType::BODEGUERO->value,
+                ]);
     }
 }

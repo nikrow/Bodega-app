@@ -35,6 +35,8 @@ class Movimiento extends Model implements Auditable
         'created_by',
         'updated_by',
         'order_id',
+        'inter_tenant_transfer_id',
+        'tenant_destino_id',
     ];
     public function getActivitylogOptions(): LogOptions
     {
@@ -131,4 +133,16 @@ class Movimiento extends Model implements Auditable
     {
         return $this->belongsTo(Order::class, 'order_id');
     }
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'order_compra', 'id');
+    }
+    public function interTenantTransfer()
+    {
+        return $this->belongsTo(InterTenantTransfer::class, 'inter_tenant_transfer_id');
+    }
+    public function tenantDestino()
+{
+    return $this->belongsTo(Field::class, 'tenant_destino_id');
+}
 }

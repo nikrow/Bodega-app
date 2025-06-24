@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PurchaseOrderResource\Pages;
 use App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 use App\Filament\Resources\PurchaseOrderResource\RelationManagers\PurchaseOrderDetailsRelationManager;
+use App\Models\PurchaseIn;
 
 class PurchaseOrderResource extends Resource
 {
@@ -120,6 +121,7 @@ class PurchaseOrderResource extends Resource
     {
         return [
             PurchaseOrderDetailsRelationManager::class,
+            //PurchaseIn::class,
         ];
     }
 

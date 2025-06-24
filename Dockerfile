@@ -1,75 +1,60 @@
-FROM php:8.3-fpm
+FROM dunglas/frankenphp:1.7.0-php8.4-bookworm
 
 WORKDIR /app
 
-# Instalamos dependencias del sistema
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    nodejs \
-    npm \
-    # Dependencias para intl
-    libicu-dev \
-    # Agregamos default-mysql-client para mysqldump
-    default-mysql-client \
-    # Agregamos nano
-    nano \
-    && rm -rf /var/lib/apt/lists/*
+ARG NODE_VERSION=22
 
-# Instalamos extensiones PHP incluyendo intl
-RUN docker-php-ext-configure intl \
-    && docker-php-ext-install \
-    pdo_mysql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd \
-    zip \
-    intl
-
-# Establecemos variables de entorno
-ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV PATH="$PATH:/root/.composer/vendor/bin"
-
-# Instalamos Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Configuramos PHP para producción
+# Enable PHP production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Optimizamos OPCache
-RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
-
-# Copiamos la aplicación
 COPY . /app
 
-# Instalamos dependencias
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
-    && npm ci \
-    && npm run build \
-    && rm -rf node_modules
-
-# Configuramos permisos
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
-    && chmod -R 775 /app/storage /app/bootstrap/cache
-
-# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
+# Make post-deploy.sh executable
 RUN chmod +x /app/post-deploy.sh
 
-# Exponemos el puerto
-EXPOSE 8080
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y \
+    zip libzip-dev gnupg gosu curl ca-certificates unzip git sqlite3 libcap2-bin \
+    libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    python3 dnsutils librsvg2-bin fswatch ffmpeg nano chromium fonts-liberation libgbm-dev libnss3 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configuración para ejecutar el script post-deploy y luego iniciar el servidor
-CMD ["sh", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp --workers=4 --max-requests=4 --host=0.0.0.0 --port=8000"]
+# Install PHP extensions
+RUN install-php-extensions pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl
+
+# Copy Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install Node.js and JavaScript tools
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@10.9.0 pnpm bun \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarnkey.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update \
+    && apt-get install -y yarn \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Puppeteer globally
+RUN npm install --location=global puppeteer@22.8.2
+
+# Set Puppeteer executable path
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Install PHP dependencies and optimize
+RUN composer install --no-dev --optimize-autoloader
+
+# Prepare application
+RUN mkdir -p /app/storage/logs
+RUN php artisan config:clear
+RUN php artisan octane:install
+
+# Install Node.js dependencies and build assets
+RUN npm install && npm audit fix && npm run build
+
+# Expose necessary port
+EXPOSE 8000
+
+# Start the application
+ENTRYPOINT ["sh", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp"]

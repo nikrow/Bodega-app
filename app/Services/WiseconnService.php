@@ -7,9 +7,12 @@ use App\Models\Field;
 use App\Models\Measure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\Client\RequestException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 
 class WiseconnService
 {
@@ -19,20 +22,36 @@ class WiseconnService
      * @var array
      */
     protected $allowedSensorTypes = [
-        'Rain',
-        'Wind Velocity',
-        'Temperature',
-        'Humidity',
-        'Chill Hours (Accumulated)',
-        'Chill Hours (Daily)',
-        'Degree Days (Accumulated)',
-        'Degree Days (Daily)',
-        'Et0',
-        'Etc',
+        'Rain', 'Wind Velocity', 'Temperature', 'Humidity',
+        'Chill Hours (Accumulated)', 'Chill Hours (Daily)',
+        'Degree Days (Accumulated)', 'Degree Days (Daily)',
+        'Et0', 'Etc',
     ];
 
     /**
+     * Crea un cliente HTTP con Guzzle configurado para reintentos automáticos.
+     *
+     * @return Client
+     */
+    protected function createHttpClient(): Client
+    {
+        $stack = HandlerStack::create();
+        $stack->push(Middleware::retry(function ($retries, $request, $response, $exception) {
+            return $retries < 3 && ($exception || ($response && $response->getStatusCode() >= 500));
+        }));
+
+        return new Client([
+            'handler' => $stack,
+            'timeout' => 5,
+            'connect_timeout' => 3,
+        ]);
+    }
+
+    /**
      * Valida la clave API de un campo.
+     *
+     * @param Field $field
+     * @return array
      */
     public function validateApiKey($field): array
     {
@@ -43,27 +62,28 @@ class WiseconnService
             return ['valid' => false, 'message' => "El Field {$field->name} no tiene una clave API configurada."];
         }
 
+        $client = $this->createHttpClient();
         try {
-            $response = Http::withHeaders([
-                'api_key' => $field->api_key,
-                'Accept' => 'application/json',
-            ])->get("https://api.wiseconn.com/farms/{$field->wiseconn_farm_id}");
+            $response = $client->get("https://api.wiseconn.com/farms/{$field->wiseconn_farm_id}", [
+                'headers' => [
+                    'api_key' => $field->api_key,
+                    'Accept' => 'application/json',
+                ],
+            ]);
 
-            if ($response->successful()) {
-                Log::info("api_key válido para el Field: {$field->name}");
-                return ['valid' => true, 'message' => 'Clave API válida.'];
-            }
-
-            Log::error("api_key inválido para el Field: {$field->name}. Respuesta: {$response->body()}");
-            return ['valid' => false, 'message' => "Clave API inválida: {$response->body()}"];
-        } catch (RequestException $e) {
+            Log::info("api_key válido para el Field: {$field->name}");
+            return ['valid' => true, 'message' => 'Clave API válida.'];
+        } catch (\Exception $e) {
             Log::error("Error al validar api_key para el Field: {$field->name}. Error: {$e->getMessage()}");
             return ['valid' => false, 'message' => "Error al validar clave API: {$e->getMessage()}"];
         }
     }
 
     /**
-     * Sincroniza los datos de un campo (como latitud y longitud) desde la API de Wiseconn.
+     * Sincroniza los datos de un campo desde la API de Wiseconn.
+     *
+     * @param Field $field
+     * @return bool
      */
     public function syncFarmData(Field $field): bool
     {
@@ -74,33 +94,34 @@ class WiseconnService
             return false;
         }
 
+        $client = $this->createHttpClient();
         try {
-            $response = Http::withHeaders([
-                'api_key' => $field->api_key,
-                'Accept' => 'application/json',
-            ])->get("https://api.wiseconn.com/farms/{$field->wiseconn_farm_id}");
+            $response = $client->get("https://api.wiseconn.com/farms/{$field->wiseconn_farm_id}", [
+                'headers' => [
+                    'api_key' => $field->api_key,
+                    'Accept' => 'application/json',
+                ],
+            ]);
 
-            if ($response->successful()) {
-                $farmData = $response->json();
+            $farmData = json_decode($response->getBody(), true);
+            $field->latitude = $farmData['latitude'] ?? $field->latitude;
+            $field->longitude = $farmData['longitude'] ?? $field->longitude;
+            $field->saveQuietly();
 
-                $field->latitude = $farmData['latitude'] ?? $field->latitude;
-                $field->longitude = $farmData['longitude'] ?? $field->longitude;
-                $field->saveQuietly();
-
-                Log::info("Campo ID: {$field->id} actualizado con latitud: {$field->latitude} y longitud: {$field->longitude}.");
-                return true;
-            } else {
-                Log::error("Error al obtener datos del farm {$field->wiseconn_farm_id}. Respuesta: " . $response->body());
-                return false;
-            }
-        } catch (RequestException $e) {
-            Log::error("Excepción al sincronizar el farm {$field->wiseconn_farm_id}: " . $e->getMessage());
+            Log::info("Campo ID: {$field->id} actualizado con latitud: {$field->latitude} y longitud: {$field->longitude}.");
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Excepción al sincronizar el farm {$field->wiseconn_farm_id}: {$e->getMessage()}");
             return false;
         }
     }
 
     /**
-     * Sincronizar las zonas de una granja desde la API.
+     * Sincroniza las zonas de un campo desde la API.
+     *
+     * @param Field $field
+     * @return void
+     * @throws \Exception
      */
     public function syncZones($field): void
     {
@@ -108,23 +129,20 @@ class WiseconnService
 
         $validation = $this->validateApiKey($field);
         if (!$validation['valid']) {
-            Log::warning("Validación de api_key fallida: {$validation['message']}");
             throw new \Exception($validation['message']);
         }
 
+        $client = $this->createHttpClient();
         try {
-            $response = Http::withHeaders([
-                'api_key' => $field->api_key,
-                'Accept' => 'application/json',
-                'Accept-Encoding' => 'gzip, br, zstd',
-            ])->get("https://api.wiseconn.com/farms/{$field->wiseconn_farm_id}/zones");
+            $response = $client->get("https://api.wiseconn.com/farms/{$field->wiseconn_farm_id}/zones", [
+                'headers' => [
+                    'api_key' => $field->api_key,
+                    'Accept' => 'application/json',
+                    'Accept-Encoding' => 'gzip, br, zstd',
+                ],
+            ]);
 
-            if (!$response->successful()) {
-                Log::error("Error al sincronizar zonas: {$response->body()}");
-                throw new \Exception("Error al sincronizar zonas: {$response->body()}");
-            }
-
-            $zonesData = $response->json();
+            $zonesData = json_decode($response->getBody(), true);
             foreach ($zonesData as $zoneData) {
                 if (in_array('Weather', (array) $zoneData['type'])) {
                     Zone::updateOrCreate(
@@ -140,14 +158,101 @@ class WiseconnService
                 }
             }
             Log::info("Zonas de tipo Weather sincronizadas exitosamente para el Field: {$field->name}");
-        } catch (RequestException $e) {
+        } catch (\Exception $e) {
             Log::error("Error al sincronizar zonas: {$e->getMessage()}");
             throw new \Exception("Error al sincronizar zonas: {$e->getMessage()}");
         }
     }
 
     /**
-     * Obtener todas las medidas de una zona específica.
+     * Obtiene todas las medidas actuales de todas las zonas de un campo.
+     *
+     * @param Field $field
+     * @return array
+     */
+    public function getAllZonesCurrentMeasures(Field $field): array
+    {
+        $cacheKey = "field_{$field->id}_all_zones_current_measures";
+        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($field) {
+            $zones = Zone::where('field_id', $field->id)->get()->toArray();
+            $allMeasures = $this->fetchAllZonesMeasures($field, $zones);
+            $currentMeasures = [];
+
+            foreach ($zones as $zone) {
+                $zoneMeasures = $allMeasures[$zone['id']] ?? [];
+                $zoneCurrentMeasures = [];
+                foreach ($zoneMeasures as $measure) {
+                    $sensorType = $this->getFilteredSensorType(
+                        $measure['id'],
+                        $measure['sensorType'] ?? 'unknown',
+                        $zone['wiseconn_zone_id']
+                    );
+
+                    if (
+                        $sensorType &&
+                        in_array($sensorType, $this->allowedSensorTypes) &&
+                        isset($measure['lastData']) &&
+                        isset($measure['lastDataDate'])
+                    ) {
+                        $zoneCurrentMeasures[$sensorType] = [
+                            'value' => $measure['lastData'],
+                            'time' => $measure['lastDataDate'],
+                        ];
+                    }
+                }
+                $currentMeasures[$zone['id']] = $zoneCurrentMeasures;
+            }
+
+            return $currentMeasures;
+        });
+    }
+
+    /**
+     * Obtiene todas las medidas actuales de una zona específica.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @return array
+     */
+    public function getAllCurrentMeasures(Field $field, Zone $zone): array
+    {
+        $cacheKey = "zone_{$zone->id}_current_measures";
+        return Cache::remember($cacheKey, now()->addSeconds(300), function () use ($field, $zone) {
+            $measures = $this->fetchZoneMeasures($field, $zone);
+            $currentMeasures = [];
+
+            foreach ($measures as $measure) {
+                $sensorType = $this->getFilteredSensorType(
+                    $measure['id'],
+                    $measure['sensorType'] ?? 'unknown',
+                    $zone->wiseconn_zone_id
+                );
+
+                if (
+                    $sensorType &&
+                    in_array($sensorType, $this->allowedSensorTypes) &&
+                    isset($measure['lastData']) &&
+                    isset($measure['lastDataDate'])
+                ) {
+                    $currentMeasures[$sensorType] = [
+                        'value' => $measure['lastData'],
+                        'time' => $measure['lastDataDate'],
+                    ];
+                }
+            }
+
+            return $currentMeasures;
+        });
+    }
+
+    /**
+     * Obtiene medidas de una zona específica en un rango de tiempo.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @param string $initTime
+     * @param string $endTime
+     * @return array
      */
     public function getZoneMeasures($field, Zone $zone, string $initTime, string $endTime): array
     {
@@ -155,7 +260,6 @@ class WiseconnService
 
         $validation = $this->validateApiKey($field);
         if (!$validation['valid']) {
-            Log::warning("Validación de api_key fallida: {$validation['message']}");
             throw new \Exception($validation['message']);
         }
 
@@ -164,98 +268,144 @@ class WiseconnService
     }
 
     /**
-     * Obtener las medidas de una zona desde la API.
+     * Obtiene medidas de todas las zonas en paralelo usando Guzzle Pool.
+     *
+     * @param Field $field
+     * @param array $zones
+     * @return array
+     */
+    protected function fetchAllZonesMeasures(Field $field, array $zones): array
+    {
+        $client = $this->createHttpClient();
+        $requests = function () use ($field, $zones, $client) {
+            foreach ($zones as $zone) {
+                yield new Request('GET', "https://api.wiseconn.com/zones/{$zone['wiseconn_zone_id']}/measures", [
+                    'api_key' => $field->api_key,
+                    'Accept' => 'application/json',
+                ]);
+            }
+        };
+
+        $measures = [];
+        $pool = new Pool($client, $requests(), [
+            'concurrency' => 5,
+            'fulfilled' => function ($response, $index) use ($zones, &$measures) {
+                $zone = $zones[$index];
+                $measures[$zone['id']] = json_decode($response->getBody(), true);
+                Log::debug("Medidas obtenidas para la zona {$zone['name']}. Cantidad: " . count($measures[$zone['id']]));
+            },
+            'rejected' => function ($reason, $index) use ($zones) {
+                $zone = $zones[$index];
+                Log::error("Error al obtener medidas de la zona {$zone['name']}: {$reason}");
+                $measures[$zone['id']] = [];
+            },
+        ]);
+
+        $pool->promise()->wait();
+        return $measures;
+    }
+
+    /**
+     * Obtiene medidas de una zona específica desde la API.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @return array
      */
     protected function fetchZoneMeasures($field, Zone $zone): array
     {
+        $client = $this->createHttpClient();
         try {
-            $response = Http::withHeaders([
-                'api_key' => $field->api_key,
-                'Accept' => 'application/json',
-            ])->get("https://api.wiseconn.com/zones/{$zone->wiseconn_zone_id}/measures");
+            $response = $client->get("https://api.wiseconn.com/zones/{$zone->wiseconn_zone_id}/measures", [
+                'headers' => [
+                    'api_key' => $field->api_key,
+                    'Accept' => 'application/json',
+                ],
+            ]);
 
-            if (!$response->successful()) {
-                throw new \Exception("Error al obtener medidas de la zona: {$response->body()}");
-            }
-
-            $measures = $response->json();
+            $measures = json_decode($response->getBody(), true);
             Log::debug("Medidas obtenidas para la zona {$zone->name}. Cantidad: " . count($measures));
             return $measures;
         } catch (\Exception $e) {
             Log::error("Error al obtener medidas de la zona {$zone->name}: {$e->getMessage()}");
-            return []; // Continúa con un array vacío
+            return [];
         }
     }
 
     /**
-     * Obtener datos de medidas para un conjunto de medidas en un rango de tiempo.
+     * Obtiene datos de medidas para un conjunto de medidas en un rango de tiempo.
+     *
+     * @param Field $field
+     * @param array $measures
+     * @param string $initTime
+     * @param string $endTime
+     * @param Zone $zone
+     * @return array
      */
     protected function fetchMeasuresData($field, array $measures, string $initTime, string $endTime, Zone $zone): array
     {
-        try {
-            $measuresData = [];
+        $client = $this->createHttpClient();
+        $measuresData = [];
 
-            foreach ($measures as $measure) {
-                $measureId = $measure['id'];
-                $sensorType = $this->getFilteredSensorType($measureId, $measure['sensorType'] ?? 'unknown', $zone->wiseconn_zone_id);
+        foreach ($measures as $measure) {
+            $measureId = $measure['id'];
+            $sensorType = $this->getFilteredSensorType($measureId, $measure['sensorType'] ?? 'unknown', $zone->wiseconn_zone_id);
 
-                if ($sensorType === null) {
-                    Log::info("Medida ignorada: {$measureId} (sensorType: {$measure['sensorType']})");
-                    continue;
-                }
+            if ($sensorType === null) {
+                Log::info("Medida ignorada: {$measureId} (sensorType: {$measure['sensorType']})");
+                continue;
+            }
 
-                $cacheKey = $this->generateCacheKey($field->wiseconn_farm_id, $measureId, $initTime, $endTime);
-
-                $measureDataResponse = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($field, $measureId, $initTime, $endTime) {
-                    try {
-                        Log::info("Obteniendo datos para la medida {$measureId} de {$initTime} a {$endTime}");
-                        $response = Http::withHeaders([
+            $cacheKey = $this->generateCacheKey($field->wiseconn_farm_id, $measureId, $initTime, $endTime);
+            $measureDataResponse = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($client, $field, $measureId, $initTime, $endTime) {
+                try {
+                    $response = $client->get("https://api.wiseconn.com/measures/{$measureId}/data", [
+                        'headers' => [
                             'api_key' => $field->api_key,
                             'Accept' => 'application/json',
-                        ])->get("https://api.wiseconn.com/measures/{$measureId}/data", [
+                        ],
+                        'query' => [
                             'initTime' => $initTime,
                             'endTime' => $endTime,
                             'tz' => 'UTC',
-                        ]);
+                        ],
+                    ]);
 
-                        if (!$response->successful()) {
-                            throw new RequestException($response);
-                        }
-
-                        return $response->json();
-                    } catch (RequestException $e) {
-                        Log::error("Fallo en la solicitud a la API para measure_id {$measureId}: {$e->getMessage()}");
-                        return []; // Retorna array vacío en caso de error
-                    }
-                });
-
-                if (empty($measureDataResponse)) {
-                    Log::warning("No se encontraron datos para measure_id {$measureId} en el rango {$initTime} a {$endTime}");
-                    continue;
+                    return json_decode($response->getBody(), true);
+                } catch (\Exception $e) {
+                    Log::error("Fallo en la solicitud a la API para measure_id {$measureId}: {$e->getMessage()}");
+                    return [];
                 }
+            });
 
-                if (!isset($measuresData[$sensorType])) {
-                    $measuresData[$sensorType] = [];
-                }
-
-                $measuresData[$sensorType][] = [
-                    'id' => $measureId,
-                    'name' => $measure['name'],
-                    'unit' => $measure['unit'],
-                    'data' => $measureDataResponse,
-                ];
+            if (empty($measureDataResponse)) {
+                Log::warning("No se encontraron datos para measure_id {$measureId} en el rango {$initTime} a {$endTime}");
+                continue;
             }
 
-            Log::info("Datos de medidas obtenidos exitosamente para la zona.");
-            return $measuresData;
-        } catch (\Exception $e) {
-            Log::error("Error en fetchMeasuresData para la zona: {$e->getMessage()}");
-            throw $e;
+            if (!isset($measuresData[$sensorType])) {
+                $measuresData[$sensorType] = [];
+            }
+
+            $measuresData[$sensorType][] = [
+                'id' => $measureId,
+                'name' => $measure['name'],
+                'unit' => $measure['unit'],
+                'data' => $measureDataResponse,
+            ];
         }
+
+        Log::info("Datos de medidas obtenidos exitosamente para la zona.");
+        return $measuresData;
     }
 
     /**
      * Determina el tipo de sensor filtrado, incluyendo manejo para Et0/Etc.
+     *
+     * @param string $measureId
+     * @param string $apiSensorType
+     * @param string $wiseconnZoneId
+     * @return ?string
      */
     protected function getFilteredSensorType(string $measureId, string $apiSensorType, string $wiseconnZoneId): ?string
     {
@@ -277,7 +427,13 @@ class WiseconnService
     }
 
     /**
-     * Generar una clave única para el caché.
+     * Genera una clave única para el caché.
+     *
+     * @param string $farmId
+     * @param string $measureId
+     * @param string $initTime
+     * @param string $endTime
+     * @return string
      */
     protected function generateCacheKey(string $farmId, string $measureId, string $initTime, string $endTime): string
     {
@@ -285,7 +441,13 @@ class WiseconnService
     }
 
     /**
-     * Preparar datos para un gráfico de mediciones.
+     * Prepara datos para un gráfico de mediciones.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @param string $initTime
+     * @param string $endTime
+     * @return array
      */
     public function getChartData($field, Zone $zone, string $initTime, string $endTime): array
     {
@@ -299,8 +461,8 @@ class WiseconnService
         ];
 
         $colors = ['#3b82f6', '#9333ea', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
-
         $index = 0;
+
         foreach ($measures as $sensorType => $measureData) {
             foreach ($measureData as $measure) {
                 $dataPoints = $measure['data'];
@@ -328,53 +490,62 @@ class WiseconnService
     }
 
     /**
-     * Obtiene la última medida disponible para un tipo de sensor específico en una zona.
+     * Obtiene la última medida disponible para un tipo de sensor específico.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @param string $sensorType
+     * @return array
      */
     public function getCurrentMeasures(Field $field, Zone $zone, string $sensorType): array
     {
         $initTime = Carbon::now('UTC')->subHours(2)->toIso8601String();
         $endTime = Carbon::now('UTC')->toIso8601String();
 
-        try {
-            $measures = $this->fetchZoneMeasures($field, $zone);
-            $targetMeasure = null;
+        $measures = $this->fetchZoneMeasures($field, $zone);
+        $targetMeasure = null;
 
-            foreach ($measures as $measure) {
-                $filteredType = $this->getFilteredSensorType($measure['id'], $measure['sensorType'] ?? 'unknown', $zone->wiseconn_zone_id);
-                if ($filteredType === $sensorType) {
-                    $targetMeasure = $measure;
-                    break;
-                }
+        foreach ($measures as $measure) {
+            $filteredType = $this->getFilteredSensorType($measure['id'], $measure['sensorType'] ?? 'unknown', $zone->wiseconn_zone_id);
+            if ($filteredType === $sensorType) {
+                $targetMeasure = $measure;
+                break;
             }
-
-            if (!$targetMeasure) {
-                return ['value' => null, 'time' => null];
-            }
-
-            $measureData = $this->fetchMeasuresData($field, [$targetMeasure], $initTime, $endTime, $zone);
-            $dataPoints = $measureData[$sensorType][0]['data'] ?? [];
-
-            if (!empty($dataPoints)) {
-                $lastDataPoint = end($dataPoints);
-                return [
-                    'value' => $lastDataPoint['value'] ?? null,
-                    'time' => $lastDataPoint['time'] ?? null
-                ];
-            }
-
-            return ['value' => null, 'time' => null];
-        } catch (\Exception $e) {
-            Log::error("Error al obtener la medida actual '{$sensorType}' para la zona {$zone->name}: {$e->getMessage()}");
-            throw $e;
         }
+
+        if (!$targetMeasure) {
+            return ['value' => null, 'time' => null];
+        }
+
+        $measureData = $this->fetchMeasuresData($field, [$targetMeasure], $initTime, $endTime, $zone);
+        $dataPoints = $measureData[$sensorType][0]['data'] ?? [];
+
+        if (!empty($dataPoints)) {
+            $lastDataPoint = end($dataPoints);
+            return [
+                'value' => $lastDataPoint['value'] ?? null,
+                'time' => $lastDataPoint['time'] ?? null,
+            ];
+        }
+
+        return ['value' => null, 'time' => null];
     }
 
     /**
-     * Obtiene el valor mínimo o máximo para un tipo de sensor en un rango de tiempo.
+     * Obtiene el valor mínimo o máximo diario para un tipo de sensor.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @param string $sensorType
+     * @param string $initTime
+     * @param string $endTime
+     * @param string $type
+     * @return ?float
      */
     public function getDailyMinMaxMeasure(Field $field, Zone $zone, string $sensorType, string $initTime, string $endTime, string $type = 'min'): ?float
     {
-        try {
+        $cacheKey = "zone_{$zone->id}_daily_{$type}_{$sensorType}_{$initTime}_{$endTime}";
+        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($field, $zone, $sensorType, $initTime, $endTime, $type) {
             $measures = $this->fetchZoneMeasures($field, $zone);
             $targetMeasure = null;
 
@@ -398,26 +569,25 @@ class WiseconnService
                 return null;
             }
 
-            $firstTime = Carbon::parse($dataPoints[0]['time']);
-            $lastTime = Carbon::parse(end($dataPoints)['time']);
-            if ($firstTime->greaterThan($initTime) || $lastTime->lessThan($endTime)) {
-                Log::warning("Los datos para '{$sensorType}' no cubren completamente el rango solicitado.");
-            }
-
             $values = array_column($dataPoints, 'value');
             return $type === 'min' ? min($values) : max($values);
-        } catch (\Exception $e) {
-            Log::error("Error al obtener {$type} de '{$sensorType}': {$e->getMessage()}");
-            throw $e;
-        }
+        });
     }
 
     /**
      * Obtiene la suma de valores para un tipo de sensor en un rango de tiempo.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @param string $sensorType
+     * @param string $initTime
+     * @param string $endTime
+     * @return ?float
      */
     public function getDailySumMeasure(Field $field, Zone $zone, string $sensorType, string $initTime, string $endTime): ?float
     {
-        try {
+        $cacheKey = "zone_{$zone->id}_sum_{$sensorType}_{$initTime}_{$endTime}";
+        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($field, $zone, $sensorType, $initTime, $endTime) {
             $measures = $this->fetchZoneMeasures($field, $zone);
             $targetMeasure = null;
 
@@ -443,18 +613,23 @@ class WiseconnService
 
             $values = array_column($dataPoints, 'value');
             return array_sum($values);
-        } catch (\Exception $e) {
-            Log::error("Error al obtener la suma de '{$sensorType}': {$e->getMessage()}");
-            throw $e;
-        }
+        });
     }
 
     /**
      * Obtiene el valor acumulado para un tipo de sensor en un rango de tiempo.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @param string $sensorType
+     * @param string $initTime
+     * @param string $endTime
+     * @return ?float
      */
     public function getAccumulatedMeasure(Field $field, Zone $zone, string $sensorType, string $initTime, string $endTime): ?float
     {
-        try {
+        $cacheKey = "zone_{$zone->id}_accumulated_{$sensorType}_{$initTime}_{$endTime}";
+        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($field, $zone, $sensorType, $initTime, $endTime) {
             $measures = $this->fetchZoneMeasures($field, $zone);
             $targetMeasure = null;
 
@@ -479,14 +654,15 @@ class WiseconnService
 
             $lastDataPoint = end($dataPoints);
             return $lastDataPoint['value'] ?? null;
-        } catch (\Exception $e) {
-            Log::error("Error al obtener el acumulado de '{$sensorType}': {$e->getMessage()}");
-            throw $e;
-        }
+        });
     }
 
     /**
      * Inicializa medidas históricas para una zona.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @return bool
      */
     public function initializeHistoricalMeasures($field, Zone $zone): bool
     {
@@ -501,7 +677,7 @@ class WiseconnService
         $currentLocalTime = Carbon::now('America/Santiago');
         $startDate = $startDateBase->isAfter($currentLocalTime) ? $currentLocalTime->startOfDay() : $startDateBase->timezone('America/Santiago');
         $endDate = Carbon::now('America/Santiago');
-        $maxDays = 30; // Reducir a 30 días por solicitud
+        $maxDays = 30;
 
         ini_set('max_execution_time', 600);
         ini_set('memory_limit', '1024M');
@@ -552,6 +728,10 @@ class WiseconnService
 
     /**
      * Actualiza las medidas para una zona.
+     *
+     * @param Field $field
+     * @param Zone $zone
+     * @return bool
      */
     public function updateMeasures($field, Zone $zone): bool
     {
@@ -588,104 +768,66 @@ class WiseconnService
             return false;
         }
     }
-    /**
-     * Fetch and cache all current measures for a zone using the 'lastData' field.
-     *
-     * @param Field $field The field associated with the zone
-     * @param Zone $zone The zone to fetch measures for
-     * @return array An array mapping sensor types to their current values and timestamps
-     */
-    public function getAllCurrentMeasures(Field $field, Zone $zone): array
-    {
-        $cacheKey = "zone_{$zone->id}_current_measures";
-
-        return Cache::remember($cacheKey, 300, function () use ($field, $zone) {
-            $measures = $this->fetchZoneMeasures($field, $zone);
-            $currentMeasures = [];
-
-            foreach ($measures as $measure) {
-                $sensorType = $this->getFilteredSensorType(
-                    $measure['id'],
-                    $measure['sensorType'] ?? 'unknown',
-                    $zone->wiseconn_zone_id
-                );
-
-                if (
-                    $sensorType &&
-                    in_array($sensorType, $this->allowedSensorTypes) &&
-                    isset($measure['lastData']) &&
-                    isset($measure['lastDataDate'])
-                ) {
-                    $currentMeasures[$sensorType] = [
-                        'value' => $measure['lastData'],
-                        'time' => $measure['lastDataDate'],
-                    ];
-                }
-            }
-
-            return $currentMeasures;
-        });
-    }
 
     /**
      * Guarda las medidas en la base de datos.
+     *
+     * @param Zone $zone
+     * @param array $measure
+     * @param array $measureData
+     * @return void
      */
     public function saveMeasures(Zone $zone, array $measure, array $measureData): void
     {
-        try {
-            $sensorType = $this->getFilteredSensorType($measure['id'], $measure['sensorType'] ?? 'unknown', $zone->wiseconn_zone_id);
+        $sensorType = $this->getFilteredSensorType($measure['id'], $measure['sensorType'] ?? 'unknown', $zone->wiseconn_zone_id);
 
-            if ($sensorType === null) {
-                Log::warning("Medida ignorada al guardar: {$measure['id']} (sensorType: {$measure['sensorType']}) - No es un tipo permitido.");
-                return;
-            }
+        if ($sensorType === null) {
+            Log::warning("Medida ignorada al guardar: {$measure['id']} (sensorType: {$measure['sensorType']}) - No es un tipo permitido.");
+            return;
+        }
 
-            if (!isset($measureData[$sensorType])) {
-                Log::warning("No se encontraron datos para el sensorType '{$sensorType}' en measureData para measure_id {$measure['id']}.");
-                return;
-            }
+        if (!isset($measureData[$sensorType])) {
+            Log::warning("No se encontraron datos para el sensorType '{$sensorType}' en measureData para measure_id {$measure['id']}.");
+            return;
+        }
 
-            $dataArray = $measureData[$sensorType][0]['data'] ?? null;
-            if (empty($dataArray)) {
-                Log::warning("No se encontraron datos históricos para measure_id {$measure['id']} al intentar guardar.");
-                return;
-            }
+        $dataArray = $measureData[$sensorType][0]['data'] ?? null;
+        if (empty($dataArray)) {
+            Log::warning("No se encontraron datos históricos para measure_id {$measure['id']} al intentar guardar.");
+            return;
+        }
 
-            $dataToInsert = [];
-            foreach ($dataArray as $dataPoint) {
-                if (isset($dataPoint['time']) && $dataPoint['time'] !== null && isset($dataPoint['value'])) {
-                    $time = Carbon::parse($dataPoint['time']);
-                    $exists = Measure::where('zone_id', $zone->id)
-                                    ->where('measure_id', $measure['id'])
-                                    ->where('time', $time)
-                                    ->exists();
-                    if (!$exists) {
-                        $dataToInsert[] = [
-                            'zone_id' => $zone->id,
-                            'measure_id' => $measure['id'],
-                            'name' => $measure['name'],
-                            'unit' => $measure['unit'],
-                            'value' => $dataPoint['value'],
-                            'time' => $time,
-                            'sensor_type' => $sensorType,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                    }
-                } else {
-                    Log::warning("Dato omitido para measure_id {$measure['id']} debido a time o value nulo al guardar: " . json_encode($dataPoint));
+        $dataToInsert = [];
+        foreach ($dataArray as $dataPoint) {
+            if (isset($dataPoint['time']) && $dataPoint['time'] !== null && isset($dataPoint['value'])) {
+                $time = Carbon::parse($dataPoint['time']);
+                $exists = Measure::where('zone_id', $zone->id)
+                    ->where('measure_id', $measure['id'])
+                    ->where('time', $time)
+                    ->exists();
+                if (!$exists) {
+                    $dataToInsert[] = [
+                        'zone_id' => $zone->id,
+                        'measure_id' => $measure['id'],
+                        'name' => $measure['name'],
+                        'unit' => $measure['unit'],
+                        'value' => $dataPoint['value'],
+                        'time' => $time,
+                        'sensor_type' => $sensorType,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
                 }
-            }
-
-            if (!empty($dataToInsert)) {
-                Measure::insert($dataToInsert);
-                Log::info("Guardados " . count($dataToInsert) . " nuevos registros para measure_id {$measure['id']}");
             } else {
-                Log::info("No hay nuevos registros para guardar para measure_id {$measure['id']}");
+                Log::warning("Dato omitido para measure_id {$measure['id']} debido a time o value nulo al guardar: " . json_encode($dataPoint));
             }
-        } catch (\Exception $e) {
-            Log::error("Error al guardar medidas para measure_id {$measure['id']}: {$e->getMessage()}");
-            throw $e;
+        }
+
+        if (!empty($dataToInsert)) {
+            Measure::insert($dataToInsert);
+            Log::info("Guardados " . count($dataToInsert) . " nuevos registros para measure_id {$measure['id']}");
+        } else {
+            Log::info("No hay nuevos registros para guardar para measure_id {$measure['id']}");
         }
     }
 }

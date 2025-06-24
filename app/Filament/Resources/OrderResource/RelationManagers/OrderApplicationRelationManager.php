@@ -2,17 +2,20 @@
 
 namespace App\Filament\Resources\OrderResource\RelationManagers;
 
-use App\Models\Climate;
 use App\Models\OrderParcel;
 use App\Models\Parcel;
+use App\Models\Zone;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use Filament\Facades\Filament;
 
 class OrderApplicationRelationManager extends RelationManager
 {
@@ -35,7 +38,6 @@ class OrderApplicationRelationManager extends RelationManager
                         ->toArray()
                     )
                     ->afterStateUpdated(function (callable $get, callable $set) {
-                        // Obtener la superficie del cuartel seleccionado
                         $parcelId = $get('parcel_id');
                         if ($parcelId) {
                             $parcel = Parcel::find($parcelId);
@@ -43,11 +45,8 @@ class OrderApplicationRelationManager extends RelationManager
                         } else {
                             $set('parcel_surface', null);
                         }
-
-                        // Recalcular superficie y porcentaje
                         $this->calculateSurfaceAndValidate($get, $set);
                     })
-
                     ->searchable(),
 
                 Forms\Components\Hidden::make('parcel_surface'),
@@ -55,6 +54,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->label('Litros aplicados')
                     ->required()
                     ->numeric()
+                    ->debounce(300)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (callable $get, callable $set) {
                         $this->calculateSurfaceAndValidate($get, $set);
@@ -65,6 +65,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('l/ha')
                     ->default(fn () => $this->ownerRecord->wetting)
                     ->numeric()
+                    ->debounce(300)
                     ->live(onBlur: true)
                     ->required()
                     ->afterStateUpdated(function (callable $get, callable $set) {
@@ -76,7 +77,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('km/h')
                     ->required()
                     ->numeric()
-                    ->default(fn () => optional($this->getTodayClimateData())->wind),
+                    ->default(fn () => optional($this->getTodayClimateData())->wind_speed),
 
                 Forms\Components\TextInput::make('temperature')
                     ->label('Temperatura')
@@ -99,6 +100,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('has')
                     ->numeric()
                     ->reactive(),
+
                 Forms\Components\TextInput::make('application_percentage')
                     ->label('Porcentaje del cuartel aplicado')
                     ->suffix('%')
@@ -111,7 +113,6 @@ class OrderApplicationRelationManager extends RelationManager
                     ->relationship('applicators', 'name')
                     ->searchable()
                     ->preload(),
-
             ]);
     }
 
@@ -123,7 +124,6 @@ class OrderApplicationRelationManager extends RelationManager
         $surfaceApplied = ($wetting > 0) ? ($liter / $wetting) : 0;
         $set('surface', $surfaceApplied);
 
-        // Validar la superficie aplicada contra la superficie del cuartel
         $parcelSurface = $get('parcel_surface') ?? 0;
         if ($surfaceApplied > $parcelSurface) {
             $set('surface_warning', 'La superficie aplicada excede la superficie del cuartel.');
@@ -131,7 +131,6 @@ class OrderApplicationRelationManager extends RelationManager
             $set('surface_warning', null);
         }
 
-        // Calcular el porcentaje de aplicación
         if ($parcelSurface > 0) {
             $percentage = ($surfaceApplied / $parcelSurface) * 100;
             $set('application_percentage', round($percentage, 2));
@@ -140,13 +139,90 @@ class OrderApplicationRelationManager extends RelationManager
         }
     }
 
-
     protected function getTodayClimateData()
     {
-        // Obtener los datos climáticos de la fecha de hoy
+        try {
+            Log::info('Iniciando getTodayClimateData para Order ID: ' . $this->ownerRecord->id);
 
-        return Climate::whereDate('created_at', today())->latest('created_at')->first();
+            // Obtener el tenant actual (Field)
+            $tenant = Filament::getTenant();
+            if (!$tenant) {
+                Log::warning('No se encontró tenant actual');
+                return null;
+            }
+            Log::debug('Tenant encontrado', ['tenant_id' => $tenant->id, 'tenant_name' => $tenant->name]);
+
+            // Obtener la primera Zone del tenant
+            $zone = Zone::where('field_id', $tenant->id)->first();
+            if (!$zone) {
+                Log::warning('No se encontró ninguna Zone para el tenant', ['tenant_id' => $tenant->id]);
+                return null;
+            }
+            Log::debug('Zone encontrada', ['zone_id' => $zone->id, 'zone_name' => $zone->name]);
+
+            // Obtener el Field asociado a la Zone
+            $field = $zone->field;
+            if (!$field) {
+                Log::warning('No se encontró Field para la Zone', ['zone_id' => $zone->id]);
+                return null;
+            }
+            Log::debug('Field encontrado', ['field_id' => $field->id, 'field_name' => $field->name]);
+
+            // Definir el rango de tiempo para hoy
+            $initTime = Carbon::today('America/Santiago')->startOfDay()->toIso8601String();
+            $endTime = Carbon::today('America/Santiago')->endOfDay()->toIso8601String();
+            Log::debug('Rango de tiempo definido', ['initTime' => $initTime, 'endTime' => $endTime]);
+
+            // Consultar medidas de la zona
+            $wiseconnService = app(\App\Services\WiseconnService::class);
+            $measures = $wiseconnService->getZoneMeasures($field, $zone, $initTime, $endTime);
+
+            // Inicializar valores por defecto
+            $climateData = [
+                'wind_speed' => null,
+                'temperature' => null,
+                'humidity' => null,
+            ];
+
+            // Procesar las medidas para obtener los valores más recientes
+            foreach ($measures as $sensorType => $measureData) {
+                if (empty($measureData)) {
+                    Log::warning("Datos vacíos para sensorType: {$sensorType}");
+                    continue;
+                }
+
+                $latestData = collect($measureData[0]['data'])->sortByDesc('time')->first();
+                Log::debug("Procesando sensorType: {$sensorType}", [
+                    'latestData' => $latestData,
+                    'measureDataCount' => count($measureData[0]['data']),
+                ]);
+
+                if ($sensorType === 'Temperature' && $latestData) {
+                    $climateData['temperature'] = $latestData['value'];
+                } elseif ($sensorType === 'Humidity' && $latestData) {
+                    $climateData['humidity'] = $latestData['value'];
+                } elseif ($sensorType === 'Wind Velocity' && $latestData) {
+                    $climateData['wind_speed'] = $latestData['value'];
+                }
+            }
+
+            Log::info('Datos climáticos obtenidos', ['climateData' => $climateData]);
+            return (object) $climateData;
+        } catch (\Exception $e) {
+            Log::error('Error en getTodayClimateData', [
+                'order_id' => $this->ownerRecord->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            \Filament\Notifications\Notification::make()
+                ->title('Error al obtener datos climáticos')
+                ->body('No se pudieron cargar los datos de Wiseconn: ' . $e->getMessage())
+                ->danger()
+                ->send();
+            return null;
+        }
     }
+
     public function table(Table $table): Table
     {
         return $table
@@ -167,11 +243,11 @@ class OrderApplicationRelationManager extends RelationManager
                     ->searchable(),
                 Tables\Columns\TextColumn::make('liter')
                     ->label('Litros aplicados')
-                    ->suffix('  l')
+                    ->suffix(' l')
                     ->numeric(decimalPlaces: 0, thousandsSeparator: '.', decimalSeparator: ','),
                 Tables\Columns\TextColumn::make('surface')
                     ->label('Superficie aplicada')
-                    ->suffix('  ha')
+                    ->suffix(' ha')
                     ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ','),
                 Tables\Columns\TextColumn::make('application_percentage')
                     ->label('Porcentaje del cuartel aplicado')
@@ -190,16 +266,16 @@ class OrderApplicationRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('temperature')
                     ->label('Temperatura')
-                    ->suffix('  °C')
+                    ->suffix(' °C')
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('moisture')
                     ->label('Humedad')
-                    ->suffix('  %')
+                    ->suffix(' %')
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('applicators_details')
-                ->label('Aplicadores')
+                    ->label('Aplicadores')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

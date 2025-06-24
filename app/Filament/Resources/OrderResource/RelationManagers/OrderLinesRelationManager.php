@@ -78,7 +78,8 @@ class OrderLinesRelationManager extends RelationManager
                     ->required()
                     ->label('Dosis')
                     ->suffix('l/100l')
-                    ->numeric(3, ',', '.')
+                    ->step(0.001)
+                    ->debounce(300)
                     ->reactive()
                     ->helperText(function (callable $get) {
                         $productId = $get('product_id');

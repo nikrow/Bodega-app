@@ -56,15 +56,14 @@ class ZoneResource extends Resource
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
-
-                // Current Temperature
                 TextColumn::make('current_temperature')
                     ->label('Temp. Actual (°C)')
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
 
-                        $currentMeasures = $wiseconnService->getAllCurrentMeasures($field, $record);
+                        $allMeasures = $wiseconnService->getAllZonesCurrentMeasures($field);
+                        $currentMeasures = $allMeasures[$record->id] ?? [];
                         $temperature = $currentMeasures['Temperature']['value'] ?? null;
 
                         return $temperature !== null ? round($temperature, 2) . '°' : 'N/D';
@@ -73,92 +72,65 @@ class ZoneResource extends Resource
                         $field = $record->field;
                         if (!$field) return null;
 
-                        $currentMeasures = $wiseconnService->getAllCurrentMeasures($field, $record);
+                        $allMeasures = $wiseconnService->getAllZonesCurrentMeasures($field);
+                        $currentMeasures = $allMeasures[$record->id] ?? [];
                         $lastDataDate = $currentMeasures['Temperature']['time'] ?? null;
 
                         return $lastDataDate ? Carbon::parse($lastDataDate)->format('d/m/Y H:i') : null;
                     }),
-
-                // Min Temperature Daily
                 TextColumn::make('min_temperature_daily')
                     ->label('Temp. Mín. Hoy (°C)')
+                    ->lazy()
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
 
-                        $cacheKey = "zone_{$record->id}_min_temperature_daily";
-                        $data = self::getCachedMeasure($cacheKey, function () use ($wiseconnService, $field, $record) {
-                            try {
-                                $today = Carbon::now('America/Santiago');
-                                $initTime = $today->startOfDay()->toIso8601String();
-                                $endTime = $today->endOfDay()->toIso8601String();
-                                return $wiseconnService->getDailyMinMaxMeasure($field, $record, 'Temperature', $initTime, $endTime, 'min');
-                            } catch (\Exception $e) {
-                                Log::error("Error al obtener temp min para zona {$record->id}: " . $e->getMessage());
-                                return null;
-                            }
-                        });
+                        $today = Carbon::now('America/Santiago');
+                        $initTime = $today->startOfDay()->toIso8601String();
+                        $endTime = $today->endOfDay()->toIso8601String();
+                        $data = $wiseconnService->getDailyMinMaxMeasure($field, $record, 'Temperature', $initTime, $endTime, 'min');
 
                         return $data !== null ? round($data, 2) . '°' : 'N/D';
                     })
                     ->color('secondary'),
-
-                // Max Temperature Daily
                 TextColumn::make('max_temperature_daily')
                     ->label('Temp. Máx. Hoy (°C)')
+                    ->lazy()
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
 
-                        $cacheKey = "zone_{$record->id}_max_temperature_daily";
-                        $data = self::getCachedMeasure($cacheKey, function () use ($wiseconnService, $field, $record) {
-                            try {
-                                $today = Carbon::now('America/Santiago');
-                                $initTime = $today->startOfDay()->toIso8601String();
-                                $endTime = $today->endOfDay()->toIso8601String();
-                                return $wiseconnService->getDailyMinMaxMeasure($field, $record, 'Temperature', $initTime, $endTime, 'max');
-                            } catch (\Exception $e) {
-                                Log::error("Error al obtener temp max para zona {$record->id}: " . $e->getMessage());
-                                return null;
-                            }
-                        });
+                        $today = Carbon::now('America/Santiago');
+                        $initTime = $today->startOfDay()->toIso8601String();
+                        $endTime = $today->endOfDay()->toIso8601String();
+                        $data = $wiseconnService->getDailyMinMaxMeasure($field, $record, 'Temperature', $initTime, $endTime, 'max');
 
                         return $data !== null ? round($data, 2) . '°' : 'N/D';
                     })
                     ->color('warning'),
-
-                // Daily Rain
                 TextColumn::make('daily_rain')
                     ->label('Lluvia Hoy (mm)')
+                    ->lazy()
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
 
-                        $cacheKey = "zone_{$record->id}_daily_rain";
-                        $data = self::getCachedMeasure($cacheKey, function () use ($wiseconnService, $field, $record) {
-                            try {
-                                $today = Carbon::now('America/Santiago');
-                                $initTime = $today->startOfDay()->toIso8601String();
-                                $endTime = $today->endOfDay()->toIso8601String();
-                                return $wiseconnService->getDailySumMeasure($field, $record, 'Rain', $initTime, $endTime);
-                            } catch (\Exception $e) {
-                                Log::error("Error al obtener lluvia hoy para zona {$record->id}: " . $e->getMessage());
-                                return null;
-                            }
-                        });
+                        $today = Carbon::now('America/Santiago');
+                        $initTime = $today->startOfDay()->toIso8601String();
+                        $endTime = $today->endOfDay()->toIso8601String();
+                        $data = $wiseconnService->getDailySumMeasure($field, $record, 'Rain', $initTime, $endTime);
 
                         return $data !== null ? round($data, 2) . 'mm' : 'N/D';
                     })
                     ->color('primary'),
-
-                // Current Humidity
                 TextColumn::make('current_humidity')
                     ->label('Humedad Actual (%)')
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
 
-                        $currentMeasures = $wiseconnService->getAllCurrentMeasures($field, $record);
+                        $allMeasures = $wiseconnService->getAllZonesCurrentMeasures($field);
+                        $currentMeasures = $allMeasures[$record->id] ?? [];
                         $humidity = $currentMeasures['Humidity']['value'] ?? null;
 
                         return $humidity !== null ? round($humidity, 2) . '%' : 'N/D';
@@ -176,54 +148,37 @@ class ZoneResource extends Resource
                         $field = $record->field;
                         if (!$field) return null;
 
-                        $currentMeasures = $wiseconnService->getAllCurrentMeasures($field, $record);
+                        $allMeasures = $wiseconnService->getAllZonesCurrentMeasures($field);
+                        $currentMeasures = $allMeasures[$record->id] ?? [];
                         $lastDataDate = $currentMeasures['Humidity']['time'] ?? null;
 
                         return $lastDataDate ? Carbon::parse($lastDataDate)->format('d/m/Y H:i') : null;
                     }),
-
-                // Chill Hours Accumulated
                 TextColumn::make('chill_hours_accumulated')
                     ->label('Horas Frío (Acum.)')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
 
-                        $currentMeasures = $wiseconnService->getAllCurrentMeasures($field, $record);
+                        $allMeasures = $wiseconnService->getAllZonesCurrentMeasures($field);
+                        $currentMeasures = $allMeasures[$record->id] ?? [];
                         $chillHours = $currentMeasures['Chill Hours (Accumulated)']['value'] ?? null;
 
                         return $chillHours !== null ? round($chillHours, 2) : 'N/D';
                     })
-                    ->color('secondary')
-                    ->tooltip(function (Zone $record) use ($wiseconnService): ?string {
-                        $field = $record->field;
-                        if (!$field) return null;
-
-                        $currentMeasures = $wiseconnService->getAllCurrentMeasures($field, $record);
-                        $lastDataDate = $currentMeasures['Chill Hours (Accumulated)']['time'] ?? null;
-
-                        return $lastDataDate ? Carbon::parse($lastDataDate)->format('d/m/Y H:i') : null;
-                    }),
-
-                // Chill Hours Daily
+                    ->color('secondary'),
                 TextColumn::make('chill_hours_daily')
                     ->label('Horas Frío (Hoy)')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
 
-                        $cacheKey = "zone_{$record->id}_chill_hours_daily";
-                        $data = self::getCachedMeasure($cacheKey, function () use ($wiseconnService, $field, $record) {
-                            try {
-                                $today = Carbon::now('America/Santiago');
-                                $initTime = $today->startOfDay()->toIso8601String();
-                                $endTime = $today->endOfDay()->toIso8601String();
-                                return $wiseconnService->getDailySumMeasure($field, $record, 'Chill Hours (Daily)', $initTime, $endTime);
-                            } catch (\Exception $e) {
-                                Log::error("Error al obtener horas frío diarias para zona {$record->id}: " . $e->getMessage());
-                                return null;
-                            }
-                        });
+                        $today = Carbon::now('America/Santiago');
+                        $initTime = $today->startOfDay()->toIso8601String();
+                        $endTime = $today->endOfDay()->toIso8601String();
+                        $data = $wiseconnService->getDailySumMeasure($field, $record, 'Chill Hours (Daily)', $initTime, $endTime);
 
                         return $data !== null ? round($data, 2) : 'N/D';
                     })
@@ -252,9 +207,9 @@ class ZoneResource extends Resource
 
                         $field = $record->field;
                         if ($field) {
-                            (new \App\Services\WiseconnService())->initializeHistoricalMeasures($field, $record);
+                            \App\Jobs\InitializeHistoricalMeasuresJob::dispatch($field, $record);
                             \Filament\Notifications\Notification::make()
-                                ->title('Inicialización de datos históricos iniciada.')
+                                ->title('Inicialización de datos históricos iniciada en segundo plano.')
                                 ->success()
                                 ->send();
                         } else {
@@ -266,9 +221,7 @@ class ZoneResource extends Resource
                     })
                     ->requiresConfirmation(),
             ])
-            ->bulkActions([
-                
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array
