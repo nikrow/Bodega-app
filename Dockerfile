@@ -2,9 +2,8 @@ FROM php:8.3-fpm
 
 WORKDIR /app
 
-# Instala dependencias
+# Instala dependencias (eliminado nginx)
 RUN apt-get update && apt-get install -y \
-    nginx \
     supervisor \
     curl \
     git \
@@ -21,8 +20,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql mbstring bcmath exif pcntl gd zip intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Verifica rutas de binarios
-RUN which php-fpm && which nginx
+# Verifica rutas de binarios (eliminado which nginx)
+RUN which php-fpm
 
 # Copia composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -46,20 +45,21 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
 # Verifica que index.php exista
 RUN ls -la /app/public/index.php
 
-# Configura Nginx
-COPY nginx.conf /etc/nginx/sites-available/default
-RUN chmod 644 /etc/nginx/sites-available/default && chown www-data:www-data /etc/nginx/sites-available/default
-RUN rm -f /etc/nginx/sites-enabled/default && \
-    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-
 # Configura Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Crea el directorio de logs para Supervisor si no existe y asegura permisos
+RUN mkdir -p /var/log/supervisor && \
+    chown -R www-data:www-data /var/log/supervisor && \
+    chmod -R 755 /var/log/supervisor
 
 # Permisos para todo /app y subdirectorios
 RUN chown -R www-data:www-data /app && chmod -R 775 /app
 
-RUN chown www-data:www-data /var/log
+# Asegura que /var/log tenga los permisos correctos para que los workers escriban logs
+RUN chown www-data:www-data /var/log && chmod 775 /var/log
 
 EXPOSE 8000
 
+# El comando de inicio sigue siendo supervisord
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
