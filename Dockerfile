@@ -54,7 +54,7 @@ RUN php artisan octane:install
 RUN npm install && npm run build
 
 # Expose necessary port
-EXPOSE 8000
+EXPOSE 8080
 
 # Start the application
 ENTRYPOINT ["sh", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp"]
