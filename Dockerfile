@@ -71,4 +71,4 @@ RUN chmod +x /app/post-deploy.sh
 # Exponemos el puerto
 EXPOSE 8080
 
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080} && /app/post-deploy.sh 
+CMD /app/post-deploy.sh  && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
