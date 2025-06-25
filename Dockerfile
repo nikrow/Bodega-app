@@ -57,4 +57,4 @@ RUN npm install && npm run build
 EXPOSE 8000
 
 # Start the application
-ENTRYPOINT ["sh", "-c", "php artisan octane:frankenphp && /app/post-deploy.sh"]
+ENTRYPOINT ["sh", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp"]
