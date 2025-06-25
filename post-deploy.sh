@@ -40,26 +40,6 @@ php artisan filament:optimize
 # Generar enlaces simbólicos
 echo "Generando enlaces simbólicos..."
 php artisan storage:link
-# PASO 3: Crear y configurar permisos para livewire-tmp
-echo "PASO 3: Crear y configurar permisos para livewire-tmp"
-echo "---------------------------------------------------"
-
-# PASO 4: Configurar parámetros PHP mediante .user.ini
-echo "PASO 4: Configurar parámetros PHP mediante .user.ini"
-echo "---------------------------------------------------"
-# Crear o sobrescribir .user.ini con parámetros PHP personalizados
-cat <<EOT > .user.ini
-[PHP]
-upload_max_filesize = 10M
-post_max_size = 10M
-max_execution_time = 300
-max_input_time = 300
-memory_limit = 256M
-client_max_body_size = 100M
-post_max_size = 100M
-EOT
-
-echo "Archivo .user.ini creado o actualizado con parámetros PHP personalizados."
 
 echo "==========================================="
 echo "Comandos post-despliegue ejecutados con éxito"
