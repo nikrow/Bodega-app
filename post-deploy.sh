@@ -7,12 +7,6 @@ echo "==========================================="
 echo "Iniciando comandos post-despliegue"
 echo "==========================================="
 
-# Verificar si mysqldump está instalado
-if ! command -v mysqldump &> /dev/null; then
-    echo "ERROR: mysqldump no está instalado. Asegúrate de que default-mysql-client esté instalado en el Dockerfile."
-    exit 1
-fi
-
 # PASO 1: Limpieza de caché y archivos temporales
 echo "PASO 1: Limpieza de caché y archivos temporales"
 echo "----------------------------------------------"
@@ -38,8 +32,8 @@ php -d memory_limit=256M artisan optimize
 php artisan filament:optimize
 
 # Generar enlaces simbólicos
-echo "Generando enlaces simbólicos..."
-php artisan storage:link
+#echo "Generando enlaces simbólicos..."
+#php artisan storage:link
 
 echo "==========================================="
 echo "Comandos post-despliegue ejecutados con éxito"
