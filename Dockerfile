@@ -2,11 +2,6 @@ FROM dunglas/frankenphp:1.7.0-php8.4-bookworm
 
 WORKDIR /app
 
-ARG NODE_VERSION=22
-
-# Enable PHP production settings
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
 COPY . /app
 
 # Make post-deploy.sh executable
@@ -24,8 +19,22 @@ RUN apt-get update \
 # Install PHP extensions
 RUN install-php-extensions pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl pdo_mysql
 
+# Establecemos variables de entorno
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV PATH="$PATH:/root/.composer/vendor/bin"
+
 # Copy Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configuramos PHP para producción
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+# Optimizamos OPCache
+RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
 
 # Install Node.js and JavaScript tools
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
@@ -54,8 +63,15 @@ RUN php artisan octane:install
 # Install Node.js dependencies and build assets
 RUN npm install && npm run build
 
+# Configuramos permisos
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
+
+# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
+RUN chmod +x /app/post-deploy.sh
+
 # Expose necessary port
 EXPOSE 8080
 
 # Start the application
-ENTRYPOINT ["sh", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp"]
+ENTRYPOINT ["sh", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp --host=0.0.0.0 --port=${PORT:-8080}"]
