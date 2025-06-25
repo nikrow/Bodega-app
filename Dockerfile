@@ -3,6 +3,7 @@ FROM dunglas/frankenphp:1.7.0-php8.4-bookworm
 WORKDIR /app
 
 COPY . /app
+ARG NODE_VERSION=22
 
 # Make post-deploy.sh executable
 RUN chmod +x /app/post-deploy.sh
