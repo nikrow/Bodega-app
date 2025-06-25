@@ -42,7 +42,7 @@
         "pxlrbt/filament-excel": "^2.3",
         "rupadana/filament-api-service": "^3.4",
         "shuvroroy/filament-spatie-laravel-backup": "^2.2",
-        "spatie/browsershot": "^4.4",
+        "spatie/browsershot": "^5.0.5",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-pdf": "^1.5",
         "spatie/laravel-permission": "^6.16",
