@@ -51,10 +51,10 @@ RUN php artisan config:clear
 RUN php artisan octane:install
 
 # Install Node.js dependencies and build assets
-RUN npm install && npm audit fix && npm run build
+RUN npm install && npm run build
 
 # Expose necessary port
 EXPOSE 8000
 
 # Start the application
-ENTRYPOINT ["sh", "-c", "/app/post-deploy.sh && php artisan octane:frankenphp"]
+ENTRYPOINT ["sh", "-c", "php artisan octane:frankenphp && /app/post-deploy.sh"]
