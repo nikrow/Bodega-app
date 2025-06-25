@@ -14,8 +14,15 @@ if ! command -v mysqldump &> /dev/null; then
 fi
 
 # PASO 1: Limpieza de caché y archivos temporales
+
 echo "PASO 1: Limpieza de caché y archivos temporales"
 echo "----------------------------------------------"
+echo "Esperando a que MySQL esté listo..."
+until php artisan db:ping; do
+    echo "MySQL no está disponible, reintentando en 2 segundos..."
+    sleep 2
+done
+echo "MySQL está listo."
 # Solo limpiamos cachés específicos si es necesario
 php artisan cache:clear  # Limpia el caché de datos (como Redis o Memcached), pero no el de configuración/rutas
 composer dump-autoload
