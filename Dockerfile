@@ -63,6 +63,7 @@ RUN composer install --no-dev --optimize-autoloader
 RUN mkdir -p /app/storage/logs
 RUN php artisan config:clear
 RUN php artisan octane:install
+RUN caddy fmt --overwrite /app/Caddyfile
 
 # Install Node.js dependencies and build assets
 RUN npm install && npm run build
@@ -75,4 +76,4 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 EXPOSE 8080
 
 # Start the application
-ENTRYPOINT ["sh", "start.sh"]
+ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--port=${PORT:-8080}"]
