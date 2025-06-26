@@ -75,4 +75,4 @@ RUN chmod +x /app/post-deploy.sh
 EXPOSE 8080
 
 # Start the application
-ENTRYPOINT ["sh", "-c", "php artisan octane:frankenphp --host=0.0.0.0 --port=${PORT:-8080}"]
+ENTRYPOINT ["sh", "start.sh"]
