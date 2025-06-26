@@ -76,4 +76,4 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 EXPOSE 8080
 
 # Start the application
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=${PORT:-8080}"]
+ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=8080"]
