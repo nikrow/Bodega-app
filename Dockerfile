@@ -5,9 +5,6 @@ WORKDIR /app
 COPY . /app
 ARG NODE_VERSION=22
 
-# Make post-deploy.sh executable
-RUN chmod +x /app/post-deploy.sh
-
 # Install system dependencies
 RUN apt-get update \
     && apt-get install -y \
@@ -29,6 +26,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configuramos PHP para producción
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+RUN echo "memory_limit=512M" >> $PHP_INI_DIR/php.ini
+RUN echo "upload_max_filesize=100M" >> $PHP_INI_DIR/php.ini \
+    && echo "post_max_size=100M" >> $PHP_INI_DIR/php.ini \
+    && echo "max_execution_time=300" >> $PHP_INI_DIR/php.ini \
+    && echo "date.timezone=America/Santiago" >> $PHP_INI_DIR/php.ini
+
 # Optimizamos OPCache
 RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
@@ -67,9 +70,6 @@ RUN npm install && npm run build
 # Configuramos permisos
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
-
-# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
-RUN chmod +x /app/post-deploy.sh
 
 # Expose necessary port
 EXPOSE 8080
