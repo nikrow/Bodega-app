@@ -87,7 +87,8 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
 # Configure permissions
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
-
+    
+RUN chmod +x /app/post-deploy.sh
 # Expose the port
 EXPOSE 8080
 

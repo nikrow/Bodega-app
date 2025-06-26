@@ -4,7 +4,7 @@ services:
   - name: web
     dockerfile_path: Dockerfile
     github:
-      branch: main
+      branch: v2.5
       deploy_on_push: true
       repo: nikrow/Bodega-app
     http_port: 8080
