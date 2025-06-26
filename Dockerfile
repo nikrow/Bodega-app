@@ -87,10 +87,10 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
 # Configure permissions
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
-    
-RUN chmod +x /app/post-deploy.sh
+
+#RUN chmod +x /app/post-deploy.sh
 # Expose the port
 EXPOSE 8080
 
 # Configuration to run post-deploy script and start the server
-CMD /app/post-deploy.sh && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
