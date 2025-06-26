@@ -105,3 +105,60 @@ workers:
       - key: DB_PASSWORD
         scope: RUN_TIME
         value: ${DB_PASSWORD}
+jobs:
+  - name: post-deploy-job
+    dockerfile_path: Dockerfile
+    github:
+      branch: v2.5
+      deploy_on_push: true
+      repo: nikrow/Bodega-app
+    kind: POST_DEPLOY
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    run_command: |
+      php artisan cache:clear
+      composer dump-autoload
+      php artisan migrate --force
+      php artisan config:cache
+      php artisan event:cache
+      php artisan route:cache
+      php artisan view:cache
+      php artisan optimize
+      php artisan filament:optimize
+    envs:
+      - key: APP_NAME
+        scope: RUN_TIME
+        value: Laravel
+      - key: APP_ENV
+        scope: RUN_TIME
+        value: production
+      - key: APP_KEY
+        scope: RUN_TIME
+        value: ${APP_KEY}
+      - key: APP_DEBUG
+        scope: RUN_TIME
+        value: "false"
+      - key: APP_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
+      - key: DB_CONNECTION
+        scope: RUN_TIME
+        value: mysql
+      - key: DB_HOST
+        scope: RUN_TIME
+        value: ${DB_HOST}
+      - key: DB_PORT
+        scope: RUN_TIME
+        value: ${DB_PORT}
+      - key: DB_DATABASE
+        scope: RUN_TIME
+        value: ${DB_DATABASE}
+      - key: DB_USERNAME
+        scope: RUN_TIME
+        value: ${DB_USERNAME}
+      - key: DB_PASSWORD
+        scope: RUN_TIME
+        value: ${DB_PASSWORD}
+      - key: COMPOSER_ALLOW_SUPERUSER
+        scope: BUILD_TIME
+        value: "1"
