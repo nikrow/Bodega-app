@@ -5,13 +5,14 @@ WORKDIR /app
 COPY . /app
 ARG NODE_VERSION=22
 
-# Install system dependencies
+# Install system dependencies including Caddy
 RUN apt-get update \
     && apt-get install -y \
     zip libzip-dev gnupg gosu curl ca-certificates unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
     python3 dnsutils librsvg2-bin fswatch ffmpeg nano chromium fonts-liberation libgbm-dev libnss3 \
     default-mysql-client \
+    && curl -fsSL https://getcaddy.com | bash -s personal \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -76,4 +77,4 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 EXPOSE 8080
 
 # Start the application
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--port=${PORT:-8080}"]
+ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=${PORT:-8080}"]
