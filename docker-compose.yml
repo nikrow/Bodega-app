@@ -5,8 +5,6 @@ services:
         entrypoint: php artisan octane:frankenphp --workers=4 --max-requests=4
         ports:
             - "8000:8000"
-            - "443:443" # HTTPS
-            - "443:443/udp" # HTTP/3
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
@@ -15,8 +13,6 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
             - '.:/var/www/html'
-            - caddy_data:/data
-            - caddy_config:/config
         restart: unless-stopped
         networks:
             - sail

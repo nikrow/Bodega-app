@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1.7.0-php8.4-bookworm
+FROM php:8.4-fpm-bookworm
 
 WORKDIR /app
 
@@ -20,8 +20,18 @@ RUN apt-get update \
     default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN install-php-extensions pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl
+# Install PHP extensions including intl
+RUN docker-php-ext-configure intl \
+    && docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    intl
+
 # Copiar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -71,5 +81,5 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public \
 # Exponer el puerto necesario
 EXPOSE 8080
 
-# Iniciar la aplicación
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=8080"]
+# Configuration to run post-deploy script and start the server
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
