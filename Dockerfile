@@ -44,7 +44,7 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
 # Instalar Node.js y herramientas JavaScript.
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && npm install -g npm@10.9.0 pnpm bun \
+    && npm install -g npm@11.4.2 pnpm bun \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias de Composer y optimizar

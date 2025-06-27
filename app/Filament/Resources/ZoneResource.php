@@ -80,7 +80,6 @@ class ZoneResource extends Resource
                     }),
                 TextColumn::make('min_temperature_daily')
                     ->label('Temp. Mín. Hoy (°C)')
-                    ->lazy()
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
@@ -95,7 +94,6 @@ class ZoneResource extends Resource
                     ->color('secondary'),
                 TextColumn::make('max_temperature_daily')
                     ->label('Temp. Máx. Hoy (°C)')
-                    ->lazy()
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';
@@ -110,7 +108,6 @@ class ZoneResource extends Resource
                     ->color('warning'),
                 TextColumn::make('daily_rain')
                     ->label('Lluvia Hoy (mm)')
-                    ->lazy()
                     ->state(function (Zone $record) use ($wiseconnService): ?string {
                         $field = $record->field;
                         if (!$field) return 'N/A';

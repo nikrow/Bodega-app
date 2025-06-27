@@ -1,0 +1,5 @@
+:8080 {
+	root * /var/www/public
+	php
+	file_server
+}
