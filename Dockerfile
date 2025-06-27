@@ -57,7 +57,6 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 RUN npm install && npm run build
 
 RUN php artisan config:clear \
-    && php artisan migrate --force \
     && php artisan octane:install \
     && php artisan storage:link \
     && php artisan optimize \
@@ -68,7 +67,7 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public \
     && chmod -R 775 /app/storage /app/bootstrap/cache /app/public \
     && find /app/storage -type d -print0 | xargs -0 chmod 2775 \
     && find /app/storage -type f -print0 | xargs -0 chmod 0664
-    
+
 # Exponer el puerto necesario
 EXPOSE 8080
 
