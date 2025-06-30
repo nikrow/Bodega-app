@@ -87,7 +87,7 @@ RUN mkdir -p /app/storage/logs \
 # Etapa 3: Etapa final - Imagen de Producción para Octane
 # Esta etapa toma lo esencial de la etapa 'app_builder' para una imagen final limpia.
 # ====================================================================
-FROM php:8.4-cli-slim
+FROM php:8.4-cli
 
 WORKDIR /app
 
