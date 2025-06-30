@@ -77,6 +77,8 @@ RUN composer install --no-dev --optimize-autoloader
 # Volver a root para operaciones que requieren permisos elevados
 USER root
 
+RUN php artisan config:clear
+
 # Preparar la aplicación (directorios, cache de configuración, etc.)
 RUN mkdir -p /app/storage/logs \
     && php artisan config:clear \
