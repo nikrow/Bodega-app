@@ -1,5 +1,5 @@
 {
-  "version": "3",
+  "version": "2024.3",
   "server": {
     "command": "php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=${PORT}"
   },

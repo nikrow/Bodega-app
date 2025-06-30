@@ -87,6 +87,11 @@ RUN mkdir -p /app/storage/logs \
     && chmod -R 775 /app/storage /app/bootstrap/cache \
     && chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
+USER root
+
+# Ajustar permisos finales
+RUN chmod -R 775 /app /app/storage /app/bootstrap/cache \
+    && chown -R www-data:www-data /app /app/storage /app/bootstrap/cache
 # ====================================================================
 # Etapa 3: Imagen de Producción para Octane
 # ====================================================================
