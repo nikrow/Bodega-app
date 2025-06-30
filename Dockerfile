@@ -40,8 +40,17 @@ RUN echo "upload_max_filesize=100M" >> $PHP_INI_DIR/php.ini \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     zip libzip-dev curl ca-certificates unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    libonig-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+    # Optimizamos OPCache
+RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
 
 # Instalar extensiones PHP, incluyendo sockets e intl
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
