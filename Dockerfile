@@ -54,10 +54,11 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
 
 # Instalar RoadRunner binario (versión compatible con Octane)
 # Revisa la documentación de Octane para la versión recomendada de RoadRunner.
-RUN curl -sS https://raw.githubusercontent.com/spiral/roadrunner-cli/master/rr | php -- --ansi --version=2.x -n -q --install \
-    && mv rr /usr/local/bin/rr \
+RUN curl -sSL https://github.com/roadrunner-server/roadrunner/releases/download/v2.11.2/rr_2.11.2_linux_amd64.tar.gz -o rr.tar.gz \
+    && tar -xzf rr.tar.gz \
+    && mv rr_2.11.2_linux_amd64/rr /usr/local/bin/rr \
     && chmod +x /usr/local/bin/rr \
-    && rr get-binary 2.11.2 --cpu=amd64 # Ajusta la versión y CPU según sea necesario
+    && rm -rf rr.tar.gz rr_2.11.2_linux_amd64
 
 # Copiar Composer desde su imagen oficial.
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
