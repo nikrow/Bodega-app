@@ -35,7 +35,6 @@ RUN echo "upload_max_filesize=100M" >> $PHP_INI_DIR/php.ini \
     && echo "max_execution_time=300" >> $PHP_INI_DIR/php.ini \
     && echo "date.timezone=America/Santiago" >> $PHP_INI_DIR/php.ini
 
-
 # Instalar dependencias del sistema usando apt-get
 RUN apt-get update && apt-get install -y --no-install-recommends \
     zip libzip-dev curl ca-certificates unzip git sqlite3 libcap2-bin \
@@ -43,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-    # Optimizamos OPCache
+# Optimizamos OPCache
 RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
@@ -82,20 +81,14 @@ RUN mkdir -p /app/storage/logs \
     && php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache \
-    && php artisan octane:install --server=roadrunner \
     && php artisan filament:optimize \
     && chmod -R 775 /app/storage /app/bootstrap/cache \
     && chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
-USER root
-
-# Ajustar permisos finales
-RUN chmod -R 775 /app /app/storage /app/bootstrap/cache \
-    && chown -R www-data:www-data /app /app/storage /app/bootstrap/cache
 # ====================================================================
-# Etapa 3: Imagen de Producción para Octane
+# Etapa 3: Imagen de Producción para PHP-FPM
 # ====================================================================
-FROM php:8.4-cli
+FROM php:8.4-fpm
 
 WORKDIR /app
 
@@ -109,11 +102,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl sockets
 
-# Copiar el binario de RoadRunner desde la imagen oficial
-COPY --from=ghcr.io/roadrunner-server/roadrunner:2024.3.2 /usr/bin/rr /usr/local/bin/rr
-
 # Copiar todos los archivos de la aplicación desde la etapa 'app_builder'
-# Asegúrate de copiar todo lo que Composer instaló y las caches generadas.
 COPY --from=app_builder /app /app
 
 # Ajustar permisos para el usuario www-data
@@ -122,8 +111,8 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 # Cambiar el usuario a www-data para ejecutar la aplicación de forma segura
 USER www-data
 
-# Exponer el puerto definido por la variable de entorno PORT
-EXPOSE ${PORT}
+# Exponer el puerto 9000 para PHP-FPM
+EXPOSE 9000
 
-# Iniciar RoadRunner con Laravel Octane
-CMD ["rr", "serve", "-c", ".rr.json"]
+# Iniciar PHP-FPM
+CMD ["php-fpm"]
