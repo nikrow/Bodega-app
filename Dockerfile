@@ -121,4 +121,4 @@ USER www-data
 EXPOSE ${PORT}
 
 # Iniciar RoadRunner con Laravel Octane
-CMD ["rr", "serve", "-c", ".rr.yaml"]
+CMD ["rr", "serve", "-c", ".rr.json"]
