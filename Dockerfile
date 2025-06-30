@@ -19,7 +19,7 @@ COPY . .
 
 # Construir los assets de frontend (CSS, JS, etc.)
 RUN npm run build \
-    && rm -rf node_modules # Limpiar node_modules después de la construcción para reducir el tamaño temporal
+    && rm -rf node_modules
 
 # ====================================================================
 # Etapa 2: Construcción de la Aplicación PHP y preparación del entorno de ejecución
@@ -37,9 +37,6 @@ WORKDIR /app
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # Instalar dependencias del sistema usando apt-get.
-# Incluye dependencias para PHP, Composer y las necesarias para RoadRunner/Octane.
-# Eliminamos Chromium/Puppeteer aquí para mantener la imagen ligera,
-# a menos que sea ABSOLUTAMENTE necesario para tu aplicación en tiempo real.
 # Si lo necesitas, reintroduce la sección de 'chromium-browser' y sus libs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     zip libzip-dev gnupg gosu curl ca-certificates unzip git sqlite3 libcap2-bin \
@@ -79,7 +76,7 @@ RUN mkdir -p /app/storage/logs \
     && php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache \
-    && php artisan octane:install \
+    && php artisan octane:install --server=roadrunner \
     && php artisan filament:optimize \
     && chmod -R 775 /app/storage /app/bootstrap/cache \
     && chown -R www-data:www-data /app/storage /app/bootstrap/cache
@@ -87,12 +84,31 @@ RUN mkdir -p /app/storage/logs \
 # Etapa 3: Etapa final - Imagen de Producción para Octane
 # Esta etapa toma lo esencial de la etapa 'app_builder' para una imagen final limpia.
 # ====================================================================
-FROM php:8.4-cli
+FROM php:8.4-cli-alpine
 
 WORKDIR /app
 
-# Copiar todos los archivos de la aplicación, incluyendo dependencias y assets,
-# desde la etapa 'app_builder'.
+RUN apk add --no-cache \
+    curl \
+    libpng \
+    libzip \
+    icu-libs \
+    freetype \
+    libjpeg-turbo \
+    libwebp \
+    oniguruma \
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl \
+    && apk del .build-deps
+# Copiar el binario de RoadRunner desde la imagen oficial
+COPY --from=ghcr.io/roadrunner-server/roadrunner:2024.3.2 /usr/bin/rr /usr/local/bin/rr
+
+# Copiar todos los archivos de la aplicación desde la etapa 'app_builder'
 COPY --from=app_builder /app /app
 
-ENTRYPOINT ["sh", "-c", " php artisan octane:start --host=0.0.0.0 --port=${PORT}"]
+# Exponer el puerto (definido por la variable de entorno PORT)
+EXPOSE ${PORT}
+
+# Iniciar RoadRunner con Laravel Octane
+CMD ["rr", "serve", "-c", ".rr.yaml"]
