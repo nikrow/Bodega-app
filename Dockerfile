@@ -37,8 +37,9 @@ RUN echo "upload_max_filesize=100M" >> $PHP_INI_DIR/php.ini \
 
 # Instalar dependencias del sistema usando apt-get
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    zip libzip-dev curl ca-certificates unzip git sqlite3 libcap2-bin \
+    zip libzip-dev gnupg gosu curl ca-certificates unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    python3 dnsutils librsvg2-bin fswatch ffmpeg nano chromium fonts-liberation libgbm-dev libnss3 \
     default-mysql-client \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
@@ -95,7 +96,9 @@ WORKDIR /app
 
 # Instalar solo las dependencias del sistema necesarias para producción
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl libpng-dev libzip-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    zip libzip-dev gnupg gosu curl ca-certificates unzip git sqlite3 libcap2-bin \
+    libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    python3 dnsutils librsvg2-bin fswatch ffmpeg nano chromium fonts-liberation libgbm-dev libnss3 \
     default-mysql-client \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
