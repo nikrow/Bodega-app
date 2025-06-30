@@ -11,9 +11,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Instalar dependencias de Node.js
-# Usamos --omit=dev para evitar instalar dependencias de desarrollo en el entorno final
-# si alguna librería lo permite.
-RUN npm install --omit=dev
+
+RUN npm install
 
 # Copiar el resto de los archivos de la aplicación
 COPY . .
