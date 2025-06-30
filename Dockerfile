@@ -27,7 +27,7 @@ RUN npm run build \
 # Esta etapa instala PHP, extensiones, dependencias de sistema y PHP Composer.
 # Aquí se preinstala RoadRunner y se prepara la aplicación para Octane.
 # ====================================================================
-FROM php:8.4-cli-slim AS app_builder
+FROM php:8.4-cli AS app_builder
 
 # Usamos la imagen CLI-slim porque RoadRunner será el que maneje el proceso,
 # no PHP-FPM. Además, 'slim' es más pequeña que la versión 'fpm' por defecto.
