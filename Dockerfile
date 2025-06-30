@@ -23,7 +23,7 @@ RUN npm run build \
 # Etapa 2: Construcción de la Aplicación PHP y preparación del entorno
 # Esta etapa instala PHP, extensiones, dependencias de sistema y PHP Composer.
 # ====================================================================
-FROM php:8.4-cli-alpine AS app_builder
+FROM php:8.4-cli AS app_builder
 
 WORKDIR /app
 
