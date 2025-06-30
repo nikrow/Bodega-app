@@ -40,7 +40,6 @@ RUN echo "upload_max_filesize=100M" >> $PHP_INI_DIR/php.ini \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     zip libzip-dev curl ca-certificates unzip git sqlite3 libcap2-bin \
     libpng-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
-    libonig-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -97,7 +96,7 @@ WORKDIR /app
 
 # Instalar solo las dependencias del sistema necesarias para producción
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl libpng-dev libzip-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+    curl libpng-dev libzip-dev libonig-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
