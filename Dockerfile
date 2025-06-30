@@ -69,7 +69,7 @@ RUN mkdir -p /app/storage/logs \
 # Etapa 3: Etapa final - Imagen de Producción para Octane
 # Usa php:8.4-cli-alpine para una imagen más ligera
 # ====================================================================
-FROM php:8.4-cli-alpine
+FROM php:8.4-cli
 
 WORKDIR /app
 
