@@ -50,15 +50,16 @@ COPY . /app
 # Copiar los assets construidos desde la etapa 'assets'
 COPY --from=assets /app/public /app/public
 
-# Ajustar permisos para evitar ejecutar Composer como root
+# Ajustar permisos y cambiar al usuario no-root para Composer
 RUN useradd -m -u 1000 appuser \
     && chown -R appuser:appuser /app
 
 USER appuser
 
-# Instalar dependencias de PHP
+# Instalar dependencias de PHP con Composer
 RUN composer install --no-dev --optimize-autoloader
 
+# Volver a root para operaciones que requieren permisos elevados
 USER root
 
 # Preparar la aplicación (directorios, cache de configuración, etc.)
@@ -79,13 +80,13 @@ FROM php:8.4-cli
 
 WORKDIR /app
 
-# Instalar dependencias necesarias para producción
+# Instalar solo las dependencias del sistema necesarias para producción
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl libpng libzip icu-devtools libjpeg62-turbo libwebp libonig \
+    curl libpng-dev libzip-dev libicu-dev libjpeg-dev libfreetype6-dev libwebp-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Instalar extensiones PHP necesarias para producción
+# Instalar y habilitar extensiones PHP necesarias para producción
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) pdo_mysql mbstring opcache exif pcntl bcmath gd zip intl sockets
 
@@ -93,10 +94,14 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
 COPY --from=ghcr.io/roadrunner-server/roadrunner:2024.3.2 /usr/bin/rr /usr/local/bin/rr
 
 # Copiar todos los archivos de la aplicación desde la etapa 'app_builder'
+# Asegúrate de copiar todo lo que Composer instaló y las caches generadas.
 COPY --from=app_builder /app /app
 
 # Ajustar permisos para el usuario www-data
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+
+# Cambiar el usuario a www-data para ejecutar la aplicación de forma segura
+USER www-data
 
 # Exponer el puerto definido por la variable de entorno PORT
 EXPOSE ${PORT}
