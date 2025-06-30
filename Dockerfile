@@ -76,9 +76,6 @@ RUN mkdir -p /app/storage/logs \
     && chmod -R 775 /app/storage /app/bootstrap/cache \
     && chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
-# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
-RUN chmod +x /app/post-deploy.sh
-
 # Exponemos el puerto
 EXPOSE 8080
 
