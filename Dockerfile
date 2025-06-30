@@ -29,6 +29,12 @@ WORKDIR /app
 
 # Habilitar configuraciones de producción de PHP
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+RUN echo "memory_limit=512M" >> $PHP_INI_DIR/php.ini
+RUN echo "upload_max_filesize=100M" >> $PHP_INI_DIR/php.ini \
+    && echo "post_max_size=100M" >> $PHP_INI_DIR/php.ini \
+    && echo "max_execution_time=300" >> $PHP_INI_DIR/php.ini \
+    && echo "date.timezone=America/Santiago" >> $PHP_INI_DIR/php.ini
+
 
 # Instalar dependencias del sistema usando apt-get
 RUN apt-get update && apt-get install -y --no-install-recommends \
