@@ -63,7 +63,7 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
 ARG NODE_VERSION=22
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g npm@10.9.0 \
+    && npm install -g npm@11.4.2 \
     && npm install -g pnpm \
     && npm install -g bun \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarnkey.gpg \
@@ -101,4 +101,4 @@ RUN chmod +x /app/post-deploy.sh
 # Exponemos el puerto
 EXPOSE 8080
 
-ENTRYPOINT ["php", "artisan", "serve", "--host=0.0.0.0"]
+ENTRYPOINT ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080", "/app/post-deploy.sh"]
