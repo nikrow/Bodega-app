@@ -112,4 +112,4 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public \
 EXPOSE 8080
 
 # Iniciar PHP-FPM
-CMD ["mhp-php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+CMD ["php-php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
