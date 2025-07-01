@@ -7,15 +7,15 @@ services:
       branch: main
       deploy_on_push: true
       repo: nikrow/Bodega-app
-    http_port: 8080
+    http_port: 443
     instance_count: 1
     instance_size_slug: basic-xs
     routes:
       - path: /
     source_dir: /
     health_check:
-      http_path: /health
-      port: 8080
+      http_path: /
+      port: 443
     envs:
       - key: APP_NAME
         scope: RUN_TIME
