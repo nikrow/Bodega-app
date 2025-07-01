@@ -2,7 +2,7 @@ FROM php:8.4-fpm
 
 WORKDIR /app
 
-# Instalar dependencias del sistema y herramientas de compilación
+# Actualizar repositorios e instalar dependencias del sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
@@ -40,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalar extensiones PHP incluyendo intl
+# Instalar extensiones PHP
 RUN docker-php-ext-configure intl \
     && docker-php-ext-install \
     pdo_mysql \
@@ -52,7 +52,7 @@ RUN docker-php-ext-configure intl \
     zip \
     intl
 
-# Establecer variables de entorno
+# Variables de entorno
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV PATH="$PATH:/root/.composer/vendor/bin"
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
@@ -86,7 +86,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
 COPY . /app
 COPY my.cnf /etc/mysql/conf.d/my.cnf
 
-# Instalar dependencias de Composer y optimizar
+# Instalar dependencias de Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Instalar dependencias de Node.js y construir assets
@@ -98,7 +98,6 @@ RUN npm install --location=global puppeteer@22.8.2
 
 # Ejecutar comandos de optimización de Laravel
 RUN php artisan config:clear \
-    && php artisan octane:install \
     && php artisan storage:link \
     && php artisan optimize \
     && php artisan filament:optimize
@@ -109,8 +108,8 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public \
     && find /app/storage -type d -print0 | xargs -0 chmod 2775 \
     && find /app/storage -type f -print0 | xargs -0 chmod 0664
 
-# Exponer el puerto
-EXPOSE 8080
+# Exponer el puerto para PHP-FPM
+EXPOSE 9000
 
-# Iniciar el servidor
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+# Iniciar PHP-FPM
+CMD ["php-fpm"]
