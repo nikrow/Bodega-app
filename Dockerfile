@@ -101,4 +101,4 @@ RUN chmod +x /app/post-deploy.sh
 # Exponemos el puerto
 EXPOSE 8080
 
-ENTRYPOINT ["php", "artisan", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+ENTRYPOINT ["php", "artisan", "serve", "--host=0.0.0.0"]
