@@ -82,5 +82,7 @@ RUN chmod +x /app/post-deploy.sh
 
 # Exponemos el puerto
 EXPOSE 443
+EXPOSE 80
+EXPOSE 8000
 
-CMD /app/post-deploy.sh  && php artisan serve --host=0.0.0.0 --port=${PORT:-443}
+CMD /app/post-deploy.sh  && php artisan serve 
