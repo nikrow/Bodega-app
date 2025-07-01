@@ -2,6 +2,7 @@ FROM php:8.3-fpm
 
 WORKDIR /app
 
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Instalamos dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git \
@@ -57,9 +58,6 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
-
-    # Instalar Node.js y herramientas JavaScript
-ARG NODE_VERSION=22
 
 # Instalamos Puppeteer globalmente
 RUN npm install --location=global puppeteer@22.8.2
