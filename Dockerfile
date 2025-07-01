@@ -1,46 +1,30 @@
-FROM php:8.4-fpm
+FROM php:8.3-fpm
 
 WORKDIR /app
 
-# Actualizar repositorios e instalar dependencias del sistema
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Instalamos dependencias del sistema
+RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm \
+    # Dependencias para intl
     libicu-dev \
+    # Agregamos default-mysql-client para mysqldump
     default-mysql-client \
+    # Agregamos nano
     nano \
-    # Dependencias para Puppeteer
     chromium \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libgdk-pixbuf2.0-0 \
-    libglib2.0-0 \
-    libnspr4 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxrandr2 \
-    libxkbcommon0 \
-    libxmuu1 \
-    libgbm1 \
-    libasound2 \
-    libatspi2.0-0 \
-    libgtk-3-0 \
-    fonts-liberation \
-    libfontconfig1 \
-    libjpeg-dev \
-    libwebp-dev \
-    ca-certificates \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar extensiones PHP
+# Instalamos extensiones PHP incluyendo intl
 RUN docker-php-ext-configure intl \
     && docker-php-ext-install \
     pdo_mysql \
@@ -52,12 +36,12 @@ RUN docker-php-ext-configure intl \
     zip \
     intl
 
-# Variables de entorno
+# Establecemos variables de entorno
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV PATH="$PATH:/root/.composer/vendor/bin"
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Instalar Composer
+# Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configurar PHP para producción
@@ -67,49 +51,36 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && echo "post_max_size=100M" >> "$PHP_INI_DIR/php.ini" \
     && echo "max_execution_time=300" >> "$PHP_INI_DIR/php.ini"
 
-# Optimizar OPCache
-RUN echo "opcache.enable=1" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
-    && echo "opcache.memory_consumption=256" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
-    && echo "opcache.interned_strings_buffer=8" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
-    && echo "opcache.max_accelerated_files=10000" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
-    && echo "opcache.revalidate_freq=3600" >> "$PHP_INI_DIR/conf.d/opcache.ini" \
-    && echo "opcache.enable_cli=1" >> "$PHP_INI_DIR/conf.d/opcache.ini"
+# Optimizamos OPCache
+RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
+    && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
 
-# Instalar Node.js y herramientas JavaScript
-ARG NODE_VERSION=22
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && npm install -g pnpm bun \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copiar la aplicación
-COPY . /app
-COPY my.cnf /etc/mysql/conf.d/my.cnf
-
-# Instalar dependencias de Composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Instalar dependencias de Node.js y construir assets
-RUN npm ci \
-    && npm run build
-
-# Instalar Puppeteer globalmente
+# Instalamos Puppeteer globalmente
 RUN npm install --location=global puppeteer@22.8.2
 
-# Ejecutar comandos de optimización de Laravel
-RUN php artisan config:clear \
-    && php artisan storage:link \
-    && php artisan optimize \
-    && php artisan filament:optimize
+# Copiamos la aplicación
+COPY . /app
 
-# Configurar permisos
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public \
-    && chmod -R 775 /app/storage /app/bootstrap/cache /app/public \
-    && find /app/storage -type d -print0 | xargs -0 chmod 2775 \
-    && find /app/storage -type f -print0 | xargs -0 chmod 0664
+# Instalamos dependencias
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
+    && npm ci \
+    && npm run build \
+    && rm -rf node_modules
 
-# Exponer el puerto para PHP-FPM
+RUN mkdir -p /app/storage/logs
+
+# Configuramos permisos
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
+
+# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
+RUN chmod +x /app/post-deploy.sh
+
+# Exponemos el puerto
 EXPOSE 8080
 
-# Iniciar PHP-FPM
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+CMD /app/post-deploy.sh  && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
