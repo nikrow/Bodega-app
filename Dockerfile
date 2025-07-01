@@ -109,7 +109,7 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public \
     && find /app/storage -type f -print0 | xargs -0 chmod 0664
 
 # Exponer el puerto para PHP-FPM
-EXPOSE 9000
+EXPOSE 8080
 
 # Iniciar PHP-FPM
-CMD ["php-fpm"]
+CMD ["mhp-php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
