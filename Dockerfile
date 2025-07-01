@@ -95,10 +95,7 @@ RUN php artisan config:clear \
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Aseguramos que el script post-deploy.sh tenga permisos de ejecución
-RUN chmod +x /app/post-deploy.sh
-
 # Exponemos el puerto
 EXPOSE 8080
 
-ENTRYPOINT ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080", "/app/post-deploy.sh"]
+ENTRYPOINT ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080",]
