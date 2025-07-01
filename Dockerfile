@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     default-mysql-client \
     # Agregamos nano
     nano \
+    chromium \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos extensiones PHP incluyendo intl
@@ -37,12 +38,17 @@ RUN docker-php-ext-configure intl \
 # Establecemos variables de entorno
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV PATH="$PATH:/root/.composer/vendor/bin"
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configuramos PHP para producción
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+# Configurar PHP para producción
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && echo "memory_limit=512M" >> "$PHP_INI_DIR/php.ini" \
+    && echo "upload_max_filesize=100M" >> "$PHP_INI_DIR/php.ini" \
+    && echo "post_max_size=100M" >> "$PHP_INI_DIR/php.ini" \
+    && echo "max_execution_time=300" >> "$PHP_INI_DIR/php.ini"
 
 # Optimizamos OPCache
 RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
@@ -51,6 +57,13 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
     && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
+
+# Instalar Node.js y herramientas JavaScript
+ARG NODE_VERSION=22
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g pnpm bun \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copiamos la aplicación
 COPY . /app
