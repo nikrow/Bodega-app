@@ -74,6 +74,15 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
     && npm run build \
     && rm -rf node_modules
 
+# Instalar Puppeteer globalmente
+RUN npm install --location=global puppeteer@22.8.2
+
+# Ejecutar comandos de optimización de Laravel
+RUN php artisan config:clear \
+    && php artisan storage:link \
+    && php artisan optimize \
+    && php artisan filament:optimize
+    
 # Configuramos permisos
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
