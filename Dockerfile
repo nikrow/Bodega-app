@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     # Agregamos nano
     nano \
     chromium \
+    fonts-liberation libgbm-dev libnss3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalamos extensiones PHP incluyendo intl
@@ -61,9 +62,18 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
 # Instalar Node.js y herramientas JavaScript
 ARG NODE_VERSION=22
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && npm install -g pnpm bun \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y nodejs \
+    && npm install -g npm@10.9.0 \
+    && npm install -g pnpm \
+    && npm install -g bun \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarnkey.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update \
+    && apt-get install -y yarn \
+    && rm -rf /var/lib/apt/lists/*
+
+    # Instalamos Puppeteer globalmente
+RUN npm install --location=global puppeteer@22.8.2
 
 # Copiamos la aplicación
 COPY . /app
@@ -74,15 +84,13 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
     && npm run build \
     && rm -rf node_modules
 
-# Instalar Puppeteer globalmente
-RUN npm install --location=global puppeteer@22.8.2
-
-# Ejecutar comandos de optimización de Laravel
+RUN mkdir -p /app/storage/logs
 RUN php artisan config:clear \
     && php artisan storage:link \
     && php artisan optimize \
     && php artisan filament:optimize
-    
+
+
 # Configuramos permisos
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
@@ -93,4 +101,4 @@ RUN chmod +x /app/post-deploy.sh
 # Exponemos el puerto
 EXPOSE 8080
 
-CMD /app/post-deploy.sh  && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+ENTRYPOINT ["php", "artisan", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
