@@ -72,7 +72,7 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
     && rm -rf node_modules
 
 # Ejecutar comandos de optimización de Laravel
-RUN php artisan config:clear \
+RUN php artisan config:cache \
     && php artisan storage:link \
     && php artisan optimize \
     && php artisan filament:optimize
