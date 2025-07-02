@@ -3,6 +3,7 @@
 namespace App\Exceptions\Stock;
 
 use Exception;
+use Throwable;
 
 class InvalidMovementTypeException extends Exception
 {
@@ -13,7 +14,7 @@ class InvalidMovementTypeException extends Exception
      * @param int $code
      * @param Exception|null $previous
      */
-    public function __construct($message = "Tipo de movimiento no válido.", $code = 0, Exception $previous = null)
+    public function __construct($message = "Tipo de movimiento no válido.",int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

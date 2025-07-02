@@ -3,7 +3,7 @@
 namespace App\Exceptions\Stock;
 
 use Exception;
-
+use Throwable;
 class WarehouseNotFoundException extends Exception
 {
     /**
@@ -13,7 +13,7 @@ class WarehouseNotFoundException extends Exception
      * @param int $code
      * @param Exception|null $previous
      */
-    public function __construct($message = "Bodega no encontrada.", $code = 0, Exception $previous = null)
+    public function __construct($message = "Bodega no encontrada.",int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

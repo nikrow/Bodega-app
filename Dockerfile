@@ -47,8 +47,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Configurar PHP para producción
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && echo "memory_limit=512M" >> "$PHP_INI_DIR/php.ini" \
-    && echo "upload_max_filesize=100M" >> "$PHP_INI_DIR/php.ini" \
-    && echo "post_max_size=100M" >> "$PHP_INI_DIR/php.ini" \
     && echo "max_execution_time=300" >> "$PHP_INI_DIR/php.ini"
 
 # Optimizamos OPCache
