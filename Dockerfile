@@ -42,7 +42,9 @@ ENV PATH="$PATH:/root/.composer/vendor/bin"
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configuramos PHP para producción
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && echo "memory_limit=512M" >> "$PHP_INI_DIR/php.ini" \
+    && echo "max_execution_time=300" >> "$PHP_INI_DIR/php.ini" 
 
 # Optimizamos OPCache
 RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
@@ -61,7 +63,14 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
     && npm run build \
     && rm -rf node_modules
 
-# Configuramos permisos
+RUN php artisan config:cache \
+    && php artisan event:cache \
+    && php artisan route:cache \
+    && php artisan view:cache \
+    && php artisan storage:link \
+    && php artisan filament:optimize
+
+    # Configuramos permisos
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
 

@@ -29,13 +29,6 @@ echo "Ejecutando migraciones..."
 php artisan migrate --force
 
 # Optimizaciones
-echo "Aplicando optimizaciones..."
-php artisan config:cache
-php artisan event:cache
-php artisan route:cache
-php -d memory_limit=256M artisan view:cache
-php -d memory_limit=256M artisan optimize
-php artisan filament:optimize
 
 # Generar enlaces simbólicos
 echo "Generando enlaces simbólicos..."
@@ -65,23 +58,23 @@ else
     echo "Nota: El comando chown no está disponible; App Platform puede manejar permisos automáticamente."
 fi
 
-# PASO 4: Configurar parámetros PHP mediante .user.ini
-echo "PASO 4: Configurar parámetros PHP mediante .user.ini"
-echo "---------------------------------------------------"
-# Crear o sobrescribir .user.ini con parámetros PHP personalizados
-cat <<EOT > .user.ini
-[PHP]
-upload_max_filesize = 10M
-post_max_size = 10M
-max_execution_time = 300
-max_input_time = 300
-memory_limit = 256M
-client_max_body_size = 100M
-post_max_size = 100M
-EOT
+# # PASO 4: Configurar parámetros PHP mediante .user.ini
+# echo "PASO 4: Configurar parámetros PHP mediante .user.ini"
+# echo "---------------------------------------------------"
+# # Crear o sobrescribir .user.ini con parámetros PHP personalizados
+# cat <<EOT > .user.ini
+# [PHP]
+# upload_max_filesize = 10M
+# post_max_size = 10M
+# max_execution_time = 300
+# max_input_time = 300
+# memory_limit = 256M
+# client_max_body_size = 100M
+# post_max_size = 100M
+# EOT
 
-echo "Archivo .user.ini creado o actualizado con parámetros PHP personalizados."
+# echo "Archivo .user.ini creado o actualizado con parámetros PHP personalizados."
 
-echo "==========================================="
-echo "Comandos post-despliegue ejecutados con éxito"
-echo "==========================================="
+# echo "==========================================="
+# echo "Comandos post-despliegue ejecutados con éxito"
+# echo "==========================================="
