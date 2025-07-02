@@ -1,45 +1,25 @@
 FROM php:8.3-fpm
 
 WORKDIR /app
-
-# Instalamos dependencias del sistema
+# Instalamos dependencias del sistema y configuramos
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    nodejs \
-    npm \
-    # Dependencias para intl
-    libicu-dev \
-    # Agregamos default-mysql-client para mysqldump
-    default-mysql-client \
-    # Agregamos nano
-    nano \
+    git curl libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip nodejs npm \
+    libicu-dev default-mysql-client chromium fonts-liberation libgbm-dev libnss3 nano \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalamos extensiones PHP incluyendo intl
+# Instalamos extensiones PHP
 RUN docker-php-ext-configure intl \
     && docker-php-ext-install \
-    pdo_mysql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd \
-    zip \
-    intl
+    pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
 # Establecemos variables de entorno
-ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV PATH="$PATH:/root/.composer/vendor/bin"
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    PATH="$PATH:/root/.composer/vendor/bin" \
+    NODE_VERSION=22
 
 # Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN npm install -g npm@latest
 
 # Configuramos PHP para producción
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
@@ -62,6 +42,12 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
     && npm ci \
     && npm run build \
     && rm -rf node_modules
+
+# Instalamos Puppeteer globalmente
+RUN npm install --location=global puppeteer@22.8.2
+
+# Configuración de Puppeteer para que utilice el Chromium instalado
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Configuramos permisos
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
