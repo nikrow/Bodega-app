@@ -38,15 +38,3 @@ Schedule::call(function () {
                 Log::warning('No se encontro ningun campo para sincronizar zonas.');
             }
         })->hourly();
-
-Schedule::call(function () {
-    $field = Field::first(); // O ajusta según tu lógica
-            if ($field) {
-                $zones = Zone::where('field_id', $field->id)->get(); // Itera sobre todas las zonas (todas son Weather)
-                foreach ($zones as $zone) {
-                    app(WiseconnService::class)->updateMeasures($field, $zone);
-                }
-            } else {
-                Log::warning('No se encontro ningun campo para actualizar medidas.');
-            }
-        })->everyFiveMinutes();

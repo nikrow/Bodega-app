@@ -17,7 +17,4 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::get('/reportes/exportar/excel', [ReportExportController::class, 'exportExcel'])->name('reportes.exportar.excel');
 Route::get('/cuarteles/exportar/excel', [ParcelExportController::class, 'exportExcel'])->name('cuarteles.exportar.excel');
-Route::get('/initialize-data', [WiseconnController::class, 'initializeData']);
-Route::prefix('api')->group(function () {
-    Route::post('/fields/{field}/sync-zones', [ZoneSyncController::class, 'sync'])->name('fields.sync-zones');
-});
+
