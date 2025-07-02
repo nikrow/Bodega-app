@@ -51,9 +51,6 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
 # Instalamos Puppeteer globalmente
 RUN npm install --location=global puppeteer@22.8.2
 
-# Configuración de Puppeteer para que utilice el Chromium instalado
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
 # Configuramos permisos
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
