@@ -81,8 +81,7 @@ RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
 RUN chmod +x /app/post-deploy.sh
 
 # Exponemos el puerto
-EXPOSE 443
-EXPOSE 80
-EXPOSE 8000
+EXPOSE 8080
 
-CMD /app/post-deploy.sh  && php artisan serve 
+# Configuración para ejecutar el script post-deploy y luego iniciar el servidor
+CMD /app/post-deploy.sh && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
