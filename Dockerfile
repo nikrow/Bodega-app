@@ -73,7 +73,6 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
 
 # Ejecutar comandos de optimización de Laravel
 RUN php artisan config:clear \
-    && php artisan octane:install \
     && php artisan storage:link \
     && php artisan optimize \
     && php artisan filament:optimize
