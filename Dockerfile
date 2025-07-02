@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.4-fpm
 
 WORKDIR /app
 
@@ -71,6 +71,12 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
     && npm run build \
     && rm -rf node_modules
 
+# Ejecutar comandos de optimización de Laravel
+RUN php artisan config:cache \
+    && php artisan storage:link \
+    && php artisan optimize \
+    && php artisan filament:optimize
+
 RUN mkdir -p /app/storage/logs
 
 # Configuramos permisos
@@ -83,4 +89,5 @@ RUN chmod +x /app/post-deploy.sh
 # Exponemos el puerto
 EXPOSE 8080
 
-CMD /app/post-deploy.sh  && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+# Configuración para ejecutar el script post-deploy y luego iniciar el servidor
+CMD /app/post-deploy.sh && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
