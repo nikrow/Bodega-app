@@ -1,9 +1,10 @@
 FROM php:8.3-fpm
 
 WORKDIR /app
+
 # Instalamos dependencias del sistema y configuramos
 RUN apt-get update && apt-get install -y \
-    git curl libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip nodejs npm \
+    git curl libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip \
     libicu-dev default-mysql-client chromium fonts-liberation libgbm-dev libnss3 nano \
     && rm -rf /var/lib/apt/lists/*
 
@@ -14,12 +15,16 @@ RUN docker-php-ext-configure intl \
 
 # Establecemos variables de entorno
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
-    PATH="$PATH:/root/.composer/vendor/bin" \
-    NODE_VERSION=22
+    PATH="$PATH:/root/.composer/vendor/bin"
+
+# Instalamos una versión específica de Node.js (22.x) y npm
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest \
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalamos Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN npm install -g npm@latest
 
 # Configuramos PHP para producción
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
