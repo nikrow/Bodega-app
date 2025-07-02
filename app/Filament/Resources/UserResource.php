@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Hash;
+use Filament\Tables\Filters\Filter;
 use Filament\Notifications\Notification;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
@@ -166,7 +167,10 @@ class UserResource extends Resource
                     ->label('Modificado el'),
             ])
             ->filters([
-
+                Filter::make('is_active')
+                    ->label('Usuarios activos')
+                    ->query(fn ($query) => $query->where('is_active', true))
+                    ->default(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -205,7 +205,7 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return $this->is_active;
     }
     
     /**

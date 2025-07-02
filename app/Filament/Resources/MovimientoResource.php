@@ -182,8 +182,11 @@ class MovimientoResource extends Resource
                     ->label('Orden de compra')
                     ->native(false)
                     ->options(function () {
-                        return PurchaseOrder::all()->pluck('number', 'id')->toArray();
+                        
+                        $options = PurchaseOrder::all()->pluck('number', 'id')->toArray();
+                        return ['' => 'Sin orden de compra'] + $options; // Agrega opción vacía
                     })
+                    ->nullable()
                     ->visible(fn ($get) => $get('tipo') == MovementType::ENTRADA->value),
 
                 TextInput::make('nombre_proveedor')

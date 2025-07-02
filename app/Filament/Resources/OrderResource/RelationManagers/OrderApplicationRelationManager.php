@@ -65,6 +65,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('l/ha')
                     ->default(fn () => $this->ownerRecord->wetting)
                     ->numeric()
+                    ->debounce(500)
                     ->live(onBlur: true)
                     ->required()
                     ->afterStateUpdated(function (callable $get, callable $set) {

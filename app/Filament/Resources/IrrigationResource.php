@@ -226,6 +226,7 @@ class IrrigationResource extends Resource
                                     ->label('Cantidad Solución')
                                     ->required()
                                     ->numeric()
+                                    ->debounce(500)
                                     ->minValue(0)
                                     ->reactive()
                                     ->afterStateUpdated(function (callable $set, $state, $get) {
