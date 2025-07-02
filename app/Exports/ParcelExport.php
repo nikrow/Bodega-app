@@ -1,10 +1,10 @@
 <?php
-
 namespace App\Exports;
 
 use App\Models\Parcel;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Carbon\Carbon;
 
 class ParcelExport implements FromCollection, WithHeadings
 {
@@ -22,7 +22,11 @@ class ParcelExport implements FromCollection, WithHeadings
                     'Plantas' => $parcel->plants ?? 'N/A',
                     'Superficie' => $parcel->surface,
                     'Activa' => $parcel->is_active ? 'Sí' : 'No',
-                    'Desactivada En' => $parcel->deactivated_at ? $parcel->deactivated_at->format('d/m/Y') : 'N/A',
+                    'Desactivada En' => $parcel->deactivated_at
+                        ? (is_string($parcel->deactivated_at)
+                            ? $parcel->deactivated_at
+                            : $parcel->deactivated_at->format('d/m/Y'))
+                        : 'N/A',
                     'Razón de Desactivación' => $parcel->deactivation_reason ?? 'N/A',
                 ];
             });

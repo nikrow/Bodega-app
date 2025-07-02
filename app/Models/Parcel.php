@@ -73,6 +73,10 @@ class Parcel extends Model implements Auditable
             }
         });
     }
+    protected $casts = [
+        'deactivated_at' => 'datetime',
+        'is_active' => 'boolean',
+    ];
 
     public function createdBy()
     {

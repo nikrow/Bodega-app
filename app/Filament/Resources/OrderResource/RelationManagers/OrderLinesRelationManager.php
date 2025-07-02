@@ -78,9 +78,9 @@ class OrderLinesRelationManager extends RelationManager
                     ->required()
                     ->label('Dosis')
                     ->suffix('l/100l')
-                    ->numeric(3, ',', '.')
-                    ->debounce(500) 
+                    ->debounce(800)
                     ->reactive()
+                    ->step(0.001)
                     ->helperText(function (callable $get) {
                         $productId = $get('product_id');
                         if ($productId) {
