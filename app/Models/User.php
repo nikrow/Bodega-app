@@ -43,6 +43,7 @@ class User extends Authenticatable implements Auditable, HasTenants, FilamentUse
         'last_login_at',
         'last_activity_at',
         'active_minutes',
+        'is_active',
     ];
     
     public function getActivitylogOptions(): LogOptions

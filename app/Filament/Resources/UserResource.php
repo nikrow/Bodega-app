@@ -195,7 +195,20 @@ class UserResource extends Resource
                         ->body('La contraseña para ' . $record->name . ' ha sido actualizada.')
                         ->send();
                 }),
-        ])
+                Action::make('toggle_active')
+                ->label(fn ($record) => $record->is_active ? 'Desactivar' : 'Activar')
+                ->icon(fn ($record) => $record->is_active ? 'heroicon-o-user-minus' : 'heroicon-o-user-plus')
+                ->color(fn ($record) => $record->is_active ? 'danger' : 'success')
+                ->action(function (User $record) {
+                    $record->is_active = !$record->is_active;
+                    $record->save();
+                    Notification::make()
+                        ->success()
+                        ->title($record->is_active ? 'Usuario activado' : 'Usuario desactivado')
+                        ->body('El estado del usuario ' . $record->name . ' ha sido actualizado.')
+                        ->send();
+                }),
+            ])
             ->bulkActions([
 
             ]);
