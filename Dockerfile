@@ -62,6 +62,13 @@ RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
 # Instalamos Puppeteer globalmente
 RUN npm install --location=global puppeteer@22.8.2
 
+# Ejecutar comandos de optimización de Laravel
+RUN php artisan config:clear \
+    && php artisan octane:install \
+    && php artisan storage:link \
+    && php artisan optimize \
+    && php artisan filament:optimize
+
 # Copiamos la aplicación
 COPY . /app
 
