@@ -13,20 +13,17 @@ if ! command -v mysqldump &> /dev/null; then
     exit 1
 fi
 
-# PASO 1: Limpieza de caché y archivos temporales
-echo "PASO 1: Limpieza de caché y archivos temporales"
+# PASO 1: Ejecutar migraciones
+echo "PASO 1: Ejecutando migraciones..."
+echo "--------------------------------"
+php artisan migrate --force
+
+# PASO 2: Limpieza de caché y archivos temporales
+echo "PASO 2: Limpieza de caché y archivos temporales"
 echo "----------------------------------------------"
-# Solo limpiamos cachés específicos si es necesario
-php artisan cache:clear  # Limpia el caché de datos (como Redis o Memcached), pero no el de configuración/rutas
+php artisan cache:clear
 composer dump-autoload
 echo "Limpieza completada."
-
-# PASO 2: Configuración y optimización
-echo "PASO 2: Configuración y optimización"
-echo "-----------------------------------"
-# Ejecutamos migraciones
-echo "Ejecutando migraciones..."
-php artisan migrate --force
 
 # Optimizaciones
 echo "Aplicando optimizaciones..."
