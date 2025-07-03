@@ -78,7 +78,7 @@ class OrderLinesRelationManager extends RelationManager
                     ->required()
                     ->label('Dosis')
                     ->suffix('l/100l')
-                    ->debounce(800)
+                    ->debounce(3000)
                     ->reactive()
                     ->step(0.001)
                     ->helperText(function (callable $get) {
