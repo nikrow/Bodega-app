@@ -106,6 +106,7 @@ class OrderLinesRelationManager extends RelationManager
                     ->readonly()
                     ->suffix('kg/lt')
                     ->numeric(2)
+                    ->default(0)
                     ->helperText(function (callable $get) {
                         $estimatedUsage = $get('EstimatedProductUsage');
                         $productStock = $get('ProductStock');
