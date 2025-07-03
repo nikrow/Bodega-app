@@ -24,7 +24,8 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 class ZoneResource extends Resource
 {
     protected static ?string $model = Zone::class;
- protected static ?string $navigationIcon = 'heroicon-o-sun';
+
+    protected static ?string $navigationIcon = 'heroicon-o-sun';
 
     protected static ?string $navigationGroup = 'Aplicaciones';
 
