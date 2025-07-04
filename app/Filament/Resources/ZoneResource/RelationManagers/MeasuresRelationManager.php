@@ -3,76 +3,55 @@
 namespace App\Filament\Resources\ZoneResource\RelationManagers;
 
 use Filament\Forms;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\RelationManagers\RelationManager;
 
 class MeasuresRelationManager extends RelationManager
 {
     protected static string $relationship = 'measures';
 
-    public function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('measure_id')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('unit')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('value')
-                    ->numeric()
-                    ->required(),
-                Forms\Components\DateTimePicker::make('time')
-                    ->required(),
-                Forms\Components\Select::make('sensor_type')
-                    ->options([
-                        'temperature' => 'Temperatura',
-                        'rain' => 'Lluvia',
-                        'humidity' => 'Humedad',
-                        'windDirection' => 'Dirección Viento',
-                        'unknown' => 'Desconocido',
-                    ])
-                    ->required(),
-            ]);
-    }
+    protected static ?string $title = 'Medidas';
 
     public function table(Table $table): Table
     {
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('measure_id')->sortable(),
-                Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('unit'),
-                Tables\Columns\TextColumn::make('value')->sortable(),
-                Tables\Columns\TextColumn::make('time')->dateTime()->sortable(),
-                Tables\Columns\TextColumn::make('sensor_type'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre'),
+                Tables\Columns\TextColumn::make('sensor_type')
+                    ->label('Tipo de Sensor'),
+                Tables\Columns\TextColumn::make('value')
+                    ->label('Valor')
+                    ->formatStateUsing(fn ($state, $record) => $state !== null ? round($state, 2) . ' ' . $record->unit : 'N/D'),
+                Tables\Columns\TextColumn::make('time')
+                    ->label('Fecha/Hora')
+                    ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d/m/Y H:i') : 'N/D'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('sensor_type')
+                    ->label('Tipo de Sensor')
                     ->options([
-                        'temperature' => 'Temperatura',
-                        'rain' => 'Lluvia',
-                        'humidity' => 'Humedad',
-                        'windDirection' => 'Dirección Viento',
-                        'unknown' => 'Desconocido',
+                        'Temperature' => 'Temperatura',
+                        'Humidity' => 'Humedad',
+                        'DailyRain' => 'Lluvia Diaria',
+                        'MinTemperatureDaily' => 'Temp. Mín. Diaria',
+                        'MaxTemperatureDaily' => 'Temp. Máx. Diaria',
+                        'Chill Hours (Accumulated)' => 'Horas Frío (Acum.)',
+                        'ChillHoursDaily' => 'Horas Frío (Diaria)',
+                        'Wind Velocity' => 'Velocidad del Viento',
+                        'Degree Days (Accumulated)' => 'Grados Día (Acum.)',
+                        'Degree Days (Daily)' => 'Grados Día (Diaria)',
+                        'Et0' => 'Evapotranspiración (Et0)',
+                        'Etc' => 'Evapotranspiración (Etc)',
                     ]),
             ])
-            ->headerActions([
-                Tables\Actions\CreateAction::make(),
-            ])
+            ->headerActions([])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
-            ]);
+            ->bulkActions([]);
     }
 }

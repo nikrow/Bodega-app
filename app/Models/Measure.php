@@ -3,14 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Measure extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'zone_id',
         'measure_id',
@@ -20,12 +16,15 @@ class Measure extends Model
         'time',
         'sensor_type',
     ];
+
     protected $casts = [
         'time' => 'datetime',
         'value' => 'decimal:2',
     ];
-    public function zone()
+
+    public function zone(): BelongsTo
     {
         return $this->belongsTo(Zone::class);
     }
+
 }
