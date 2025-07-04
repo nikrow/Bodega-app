@@ -25,7 +25,7 @@ class ZoneResource extends Resource
 {
     protected static ?string $model = Zone::class;
 
-    protected static ?string $navigationIcon = 'fluentui-weather-rain-showers-day-48-o';
+    protected static ?string $navigationIcon = 'heroicon-o-sun';
 
     protected static ?string $navigationGroup = 'Aplicaciones';
 
