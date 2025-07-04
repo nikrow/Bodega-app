@@ -2,17 +2,18 @@
 
 namespace App\Filament\Resources\OrderResource\RelationManagers;
 
-use App\Models\Climate;
-use App\Models\OrderParcel;
-use App\Models\Parcel;
+use Carbon\Carbon;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use App\Models\Parcel;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use App\Models\OrderParcel;
+use App\Services\WiseconnService;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use Filament\Resources\RelationManagers\RelationManager;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class OrderApplicationRelationManager extends RelationManager
 {
@@ -23,6 +24,8 @@ class OrderApplicationRelationManager extends RelationManager
 
     public function form(Form $form): Form
     {
+        $wiseconnService = app(WiseconnService::class); // Inyectar el servicio
+
         return $form
             ->schema([
                 Forms\Components\Select::make('parcel_id')
@@ -47,7 +50,6 @@ class OrderApplicationRelationManager extends RelationManager
                         // Recalcular superficie y porcentaje
                         $this->calculateSurfaceAndValidate($get, $set);
                     })
-
                     ->searchable(),
 
                 Forms\Components\Hidden::make('parcel_surface'),
@@ -77,21 +79,30 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('km/h')
                     ->required()
                     ->numeric()
-                    ->default(fn () => optional($this->getTodayClimateData())->wind),
+                    ->default(function () use ($wiseconnService) {
+                        $latestValue = $this->getLatestClimateValue('Wind Velocity', $wiseconnService);
+                        return $latestValue !== null ? $latestValue : 0; // Valor por defecto si no hay datos
+                    }),
 
                 Forms\Components\TextInput::make('temperature')
                     ->label('Temperatura')
                     ->numeric()
                     ->suffix('°C')
                     ->required()
-                    ->default(fn () => optional($this->getTodayClimateData())->temperature),
+                    ->default(function () use ($wiseconnService) {
+                        $latestValue = $this->getLatestClimateValue('Temperature', $wiseconnService);
+                        return $latestValue !== null ? $latestValue : 0; // Valor por defecto si no hay datos
+                    }),
 
                 Forms\Components\TextInput::make('moisture')
                     ->label('Humedad')
                     ->numeric()
                     ->suffix('%')
                     ->required()
-                    ->default(fn () => optional($this->getTodayClimateData())->humidity),
+                    ->default(function () use ($wiseconnService) {
+                        $latestValue = $this->getLatestClimateValue('Humidity', $wiseconnService);
+                        return $latestValue !== null ? $latestValue : 0; // Valor por defecto si no hay datos
+                    }),
 
                 Forms\Components\TextInput::make('surface')
                     ->label('Superficie aplicada')
@@ -112,7 +123,6 @@ class OrderApplicationRelationManager extends RelationManager
                     ->relationship('applicators', 'name')
                     ->searchable()
                     ->preload(),
-
             ]);
     }
 
@@ -141,13 +151,34 @@ class OrderApplicationRelationManager extends RelationManager
         }
     }
 
-
-    protected function getTodayClimateData()
+    protected function getLatestClimateValue(string $sensorType, WiseconnService $wiseconnService)
     {
-        // Obtener los datos climáticos de la fecha de hoy
+        $order = $this->ownerRecord;
+        $field = $order->field; // Asume que Order tiene una relación con Field
+        if (!$field) {
+            return null;
+        }
 
-        return Climate::whereDate('created_at', today())->latest('created_at')->first();
+        $latestValue = null;
+        $latestTime = null;
+
+        // Obtener todas las zonas del campo
+        $zones = $field->zones; // Asume que Field tiene una relación hasMany con Zone
+
+        foreach ($zones as $zone) {
+            $measures = $wiseconnService->getAllCurrentMeasures($field, $zone);
+            if (isset($measures[$sensorType]['value']) && isset($measures[$sensorType]['time'])) {
+                $measureTime = Carbon::parse($measures[$sensorType]['time']);
+                if ($latestTime === null || $measureTime->greaterThan($latestTime)) {
+                    $latestValue = $measures[$sensorType]['value'];
+                    $latestTime = $measureTime;
+                }
+            }
+        }
+
+        return $latestValue;
     }
+
     public function table(Table $table): Table
     {
         return $table
@@ -200,7 +231,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('applicators_details')
-                ->label('Aplicadores')
+                    ->label('Aplicadores')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

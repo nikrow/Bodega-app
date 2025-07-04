@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\Zone;
-use App\Models\Field;
 use App\Services\WiseconnService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,26 +15,19 @@ class UpdateZoneSummariesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $zone;
-    protected $field;
-
-    public function __construct(Zone $zone, Field $field)
-    {
-        $this->zone = $zone;
-        $this->field = $field;
-    }
-
     public function handle(WiseconnService $wiseconnService): void
     {
-        Log::info("Iniciando UpdateZoneSummariesJob para la zona: {$this->zone->name} (ID: {$this->zone->id}) del Field: {$this->field->name} (ID: {$this->field->id}).");
-
-        try {
-            $wiseconnService->updateZoneSummary($this->field, $this->zone);
-            Log::info("UpdateZoneSummariesJob completado exitosamente para la zona {$this->zone->name}.");
-        } catch (\Exception $e) {
-            Log::error("Error en UpdateZoneSummariesJob para la zona {$this->zone->name}: {$e->getMessage()}");
-            
-            throw $e;
+        Log::info('Iniciando actualización de zone_summaries para todas las zonas.');
+        $zones = Zone::all(); // Fetch all zones, not just Weather
+        foreach ($zones as $zone) {
+            $field = $zone->field;
+            if ($field) {
+                Log::info("Processing zone: {$zone->name} (ID: {$zone->id})");
+                $wiseconnService->updateZoneSummary($field, $zone);
+            } else {
+                Log::warning("No field found for zone {$zone->name} (ID: {$zone->id})");
+            }
         }
+        Log::info('Actualización de zone_summaries completada.');
     }
 }

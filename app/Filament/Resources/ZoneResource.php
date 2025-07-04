@@ -17,7 +17,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ZoneResource\Pages;
-use App\Filament\Resources\ZoneResource\RelationManagers;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
@@ -26,7 +25,7 @@ class ZoneResource extends Resource
 {
     protected static ?string $model = Zone::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-sun';
+    protected static ?string $navigationIcon = 'fluentui-weather-rain-showers-day-48-o';
 
     protected static ?string $navigationGroup = 'Aplicaciones';
 
@@ -45,6 +44,7 @@ class ZoneResource extends Resource
                 TextColumn::make('wiseconn_zone_id')
                     ->label('ID Wiseconn')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 TextColumn::make('name')
                     ->label('Nombre')
@@ -56,11 +56,14 @@ class ZoneResource extends Resource
                     ->label('Temp. Actual (°C)')
                     ->state(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->current_temperature !== null ? round($summary->current_temperature, 2) . '°' : 'N/D';
+                        if (!$summary || is_null($summary->current_temperature)) return 'N/D';
+                        return round($summary->current_temperature, 2) . '°';
                     })
                     ->tooltip(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->current_temperature_time ? Carbon::parse($summary->current_temperature_time)->format('d/m/Y H:i') : null;
+                        if (!$summary || is_null($summary->current_temperature_time)) return null;
+                        $date = $summary->current_temperature_time;
+                        return $date->setTimezone('America/Santiago')->format('d/m/Y H:i');
                     }),
 
                 // Min Temperature Daily
@@ -68,11 +71,8 @@ class ZoneResource extends Resource
                     ->label('Temp. Mín. Hoy (°C)')
                     ->state(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->min_temperature_daily !== null ? round($summary->min_temperature_daily, 2) . '°' : 'N/D';
-                    })
-                    ->tooltip(function (Zone $record): ?string {
-                        $summary = $record->summary;
-                        return $summary && $summary->min_temperature_time ? Carbon::parse($summary->min_temperature_time)->format('d/m/Y H:i') : null;
+                        if (!$summary || is_null($summary->min_temperature_daily)) return 'N/D';
+                        return round($summary->min_temperature_daily, 2) . '°';
                     })
                     ->color('secondary'),
 
@@ -81,11 +81,8 @@ class ZoneResource extends Resource
                     ->label('Temp. Máx. Hoy (°C)')
                     ->state(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->max_temperature_daily !== null ? round($summary->max_temperature_daily, 2) . '°' : 'N/D';
-                    })
-                    ->tooltip(function (Zone $record): ?string {
-                        $summary = $record->summary;
-                        return $summary && $summary->max_temperature_time ? Carbon::parse($summary->max_temperature_time)->format('d/m/Y H:i') : null;
+                        if (!$summary || is_null($summary->max_temperature_daily)) return 'N/D';
+                        return round($summary->max_temperature_daily, 2) . '°';
                     })
                     ->color('warning'),
 
@@ -94,7 +91,8 @@ class ZoneResource extends Resource
                     ->label('Lluvia Hoy (mm)')
                     ->state(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->daily_rain !== null ? round($summary->daily_rain, 2) . 'mm' : 'N/D';
+                        if (!$summary || is_null($summary->daily_rain)) return 'N/D';
+                        return round($summary->daily_rain, 2) . 'mm';
                     })
                     ->color('primary'),
 
@@ -103,20 +101,23 @@ class ZoneResource extends Resource
                     ->label('Humedad Actual (%)')
                     ->state(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->current_humidity !== null ? round($summary->current_humidity, 2) . '%' : 'N/D';
+                        if (!$summary || is_null($summary->current_humidity)) return 'N/D';
+                        return round($summary->current_humidity, 2) . '%';
                     })
                     ->color(function (?string $state): ?string {
                         if (str_contains($state, 'N/D') || str_contains($state, 'N/A')) {
                             return 'gray';
                         }
-                        $value = (float) $state;
+                        $value = (float) str_replace('%', '', $state);
                         if ($value < 40) return 'warning';
                         if ($value > 80) return 'info';
                         return 'success';
                     })
                     ->tooltip(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->current_humidity_time ? Carbon::parse($summary->current_humidity_time)->format('d/m/Y H:i') : null;
+                        if (!$summary || is_null($summary->current_humidity_time)) return null;
+                        $date = Carbon::parse($summary->current_humidity_time); // Parse como UTC
+                        return $date->setTimezone('America/Santiago')->format('d/m/Y H:i');
                     }),
 
                 // Chill Hours Accumulated
@@ -124,12 +125,15 @@ class ZoneResource extends Resource
                     ->label('Horas Frío (Acum.)')
                     ->state(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->chill_hours_accumulated !== null ? round($summary->chill_hours_accumulated, 2) : 'N/D';
+                        if (!$summary || is_null($summary->chill_hours_accumulated)) return 'N/D';
+                        return round($summary->chill_hours_accumulated, 2);
                     })
                     ->color('secondary')
                     ->tooltip(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->chill_hours_accumulated_time ? Carbon::parse($summary->chill_hours_accumulated_time)->format('d/m/Y H:i') : null;
+                        if (!$summary || is_null($summary->chill_hours_accumulated_time)) return null;
+                        $date = Carbon::parse($summary->chill_hours_accumulated_time); // Parse como UTC
+                        return $date->setTimezone('America/Santiago')->format('d/m/Y H:i');
                     }),
 
                 // Chill Hours Daily
@@ -137,9 +141,16 @@ class ZoneResource extends Resource
                     ->label('Horas Frío (Hoy)')
                     ->state(function (Zone $record): ?string {
                         $summary = $record->summary;
-                        return $summary && $summary->chill_hours_daily !== null ? round($summary->chill_hours_daily, 2) : 'N/D';
+                        if (!$summary || is_null($summary->chill_hours_daily)) return 'N/D';
+                        return round($summary->chill_hours_daily, 2);
                     })
-                    ->color('info'),
+                    ->color('info')
+                    ->tooltip(function (Zone $record): ?string {
+                        $summary = $record->summary;
+                        if (!$summary || is_null($summary->chill_hours_daily_time)) return null;
+                        $date = Carbon::parse($summary->chill_hours_daily_time); // Parse como UTC
+                        return $date->setTimezone('America/Santiago')->format('d/m/Y H:i');
+                    }),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_historical_initialized')
@@ -178,13 +189,15 @@ class ZoneResource extends Resource
                     })
                     ->requiresConfirmation(),
             ])
-            ->bulkActions([]);
+            ->bulkActions([
+                // Puedes agregar ExportBulkAction si lo necesitas
+            ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            RelationManagers\MeasuresRelationManager::class,
+            //
         ];
     }
 
@@ -192,14 +205,15 @@ class ZoneResource extends Resource
     {
         return [
             'index' => Pages\ListZones::route('/'),
-            'edit' => Pages\EditZone::route('/{record}/edit'),
         ];
     }
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->withoutGlobalScopes([SoftDeletingScope::class])
-            ->with('summary');
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ])
+            ->with('summary'); 
     }
 }

@@ -29,8 +29,13 @@ Schedule::job(new ProcessEmailAttachments())->dailyAt('08:05')
     ->onSuccess(function () {
         Log::info('Archivo adjunto procesado con éxito ' . now());
     });
-Schedule::command('zones:update-summaries')->everyFiveMinutes();
-Schedule::command('zones:update-historical-measures')->everyFiveMinutes();
+Schedule::job(new UpdateZoneSummariesJob())->everyFifteenMinutes()
+    ->onFailure(function () {
+        Log::error('Fallo en actualización de resúmenes de zonas ' . now());
+    })
+    ->onSuccess(function () {
+        Log::info('Resúmenes de zonas actualizados con éxito ' . now());
+    });
 Schedule::call(function () {
     $field = Field::find(1); 
     if ($field) {

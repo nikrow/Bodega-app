@@ -28,6 +28,7 @@ class MeasuresRelationManager extends RelationManager
                     ->formatStateUsing(fn ($state, $record) => $state !== null ? round($state, 2) . ' ' . $record->unit : 'N/D'),
                 Tables\Columns\TextColumn::make('time')
                     ->label('Fecha/Hora')
+                    ->sortable()
                     ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('d/m/Y H:i') : 'N/D'),
             ])
             ->filters([
