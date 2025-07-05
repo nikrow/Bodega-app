@@ -1,14 +1,16 @@
 <?php
+use App\Models\Zone;
 use App\Models\Field;
+use Dompdf\Image\Cache;
+use App\Jobs\CacheClimateDataJob;
 use App\Services\WiseconnService;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\UpdateZoneSummariesJob;
 use App\Jobs\ProcessEmailAttachments;
 use Illuminate\Support\Facades\Schedule;
+use App\Jobs\UpdateHistoricalMeasuresJob; 
 use Illuminate\Support\Facades\Notification;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
-use App\Jobs\UpdateZoneSummariesJob;
-use App\Jobs\UpdateHistoricalMeasuresJob; 
-use App\Models\Zone;
 
 Schedule::command('backup:run')
     ->daily()
@@ -35,6 +37,14 @@ Schedule::job(new UpdateZoneSummariesJob())->everyFifteenMinutes()
     })
     ->onSuccess(function () {
         Log::info('Resúmenes de zonas actualizados con éxito ' . now());
+    });
+    
+Schedule::job(new CacheClimateDataJob())->everyFifteenMinutes()
+    ->onFailure(function () {
+        Log::error('Fallo en caché de datos climáticos ' . now());
+    })
+    ->onSuccess(function () {
+        Log::info('Datos climáticos cacheados con éxito ' . now());
     });
 Schedule::call(function () {
     $field = Field::find(1); 
