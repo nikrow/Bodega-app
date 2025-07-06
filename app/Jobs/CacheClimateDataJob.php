@@ -32,7 +32,7 @@ class CacheClimateDataJob implements ShouldQueue
                     'Humidity' => ['value' => null, 'time' => null],
                 ];
 
-                $zones = $field->zones; // Asume relación hasMany con Zone
+                $zones = $field->zones;
                 foreach ($zones as $zone) {
                     $measures = $wiseconnService->getAllCurrentMeasures($field, $zone);
                     foreach (['Wind Velocity', 'Temperature', 'Humidity'] as $sensorType) {

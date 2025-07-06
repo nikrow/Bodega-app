@@ -31,7 +31,8 @@ Schedule::job(new ProcessEmailAttachments())->dailyAt('08:05')
     ->onSuccess(function () {
         Log::info('Archivo adjunto procesado con éxito ' . now());
     });
-Schedule::job(new UpdateZoneSummariesJob())->everyFifteenMinutes()
+Schedule::command('update:zone-summaries')
+    ->everyTenMinutes()
     ->onFailure(function () {
         Log::error('Fallo en actualización de resúmenes de zonas ' . now());
     })

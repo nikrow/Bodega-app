@@ -18,7 +18,7 @@ class UpdateZoneSummariesJob implements ShouldQueue
     public function handle(WiseconnService $wiseconnService): void
     {
         Log::info('Iniciando actualización de zone_summaries para todas las zonas.');
-        $zones = Zone::all(); // Fetch all zones, not just Weather
+        $zones = Zone::all();
         foreach ($zones as $zone) {
             $field = $zone->field;
             if ($field) {
