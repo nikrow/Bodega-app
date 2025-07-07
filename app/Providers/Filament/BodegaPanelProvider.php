@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Navigation\NavigationGroup;
 use Rupadana\ApiService\ApiServicePlugin;
 use Filament\Http\Middleware\Authenticate;
+use App\Filament\Widgets\ClimateStatsOverview;
 use App\Filament\Resources\ActivityLogResource;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -93,7 +94,7 @@ class BodegaPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
-
+                ClimateStatsOverview::class,
             ])
             ->middleware([
                 EncryptCookies::class,
