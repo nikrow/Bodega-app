@@ -21,23 +21,25 @@ Schedule::command('backup:run')
     ->onSuccess(function () {
         Log::info('Backup completed successfully at ' . now());
     });
-    Schedule::command('backup:monitor')->daily()->at('02:00');
+
+Schedule::command('backup:monitor')->daily()->at('02:00');
 
 Schedule::job(new ProcessEmailAttachments())->dailyAt('08:05')
-    ->everyFiveMinutes()
     ->onFailure(function () {
         Log::error('Fallo en procesamiento de archivo adjunto ' . now());
     })
     ->onSuccess(function () {
         Log::info('Archivo adjunto procesado con éxito ' . now());
     });
-Schedule::command('update:zone-summaries')
-    ->everyTenMinutes()
+    
+Schedule::command('zones:update-summaries')
+    ->everyFifteenMinutes() 
+    ->withoutOverlapping() // Evita que se ejecuten múltiples instancias del comando al mismo tiempo
     ->onFailure(function () {
-        Log::error('Fallo en actualización de resúmenes de zonas ' . now());
+        Log::error('Fallo en actualización de resúmenes de zonas a las ' . now());
     })
     ->onSuccess(function () {
-        Log::info('Resúmenes de zonas actualizados con éxito ' . now());
+        Log::info('Resúmenes de zonas actualizados con éxito a las ' . now());
     });
     
 Schedule::job(new CacheClimateDataJob())->everyFifteenMinutes()
@@ -47,16 +49,30 @@ Schedule::job(new CacheClimateDataJob())->everyFifteenMinutes()
     ->onSuccess(function () {
         Log::info('Datos climáticos cacheados con éxito ' . now());
     });
+
 Schedule::call(function () {
-    $field = Field::find(1); 
-    if ($field) {
-        try {
-            app(WiseconnService::class)->syncZones($field);
-            Log::info("Sincronización de zonas para el Field ID {$field->id} completada exitosamente.");
-        } catch (\Exception $e) {
-            Log::error("Error al sincronizar zonas para el Field ID {$field->id}: {$e->getMessage()}");
-        }
-    } else {
-        Log::warning("No se encontró el Field con ID 1 para sincronizar zonas.");
+    Log::info('Iniciando sincronización de zonas para todos los campos.');
+    $fields = Field::all(); // Obtener todos los campos
+    if ($fields->isEmpty()) {
+        Log::warning("No se encontraron campos para sincronizar zonas.");
+        return;
     }
-})->hourly();
+
+    $wiseconnService = app(WiseconnService::class);
+    foreach ($fields as $field) {
+        try {
+            // Validar la API key antes de intentar sincronizar las zonas de un campo
+            $validation = $wiseconnService->validateApiKey($field);
+            if (!$validation['valid']) {
+                Log::error("Saltando sincronización de zonas para el Campo ID {$field->id} (Nombre: {$field->name}) debido a API Key inválida: {$validation['message']}");
+                continue;
+            }
+
+            $wiseconnService->syncZones($field);
+            Log::info("Sincronización de zonas para el Campo ID {$field->id} (Nombre: {$field->name}) completada exitosamente.");
+        } catch (\Exception $e) {
+            Log::error("Error al sincronizar zonas para el Campo ID {$field->id} (Nombre: {$field->name}): {$e->getMessage()}");
+        }
+    }
+    Log::info('Sincronización de zonas para todos los campos finalizada.');
+})->hourly(); 
