@@ -37,6 +37,7 @@ class OrderLinesRelationManager extends RelationManager
 
                         return Product::all()->pluck('product_name', 'id')->toArray();
                     })
+                    ->searchable()
                     ->reactive() // Mantener reactive para actualizar carencia, reingreso, etc.
                     ->afterStateUpdated(function (callable $get, callable $set) {
                         $productId = $get('product_id');
