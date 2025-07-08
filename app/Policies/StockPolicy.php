@@ -19,6 +19,7 @@ class StockPolicy
             RoleType::ASISTENTE,
             RoleType::ESTANQUERO,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -34,6 +35,7 @@ class StockPolicy
             RoleType::ASISTENTE,
             RoleType::ESTANQUERO,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 

@@ -19,6 +19,7 @@ class WarehousePolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -33,6 +34,7 @@ class WarehousePolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -41,7 +43,10 @@ class WarehousePolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -49,7 +54,10 @@ class WarehousePolicy
      */
     public function update(User $user, Warehouse $warehouse): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -82,5 +90,12 @@ class WarehousePolicy
     private function hasAccess(User $user, array $roles): bool
     {
         return in_array($user->role, $roles);
+    }
+    public function audit(User $user, Warehouse $warehouse): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 }

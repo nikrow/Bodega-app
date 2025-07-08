@@ -18,6 +18,7 @@ class ProviderPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
     /**
@@ -31,6 +32,7 @@ class ProviderPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
     /**
@@ -43,6 +45,7 @@ class ProviderPolicy
             RoleType::AGRONOMO,
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
     /**
@@ -55,6 +58,7 @@ class ProviderPolicy
             RoleType::AGRONOMO,
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
     /**

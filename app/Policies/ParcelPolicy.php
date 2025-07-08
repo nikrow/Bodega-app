@@ -19,6 +19,7 @@ class ParcelPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -33,6 +34,7 @@ class ParcelPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -43,7 +45,7 @@ class ParcelPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
-
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -54,6 +56,7 @@ class ParcelPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::SUPERUSER
 
         ]);
     }
@@ -90,6 +93,7 @@ class ParcelPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::SUPERUSER
         ]);
     }
 }

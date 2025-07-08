@@ -12,7 +12,8 @@ class WorkPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE
+            RoleType::ASISTENTE,
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -21,7 +22,8 @@ class WorkPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
-            RoleType::ASISTENTE
+            RoleType::ASISTENTE,
+            RoleType::SUPERUSER
         ]);
     }
     public function create(User $user): bool
@@ -29,6 +31,7 @@ class WorkPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER
         ]);
     }
     public function update(User $user): bool
@@ -36,12 +39,14 @@ class WorkPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER
         ]);
     }
     public function delete(User $user): bool
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            
             
         ]);
     }

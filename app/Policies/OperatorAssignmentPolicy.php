@@ -38,12 +38,13 @@ class OperatorAssignmentPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER,
         ]);
     }
     public function delete(User $user): bool
     {
         return in_array($user->role, [
-            RoleType::ADMIN,
+            null
             
         ]);
     }
@@ -61,4 +62,12 @@ class OperatorAssignmentPolicy
             
         ]);
     }   
+    public function audit(User $user): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER
+        ]);
+    }
 }

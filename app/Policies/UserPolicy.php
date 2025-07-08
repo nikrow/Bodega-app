@@ -13,7 +13,10 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -21,7 +24,10 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -29,7 +35,10 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**

@@ -20,6 +20,7 @@ class StockMovementPolicy
             RoleType::BODEGUERO,
             RoleType::ESTANQUERO,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -34,6 +35,7 @@ class StockMovementPolicy
             RoleType::BODEGUERO,
             RoleType::ESTANQUERO,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -46,6 +48,7 @@ class StockMovementPolicy
             RoleType::ADMIN,
             RoleType::BODEGUERO,
             RoleType::ESTANQUERO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -57,6 +60,7 @@ class StockMovementPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::BODEGUERO,
+            RoleType::SUPERUSER
         ]);
     }
 

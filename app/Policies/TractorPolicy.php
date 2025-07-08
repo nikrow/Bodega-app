@@ -13,6 +13,7 @@ class TractorPolicy
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
             RoleType::MAQUINARIA,
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -21,6 +22,7 @@ class TractorPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER
         ]);
     }
     public function create(User $user): bool
@@ -28,6 +30,7 @@ class TractorPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER
         ]);
     }
     public function update(User $user): bool
@@ -35,20 +38,21 @@ class TractorPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER
         ]);
     }
     public function delete(User $user): bool
     {
         return in_array($user->role, [
             RoleType::ADMIN,
-            
+            RoleType::SUPERUSER
         ]);
     }
     public function restore(User $user): bool
     {
         return in_array($user->role, [
             RoleType::ADMIN,
-            
+            RoleType::SUPERUSER
         ]);
     }
     public function forceDelete(User $user): bool

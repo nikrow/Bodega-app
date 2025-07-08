@@ -16,6 +16,7 @@ class PurchaseOrderPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -30,6 +31,7 @@ class PurchaseOrderPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -42,6 +44,7 @@ class PurchaseOrderPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -54,6 +57,7 @@ class PurchaseOrderPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -62,7 +66,10 @@ class PurchaseOrderPolicy
      */
     public function delete(User $user, PurchaseOrder $purchase): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -98,6 +105,7 @@ class PurchaseOrderPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
 }

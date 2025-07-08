@@ -19,6 +19,7 @@ class OrderPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -33,6 +34,7 @@ class OrderPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -44,6 +46,7 @@ class OrderPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -56,6 +59,7 @@ class OrderPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -88,6 +92,7 @@ class OrderPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
     public function createApplication(User $user, Order $order): bool
@@ -96,6 +101,15 @@ class OrderPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER
+        ]);
+    }
+    public function audit(User $user): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
 }

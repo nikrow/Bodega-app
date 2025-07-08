@@ -20,6 +20,7 @@ class ProductPolicy
             RoleType::ASISTENTE,
             RoleType::ESTANQUERO,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -35,6 +36,7 @@ class ProductPolicy
             RoleType::ASISTENTE,
             RoleType::ESTANQUERO,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -46,6 +48,7 @@ class ProductPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -57,6 +60,7 @@ class ProductPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -93,6 +97,7 @@ class ProductPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
     

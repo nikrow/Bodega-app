@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Enums\RoleType;
+use App\Models\Role;
 
 class OrderApplicationUsagePolicy
 {
@@ -18,6 +19,7 @@ class OrderApplicationUsagePolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
     /**
@@ -31,6 +33,7 @@ class OrderApplicationUsagePolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
     
