@@ -190,11 +190,11 @@ class Order extends Model implements Auditable
     {
         return $this->hasMany(OrderApplication::class, 'order_id', 'id');
     }
-    public function applicators()
+   /*  public function applicators()
     {
         return $this->belongsToMany(Applicator::class, 'order_application_applicator', 'order_application_id', 'applicator_id')
             ->withTimestamps();
-    }
+    } */
     public function orderApplicationUsages()
     {
         return $this->hasManyThrough(OrderApplicationUsage::class, OrderApplication::class, 'order_id', 'order_application_id');

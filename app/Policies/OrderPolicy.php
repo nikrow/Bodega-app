@@ -90,4 +90,12 @@ class OrderPolicy
             RoleType::AGRONOMO,
         ]);
     }
+    public function createApplication(User $user, Order $order): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
+        ]);
+    }
 }

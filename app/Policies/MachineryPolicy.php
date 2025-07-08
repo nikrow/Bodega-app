@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Enums\RoleType;
+use App\Models\Role;
 
 class MachineryPolicy
 {
@@ -16,6 +17,7 @@ class MachineryPolicy
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
             RoleType::MAQUINARIA,
+            Roletype::SUPERUSER
         ]);
     }
 
@@ -24,6 +26,7 @@ class MachineryPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            Roletype::SUPERUSER
         ]);
     }
     public function create(User $user): bool
@@ -31,6 +34,7 @@ class MachineryPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            Roletype::SUPERUSER
         ]);
     }
     public function update(User $user): bool
@@ -38,12 +42,15 @@ class MachineryPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            Roletype::SUPERUSER
         ]);
     }
     public function delete(User $user): bool
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::USUARIOMAQ,
+            Roletype::SUPERUSER
             
         ]);
     }
@@ -60,5 +67,13 @@ class MachineryPolicy
             RoleType::ADMIN,
             
         ]);
-    }   
+    }
+    public function audit(User $user): bool
+    {
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER
+        ]);
+    } 
 }

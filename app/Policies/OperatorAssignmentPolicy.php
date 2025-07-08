@@ -13,6 +13,7 @@ class OperatorAssignmentPolicy
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
             RoleType::MAQUINARIA,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -21,6 +22,7 @@ class OperatorAssignmentPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER,
         ]);
     }
     public function create(User $user): bool
@@ -28,6 +30,7 @@ class OperatorAssignmentPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
+            RoleType::SUPERUSER,
         ]);
     }
     public function update(User $user): bool

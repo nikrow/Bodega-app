@@ -18,6 +18,7 @@ class ImportBatchPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -28,6 +29,9 @@ class ImportBatchPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
 
         ]);
     }
@@ -47,6 +51,7 @@ class ImportBatchPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::SUPERUSER,
         ]);
     }
 

@@ -24,7 +24,7 @@ class CacheClimateDataJob implements ShouldQueue
         $fields = Field::all();
         foreach ($fields as $field) {
             $cacheKey = "field_{$field->id}_latest_climate_values";
-            Cache::remember($cacheKey, now()->addMinutes(15), function () use ($field, $wiseconnService) {
+            Cache::remember($cacheKey, now()->addMinutes(30), function () use ($field, $wiseconnService) {
                 Log::info("Cacheando datos climáticos para Field ID: {$field->id}");
                 $latestValues = [
                     'Wind Velocity' => ['value' => null, 'time' => null],

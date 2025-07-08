@@ -42,7 +42,7 @@ Schedule::command('zones:update-summaries')
         Log::info('Resúmenes de zonas actualizados con éxito a las ' . now());
     });
     
-Schedule::job(new CacheClimateDataJob())->everyFifteenMinutes()
+Schedule::job(new CacheClimateDataJob())->everyFiveMinutes()
     ->onFailure(function () {
         Log::error('Fallo en caché de datos climáticos ' . now());
     })

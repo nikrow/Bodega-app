@@ -16,7 +16,8 @@ class ConsolidatedReportPolicy
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
             RoleType::ASISTENTE,
-            RoleType::MAQUINARIA
+            RoleType::MAQUINARIA,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -26,7 +27,8 @@ class ConsolidatedReportPolicy
             RoleType::ADMIN,
             RoleType::USUARIOMAQ,
             RoleType::ASISTENTE,
-            RoleType::MAQUINARIA
+            RoleType::MAQUINARIA,
+            RoleType::SUPERUSER,
         ]);
     }
     

@@ -13,7 +13,11 @@ class ActivityLogPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
+
     }
 
     /**
@@ -21,7 +25,10 @@ class ActivityLogPolicy
      */
     public function view(User $user, Activity $activity): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**

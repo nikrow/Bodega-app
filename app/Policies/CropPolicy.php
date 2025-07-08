@@ -20,6 +20,7 @@ class CropPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -34,6 +35,7 @@ class CropPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 

@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Enums\RoleType;
 use App\Models\Irrigation;
+use App\Models\Role;
 use Filament\Facades\Filament;
 use Illuminate\Auth\Access\Response;
 
@@ -20,6 +21,7 @@ class IrrigationPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
     /**
@@ -31,6 +33,7 @@ class IrrigationPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -43,6 +46,7 @@ class IrrigationPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -61,6 +65,7 @@ class IrrigationPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ])) {
             return Response::deny('No tienes el rol necesario para modificar riegos.');
         }
@@ -101,6 +106,7 @@ class IrrigationPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
     

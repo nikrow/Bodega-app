@@ -100,7 +100,7 @@ class OrderApplication extends Model implements Auditable
     public function applicators()
     {
         return $this->belongsToMany(Applicator::class, 'order_application_applicator', 'order_application_id', 'applicator_id')
-            ->where('field_id', Filament::getTenant()->id);
+            ->withTimestamps();
     }
     public function orderApplicationUsage()
     {

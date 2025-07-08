@@ -190,7 +190,8 @@ class MovimientoResource extends Resource
                     ->visible(fn ($get) => $get('tipo') == MovementType::ENTRADA->value),
 
                 TextInput::make('nombre_proveedor')
-                    ->label('Nombre del proveedor')
+                    ->label('Proveedor')
+                    ->default(fn () => PurchaseOrder::find(request()->input('orden_compra'))?->supplier_name ?? '')
                     ->visible(fn ($get) => $get('tipo') == MovementType::ENTRADA->value),
 
                 TextInput::make('guia_despacho')
@@ -204,8 +205,7 @@ class MovimientoResource extends Resource
                     ->numeric(),
 
                 TextInput::make('encargado')
-                    ->label('Encargado')
-                    ->visible(fn ($get) => in_array($get('tipo'), [MovementType::SALIDA->value, MovementType::TRASLADO->value])),
+                    ->label('Observaciones'),
 
                 Select::make('user_id')
                     ->label('Usuario')

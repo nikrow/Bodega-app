@@ -21,6 +21,7 @@ class FertilizationPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -33,6 +34,7 @@ class FertilizationPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -45,6 +47,7 @@ class FertilizationPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -60,7 +63,7 @@ class FertilizationPolicy
             'field_id' => $fertilization->field_id,
             'days_diff' => $fertilization->date->diffInDays(Carbon::now())
         ]);
-        if (!in_array($user->role, [RoleType::ADMIN, RoleType::AGRONOMO, RoleType::ASISTENTE])) {
+        if (!in_array($user->role, [RoleType::ADMIN, RoleType::AGRONOMO, RoleType::ASISTENTE, RoleType::SUPERUSER])) {
             return Response::deny('No tienes el rol necesario para modificar riegos.');
         }
         if ($fertilization->date->diffInDays(Carbon::now()) > 5 && $user->role !== RoleType::ADMIN) {
@@ -74,7 +77,10 @@ class FertilizationPolicy
      */
     public function delete(User $user, Fertilization $fertilization): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -97,6 +103,7 @@ class FertilizationPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER
         ]);
     }
 }

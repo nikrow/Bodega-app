@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\User;
 use App\Enums\RoleType;
 use App\Models\FertilizerMapping;
+use App\Models\Role;
 use Illuminate\Auth\Access\Response;
 
 class FertilizerMappingPolicy
@@ -16,6 +17,9 @@ class FertilizerMappingPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -26,6 +30,9 @@ class FertilizerMappingPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -36,6 +43,7 @@ class FertilizerMappingPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -46,6 +54,7 @@ class FertilizerMappingPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
+            RoleType::SUPERUSER,
         ]);
     }
 

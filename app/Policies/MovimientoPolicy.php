@@ -38,6 +38,7 @@ class MovimientoPolicy
             RoleType::ADMIN,
             RoleType::BODEGUERO,
             RoleType::ESTANQUERO,
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -51,6 +52,7 @@ class MovimientoPolicy
             RoleType::AGRONOMO,
             RoleType::BODEGUERO,
             RoleType::ESTANQUERO,
+            RoleType::SUPERUSER
         ]);
     }
 
@@ -59,7 +61,10 @@ class MovimientoPolicy
      */
     public function delete(User $user, Movimiento $movimiento): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER
+        ]);
     }
 
     /**
@@ -87,7 +92,10 @@ class MovimientoPolicy
     }
     private function audit(User $user, Movimiento $movimiento): bool
     {
-        return $user->isAdmin();
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER
+        ]);
 
     }
     public function canUseMovementType(User $user, MovementType $type): bool
@@ -113,6 +121,7 @@ class MovimientoPolicy
             RoleType::AGRONOMO,
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER
         ]);
     }
 }

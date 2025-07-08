@@ -14,7 +14,12 @@ class FieldPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -22,7 +27,12 @@ class FieldPolicy
      */
     public function view(User $user, Field $field): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::AGRONOMO,
+            RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -38,7 +48,10 @@ class FieldPolicy
      */
     public function update(User $user, Field $field): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+                RoleType::ADMIN,
+                RoleType::SUPERUSER,
+            ]);
     }
 
     /**

@@ -16,6 +16,7 @@ class BatchPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
 
     }
@@ -31,6 +32,7 @@ class BatchPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -47,7 +49,10 @@ class BatchPolicy
      */
     public function update(User $user, Batch $batch): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -55,7 +60,10 @@ class BatchPolicy
      */
     public function delete(User $user,  Batch $batch): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**

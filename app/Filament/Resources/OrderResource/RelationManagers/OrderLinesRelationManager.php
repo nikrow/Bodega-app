@@ -122,13 +122,11 @@ class OrderLinesRelationManager extends RelationManager
                 Forms\Components\TextInput::make('waiting_time')
                     ->label('Carencia')
                     ->required()
-                    ->suffix('dias')
-                    ->readOnly(),
+                    ->suffix('dias'),
                 Forms\Components\TextInput::make('reentry')
                     ->label('Reingreso')
                     ->required()
-                    ->suffix('horas')
-                    ->readOnly(),
+                    ->suffix('horas'),
                 Forms\Components\TextInput::make('ProductStock')
                     ->label('Stock de producto')
                     ->readonly()

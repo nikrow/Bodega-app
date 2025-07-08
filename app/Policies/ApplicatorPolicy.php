@@ -19,6 +19,7 @@ class ApplicatorPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -33,6 +34,7 @@ class ApplicatorPolicy
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
             RoleType::USUARIO,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -45,6 +47,7 @@ class ApplicatorPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -57,6 +60,7 @@ class ApplicatorPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::SUPERUSER,
         ]);
     }
 
@@ -65,7 +69,10 @@ class ApplicatorPolicy
      */
     public function delete(User $user, Applicator $applicator): bool
     {
-        return $user->role === RoleType::ADMIN;
+        return in_array($user->role, [
+            RoleType::ADMIN,
+            RoleType::SUPERUSER,
+        ]);
     }
 
     /**
@@ -100,6 +107,7 @@ class ApplicatorPolicy
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
+            RoleType::SUPERUSER,
         ]);
     }
 }
