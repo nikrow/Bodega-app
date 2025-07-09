@@ -17,4 +17,4 @@ Route::get('/cuarteles/exportar/excel', [ParcelExportController::class, 'exportE
 Route::get('/aplicaciones/exportar/excel', [ApplicationRecordExportController::class, 'exportExcel'])->name('export.application-records');
 Route::get('movimientos-stock/exportar/excel', [StockMovementExportController::class, 'exportExcel'])->name('movimientos-stock.exportar.excel');
 Route::get('fertilizaciones/exportar/excel', [FertilizationExportController::class, 'exportExcel'])->name('fertilizations.exportar.excel');
-Route::get('aplicaciones-terreno/exportar/excel', [ApplicationRecordExportController::class, 'exportExcel'])->name('export.application-records');
+Route::get('aplicaciones-terreno/exportar/excel', [ApplicationRecordExportController::class, 'exportExcel'])->name('export.field-application-records');
