@@ -1,11 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Exports\OrderApplicationExport;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ParcelExportController;
 use App\Http\Controllers\ReportExportController;
 use App\Http\Controllers\FertilizationExportController;
 use App\Http\Controllers\StockMovementExportController;
+use App\Http\Controllers\OrderApplicationExportController;
 use App\Http\Controllers\ApplicationRecordExportController;
 
 Route::middleware(['auth'])->group(function () {
@@ -17,4 +19,4 @@ Route::get('/cuarteles/exportar/excel', [ParcelExportController::class, 'exportE
 Route::get('/aplicaciones/exportar/excel', [ApplicationRecordExportController::class, 'exportExcel'])->name('export.application-records');
 Route::get('movimientos-stock/exportar/excel', [StockMovementExportController::class, 'exportExcel'])->name('movimientos-stock.exportar.excel');
 Route::get('fertilizaciones/exportar/excel', [FertilizationExportController::class, 'exportExcel'])->name('fertilizations.exportar.excel');
-Route::get('aplicaciones-terreno/exportar/excel', [ApplicationRecordExportController::class, 'exportExcel'])->name('export.field-application-records');
+Route::get('aplicaciones-terreno/exportar/excel', [OrderApplicationExportController::class, 'exportExcel'])->name('export.field-application-records');
