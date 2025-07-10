@@ -186,7 +186,7 @@ class ParcelResource extends Resource
                                                     ->label('Superficie')
                                                     ->suffix('ha')
                                                     ->numeric()
-                                                    ->required()
+                                                    ->nullable()
                                                     ->rules(['min:0']),
                                             ])
                                             ->columns(3)
