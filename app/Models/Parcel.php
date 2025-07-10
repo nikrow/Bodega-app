@@ -9,22 +9,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Models\Audit;
-use ApiPlatform\Metadata\ApiResource;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-//#[ApiResource]
 class Parcel extends Model implements Auditable
 {
     use HasFactory;
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'name',
         'field_id',
@@ -40,21 +33,25 @@ class Parcel extends Model implements Auditable
         'deactivated_at',
         'deactivated_by',
         'deactivation_reason',
+        'sdp',
+        'irrigation_system',
+        'planting_scheme_id',
+        'planting_scheme_custom',
     ];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logFillable();
     }
+
     protected static function booted()
     {
         static::creating(function ($parcel) {
-            // Asignar `created_by` y `updated_by` al usuario autenticado
             $parcel->user_id = Auth::id();
             $parcel->created_by = Auth::id();
             $parcel->updated_by = Auth::id();
             $parcel->is_active = true;
-            // Generar un slug único
             $originalSlug = Str::slug($parcel->name);
             $slug = $originalSlug;
             $count = 1;
@@ -65,14 +62,23 @@ class Parcel extends Model implements Auditable
             }
 
             $parcel->slug = $slug;
+            if ($parcel->planting_scheme_id === null && !empty($parcel->planting_scheme_custom)) {
+                $newScheme = PlantingScheme::firstOrCreate(['scheme' => trim($parcel->planting_scheme_custom)]);
+                $parcel->planting_scheme_id = $newScheme->id;
+            }
         });
 
         static::updating(function ($parcel) {
             if ($parcel->is_active) {
                 $parcel->updated_by = Auth::id();
             }
+            if ($parcel->planting_scheme_id === null && !empty($parcel->planting_scheme_custom)) {
+                $newScheme = PlantingScheme::firstOrCreate(['scheme' => trim($parcel->planting_scheme_custom)]);
+                $parcel->planting_scheme_id = $newScheme->id;
+            }
         });
     }
+
     protected $casts = [
         'deactivated_at' => 'datetime',
         'is_active' => 'boolean',
@@ -98,6 +104,7 @@ class Parcel extends Model implements Auditable
         return $this->belongsToMany(Order::class, 'order_parcels', 'parcel_id', 'order_id')
             ->withTimestamps();
     }
+
     public function crop()
     {
         return $this->belongsTo(Crop::class, 'crop_id');
@@ -107,16 +114,29 @@ class Parcel extends Model implements Auditable
     {
         return $this->belongsTo(User::class, 'deactivated_by');
     }
+
     public function deactivatedByName()
-        {
-            return $this->belongsTo(User::class, 'deactivated_by')->select(['id', 'name']);
-        }
+    {
+        return $this->belongsTo(User::class, 'deactivated_by')->select(['id', 'name']);
+    }
+
     public function applicationUsages()
     {
         return $this->hasMany(OrderApplicationUsage::class, 'parcel_id');
     }
+
     public function audit()
     {
         return $this->morphTo(Audit::class, 'auditable_id', 'id');
+    }
+
+    public function parcelCropDetails()
+    {
+        return $this->hasMany(ParcelCropDetail::class, 'parcel_id');
+    }
+
+    public function plantingScheme()
+    {
+        return $this->belongsTo(PlantingScheme::class, 'planting_scheme_id');
     }
 }

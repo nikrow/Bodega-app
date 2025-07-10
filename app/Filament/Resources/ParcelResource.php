@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources;
 
-
-
 use Filament\Forms;
 use App\Models\Crop;
 use Filament\Tables;
@@ -11,19 +9,23 @@ use App\Models\Parcel;
 use App\Enums\RoleType;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\PlantingScheme;
 use Filament\Facades\Filament;
 use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Tabs;
 use Illuminate\Support\Facades\Auth;
-use OwenIt\Auditing\Contracts\Audit;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
 use App\Filament\Imports\ParcelImporter;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\ImportAction;
 use App\Filament\Resources\ParcelResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+use Filament\Notifications\Notification;
 use App\Filament\Resources\ParcelResource\RelationManagers\AplicacionesRelationManager;
-
+use App\Filament\Resources\ParcelResource\RelationManagers\ParcelCropDetailsRelationManager;
 
 class ParcelResource extends Resource
 {
@@ -49,48 +51,191 @@ class ParcelResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('id')
-                    ->label('ID')
-                    ->readonly(),
-                Forms\Components\TextInput::make('name')
-                    ->label('Nombre')
-                    ->required()
-                    ->rules(function (Forms\Get $get) {
-                        return Rule::unique('parcels', 'name')
-                            ->whereNull('deactivated_at') // Omitir parcelas inactivas
-                            ->ignore($get('id'));
-                    }),
-                Forms\Components\Select::make('crop_id')
-                    ->label('Cultivo')
-                    ->options(Crop::all()->pluck('especie', 'id')->toArray())
-                    ->required(),
-                Forms\Components\TextInput::make('planting_year')
-                    ->label('Año Plantación')
-                    ->numeric()
-                    ->required(),
-                Forms\Components\TextInput::make('plants')
-                    ->label('Plantas')
-                    ->numeric()
-                    ->required(),
-                Forms\Components\TextInput::make('surface')
-                    ->label('Superficie')
-                    ->suffix('ha')
-                    ->required()
-                    ->numeric(2),
-                Forms\Components\TextInput::make('deactivation_reason')
-                    ->label('Motivo de Baja')
-                    ->visible(fn($record) => $record !== null && !$record->is_active)
-                    ->disabled(),
-                Forms\Components\TextInput::make('deactivated_at')
-                    ->label('Fecha de Baja')
-                    ->visible(fn($record) => $record !== null && !$record->is_active)
-                    ->disabled(),
-                Forms\Components\TextInput::make('deactivatedBy.name')
-                    ->label('Dada de baja por')
-                    ->visible(fn($record) => $record !== null && !$record->is_active)
-                    ->disabled(),
-                Forms\Components\Hidden::make('Field_id')
-                    ->default(Filament::getTenant()->id),
+                Tabs::make('Cuartel')
+                    ->columnSpan('full')
+                    ->tabs([
+                        Tabs\Tab::make('Información General')
+                            ->schema([
+                                Section::make('Detalles del Cuartel')
+                                    ->columns(3)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('id')
+                                            ->label('ID')
+                                            ->readonly(),
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Nombre')
+                                            ->required()
+                                            ->rules(function (Forms\Get $get) {
+                                                return Rule::unique('parcels', 'name')
+                                                    ->whereNull('deactivated_at')
+                                                    ->ignore($get('id'));
+                                            }),
+                                        Forms\Components\Select::make('crop_id')
+                                            ->label('Cultivo')
+                                            ->options(Crop::all()->pluck('especie', 'id')->toArray())
+                                            ->required()
+                                            ->reactive(),
+                                        Forms\Components\TextInput::make('planting_year')
+                                            ->label('Año Plantación')
+                                            ->numeric()
+                                            ->required(),
+                                        Forms\Components\TextInput::make('plants')
+                                            ->label('Plantas')
+                                            ->numeric()
+                                            ->required(),
+                                        Forms\Components\TextInput::make('surface')
+                                            ->label('Superficie Total')
+                                            ->suffix('ha')
+                                            ->required()
+                                            ->numeric()
+                                            ->rules(['min:0']),
+                                        Forms\Components\TextInput::make('sdp')
+                                            ->label('SDP')
+                                            ->nullable()
+                                            ->maxLength(255),
+                                        Forms\Components\Select::make('irrigation_system')
+                                            ->label('Sistema de Riego')
+                                            ->options([
+                                                'gotero' => 'Gotero',
+                                                'aspersor' => 'Aspersor',
+                                                'microjet' => 'Microjet',
+                                                'otro' => 'Otro',
+                                            ])
+                                            ->nullable(),
+                                        Forms\Components\Select::make('planting_scheme_id')
+                                            ->label('Marco de Plantación')
+                                            ->options(function () {
+                                                return PlantingScheme::pluck('scheme', 'id')
+                                                    ->merge(['otro' => 'Otro'])
+                                                    ->toArray();
+                                            })
+                                            ->searchable()
+                                            ->required()
+                                            ->reactive()
+                                            ->hintAction(
+                                                Forms\Components\Actions\Action::make('add_planting_scheme')
+                                                    ->label('Agregar marco')
+                                                    ->icon('heroicon-o-plus')
+                                                    ->visible(fn (Forms\Get $get) => $get('planting_scheme_id') === 'otro')
+                                                    ->modalHeading('Crear Nuevo Marco de Plantación')
+                                                    ->form([
+                                                        Forms\Components\TextInput::make('new_scheme')
+                                                            ->label('Seguir el formato: 2,5 x 1,5')
+                                                            ->required()
+                                                            ->maxLength(255)
+                                                            ->rules(['unique:planting_schemes,scheme']),
+                                                    ])
+                                                    ->action(function (array $data, Forms\Set $set) {
+                                                        $newScheme = trim($data['new_scheme']);
+                                                        $createdScheme = PlantingScheme::create(['scheme' => $newScheme]);
+                                                        $set('planting_scheme_id', $createdScheme->id);
+                                                        Notification::make()
+                                                            ->title('Éxito')
+                                                            ->body('El nuevo marco de plantación ha sido creado.')
+                                                            ->success()
+                                                            ->send();
+                                                    })
+                                            ),
+                                        Forms\Components\Hidden::make('field_id')
+                                            ->default(Filament::getTenant()->id),
+                                    ]),
+                            ]),
+                        Tabs\Tab::make('Detalles de Variedades y Portainjertos')
+                            ->schema([
+                                Section::make('Variedades y Portainjertos')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('total_variety_surface')
+                                            ->label('Superficie Total de Variedades')
+                                            ->suffix('ha')
+                                            ->numeric()
+                                            ->readonly()
+                                            ->default(0)
+                                            ->afterStateHydrated(function (Forms\Components\TextInput $component, $record) {
+                                                if ($record && $record->parcelCropDetails) {
+                                                    $total = $record->parcelCropDetails->sum('surface');
+                                                    $component->state($total);
+                                                }
+                                            }),
+                                        Repeater::make('parcelCropDetails')
+                                            ->label('Variedades y Portainjertos')
+                                            ->relationship('parcelCropDetails')
+                                            ->schema([
+                                                Forms\Components\Hidden::make('crop_id')
+                                                    ->default(fn (Forms\Get $get) => $get('../../crop_id')),
+                                                Forms\Components\Select::make('variety_id')
+                                                    ->label('Variedad')
+                                                    ->options(function (Forms\Get $get) {
+                                                        $cropId = $get('../../crop_id');
+                                                        return $cropId
+                                                            ? \App\Models\Variety::where('crop_id', $cropId)->pluck('name', 'id')->toArray()
+                                                            : [];
+                                                    })
+                                                    ->nullable()
+                                                    ->reactive(),
+                                                Forms\Components\Select::make('rootstock_id')
+                                                    ->label('Portainjerto')
+                                                    ->options(function (Forms\Get $get) {
+                                                        $cropId = $get('../../crop_id');
+                                                        return $cropId
+                                                            ? \App\Models\Rootstock::where('crop_id', $cropId)->pluck('name', 'id')->toArray()
+                                                            : [];
+                                                    })
+                                                    ->nullable()
+                                                    ->reactive(),
+                                                Forms\Components\TextInput::make('surface')
+                                                    ->label('Superficie')
+                                                    ->suffix('ha')
+                                                    ->numeric()
+                                                    ->required()
+                                                    ->rules(['min:0']),
+                                            ])
+                                            ->columns(3)
+                                            ->required()
+                                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
+                                                $totalSurface = collect($get('parcelCropDetails'))->sum('surface');
+                                                $set('total_variety_surface', $totalSurface);
+                                                $parcelSurface = $get('surface');
+                                                if ($parcelSurface && $totalSurface > $parcelSurface) {
+                                                    Notification::make()
+                                                        ->title('Error')
+                                                        ->body('La suma de las superficies de las variedades no puede superar la superficie total del cuartel.')
+                                                        ->danger()
+                                                        ->send();
+                                                }
+                                            })
+                                            ->rules([
+                                                function (Forms\Get $get) {
+                                                    return function (string $attribute, $value, $fail) use ($get) {
+                                                        $totalSurface = collect($get('parcelCropDetails'))->sum('surface');
+                                                        $parcelSurface = $get('surface');
+                                                        if ($parcelSurface && $totalSurface > $parcelSurface) {
+                                                            $fail('La suma de las superficies de las variedades no puede superar la superficie total del cuartel.');
+                                                        }
+                                                    };
+                                                },
+                                            ]),
+                                    ]),
+                            ]),
+                        Tabs\Tab::make('Información Adicional')
+                            ->schema([
+                                Section::make('Información Adicional')
+                                    ->columns(2)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('deactivation_reason')
+                                            ->label('Motivo de Baja')
+                                            ->visible(fn ($record) => $record !== null && !$record->is_active)
+                                            ->disabled(),
+                                        Forms\Components\TextInput::make('deactivated_at')
+                                            ->label('Fecha de Baja')
+                                            ->visible(fn ($record) => $record !== null && !$record->is_active)
+                                            ->disabled(),
+                                        Forms\Components\TextInput::make('deactivatedBy.name')
+                                            ->label('Dada de baja por')
+                                            ->visible(fn ($record) => $record !== null && !$record->is_active)
+                                            ->disabled(),
+                                    ]),
+                            ]),
+                    ]),
             ]);
     }
 
@@ -112,6 +257,10 @@ class ParcelResource extends Resource
                     ->label('Cultivo')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('parcelCropDetails.variety.name')
+                    ->label('Variedades')
+                    ->formatStateUsing(fn ($state, $record) => $record->parcelCropDetails->pluck('variety.name')->filter()->join(', '))
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('planting_year')
                     ->label('Año de Plantación')
                     ->searchable()
@@ -125,6 +274,9 @@ class ParcelResource extends Resource
                     ->searchable()
                     ->numeric(2)
                     ->sortable(),
+                Tables\Columns\TextColumn::make('plantingScheme.scheme')
+                    ->label('Marco de Plantación')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -132,8 +284,8 @@ class ParcelResource extends Resource
                     ->label('Modificado por')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('is_active')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Activa'),
+                    ->label('Activa')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('deactivated_at')
                     ->label('Fecha de Baja')
                     ->sortable()
@@ -153,7 +305,6 @@ class ParcelResource extends Resource
                     ->searchable(true)
                     ->options(Crop::all()->pluck('especie', 'id')->toArray()),
             ])
-            
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make()
@@ -196,14 +347,13 @@ class ParcelResource extends Resource
             ->bulkActions([
                 ExportBulkAction::make()
             ]);
-
     }
 
     public static function getRelations(): array
     {
         return [
             AplicacionesRelationManager::class,
-            AuditsRelationManager::class
+            AuditsRelationManager::class,
         ];
     }
 
@@ -216,4 +366,4 @@ class ParcelResource extends Resource
             'view' => Pages\ViewParcel::route('/{record}'),
         ];
     }
-}
+}   
