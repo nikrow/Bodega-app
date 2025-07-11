@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Policies;
 
 use App\Models\Stock;
@@ -12,6 +13,7 @@ class StockPolicy
      */
     public function viewAny(User $user): bool
     {
+        // Todos los roles especificados pueden ver la lista de stocks
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
@@ -28,12 +30,17 @@ class StockPolicy
      */
     public function view(User $user, Stock $stock): bool
     {
+        // Los estanqueros solo pueden ver stocks de sus bodegas asignadas
+        if ($user->role === RoleType::ESTANQUERO) {
+            return $user->warehouses()->pluck('warehouses.id')->contains($stock->warehouse_id);
+        }
+
+        // Otros roles pueden ver cualquier stock
         return in_array($user->role, [
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::BODEGUERO,
             RoleType::ASISTENTE,
-            RoleType::ESTANQUERO,
             RoleType::USUARIO,
             RoleType::SUPERUSER,
         ]);

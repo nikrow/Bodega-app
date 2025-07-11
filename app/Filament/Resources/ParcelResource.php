@@ -105,18 +105,21 @@ class ParcelResource extends Resource
                                         Forms\Components\Select::make('planting_scheme_id')
                                             ->label('Marco de Plantación')
                                             ->options(function () {
-                                                return PlantingScheme::pluck('scheme', 'id')
-                                                    ->merge(['otro' => 'Otro'])
-                                                    ->toArray();
+                                                return PlantingScheme::pluck('scheme', 'id')->toArray();
                                             })
                                             ->searchable()
                                             ->required()
                                             ->reactive()
+                                            ->afterStateHydrated(function (Forms\Components\Select $component, $state, $record) {
+                                                if ($record && $record->planting_scheme_id) {
+                                                    $component->state($record->planting_scheme_id);
+                                                }
+                                            })
                                             ->hintAction(
                                                 Forms\Components\Actions\Action::make('add_planting_scheme')
                                                     ->label('Agregar marco')
                                                     ->icon('heroicon-o-plus')
-                                                    ->visible(fn (Forms\Get $get) => $get('planting_scheme_id') === 'otro')
+                                                    ->visible(fn (Forms\Get $get) => $get('planting_scheme_id') === null)
                                                     ->modalHeading('Crear Nuevo Marco de Plantación')
                                                     ->form([
                                                         Forms\Components\TextInput::make('new_scheme')
@@ -135,7 +138,7 @@ class ParcelResource extends Resource
                                                             ->success()
                                                             ->send();
                                                     })
-                                            ),
+                                            ),                                        
                                         Forms\Components\Hidden::make('field_id')
                                             ->default(Filament::getTenant()->id),
                                     ]),
@@ -190,7 +193,6 @@ class ParcelResource extends Resource
                                                     ->rules(['min:0']),
                                             ])
                                             ->columns(3)
-                                            ->required()
                                             ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
                                                 $totalSurface = collect($get('parcelCropDetails'))->sum('surface');
                                                 $set('total_variety_surface', $totalSurface);
