@@ -137,7 +137,7 @@ class FertilizationResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->reactive()
-                    ->debounce(500)
+                    ->debounce(3000)
                     ->afterStateUpdated(function (callable $set, $state, $get) {
                         $dilution_factor = $get('dilution_factor');
                         $product_price = $get('product_price');

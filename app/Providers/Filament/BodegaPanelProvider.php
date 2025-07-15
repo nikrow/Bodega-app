@@ -93,8 +93,8 @@ class BodegaPanelProvider extends PanelProvider
             ->authGuard('web')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                ClimateStatsOverview::class,
+                //Widgets\AccountWidget::class,
+                //ClimateStatsOverview::class,
             ])
             ->middleware([
                 EncryptCookies::class,

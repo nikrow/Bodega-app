@@ -90,8 +90,8 @@ class FertilizationExport implements FromQuery, WithHeadings, WithMapping
             'G' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Cantidad Solución
             'H' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Factor de Dilución
             'K' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Cantidad Producto
-            'L' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Precio Producto
-            'M' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Costo Total
+            'L' => NumberFormat::FORMAT_CURRENCY_USD_INTEGER, // Precio Producto
+            'M' => NumberFormat::FORMAT_CURRENCY_USD_INTEGER, // Costo Total
         ];
     }
 }

@@ -149,6 +149,14 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(Zone::class, 'field_id');
     }
+    public function fertilizations()
+    {
+        return $this->hasMany(Fertilization::class, 'field_id');
+    }
+    public function irrigation()
+    {
+        return $this->hasMany(Irrigation::class, 'field_id');
+    }
 
 }
 

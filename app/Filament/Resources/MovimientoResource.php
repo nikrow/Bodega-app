@@ -326,9 +326,9 @@ class MovimientoResource extends Resource
                         ->visible(function () {
                             $user = Auth::user();
                             return in_array($user->role, [
-                                RoleType::ADMIN->value,
-                                RoleType::AGRONOMO->value,
-                                RoleType::BODEGUERO->value
+                                RoleType::ADMIN,
+                                RoleType::AGRONOMO,
+                                RoleType::BODEGUERO
                             ]);
                         })
                         ->hidden(fn(Movimiento $record) => $record->is_completed),
