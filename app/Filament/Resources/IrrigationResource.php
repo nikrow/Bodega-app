@@ -226,9 +226,9 @@ class IrrigationResource extends Resource
                                     ->label('Cantidad Solución')
                                     ->required()
                                     ->numeric()
-                                    ->debounce(5000)
+                                    
                                     ->minValue(0)
-                                    ->reactive()
+                                    ->live()
                                     ->afterStateUpdated(function (callable $set, $state, $get) {
                                         $dilution_factor = $get('dilution_factor');
                                         $product_price = $get('product_price');
