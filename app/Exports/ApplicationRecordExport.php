@@ -28,7 +28,7 @@ class ApplicationRecordExport implements FromQuery, WithHeadings, WithMapping
                 'product',
                 'orderApplication',
                 'order.user',
-                'field'
+                'field',
             ]);
 
         // Aplicar filtros
@@ -58,7 +58,12 @@ class ApplicationRecordExport implements FromQuery, WithHeadings, WithMapping
         return [
             'Fecha',
             'ID Aplicación',
-            'Campo', // Nueva columna
+            'ID Orden',
+            'ID Campo',
+            'ID Cuartel',
+            'ID Producto',
+            'ID Encargado',
+            'Campo',
             'Cuartel',
             'Objetivo',
             'Cultivo',
@@ -87,46 +92,60 @@ class ApplicationRecordExport implements FromQuery, WithHeadings, WithMapping
     {
         return [
             $record->created_at ? Date::PHPToExcel(Carbon::parse($record->created_at)) : null,
-            $record->order_application_id,
+            $record->order_application_id ?? 'N/A',
+            $record->order?->id ?? 'N/A',
+            $record->field?->id ?? $record->order?->field_id ?? 'N/A',
+            $record->parcel?->id ?? 'N/A',
+            $record->product?->id ?? 'N/A',
+            $record->order?->user?->id ?? 'N/A',
             $record->field?->name ?? 'N/A',
-            $record->parcel?->name,
+            $record->parcel?->name ?? 'N/A',
             is_array($record->order?->objective)
                 ? implode(', ', array_filter($record->order->objective))
-                : $record->order?->objective,
-            $record->parcel?->crop?->especie,
-            $record->orderNumber,
-            $record->product?->product_name,
-            $record->product?->active_ingredients,
-            $record->product?->waiting_time,
+                : ($record->order?->objective ?? 'N/A'),
+            $record->parcel?->crop?->especie ?? 'N/A',
+            $record->orderNumber ?? 'N/A',
+            $record->product?->product_name ?? 'N/A',
+            $record->product?->active_ingredients ?? 'N/A',
+            $record->product?->waiting_time ?? 'N/A',
             $record->created_at && $record->product?->reentry
                 ? Date::PHPToExcel($record->created_at->copy()->addHours($record->product->reentry))
                 : null,
             $record->created_at && $record->product?->waiting_time
                 ? Date::PHPToExcel($record->created_at->copy()->addDays($record->product->waiting_time))
                 : null,
-            $record->dose_per_100l,
-            $record->order?->wetting,
-            $record->liters_applied,
-            $record->orderApplication?->surface,
-            $record->product_usage,
+            $record->dose_per_100l ? number_format($record->dose_per_100l, 2, ',', '.') : 0,
+            $record->order?->wetting ? number_format($record->order->wetting, 0, ',', '.') : 0,
+            $record->liters_applied ? number_format($record->liters_applied, 2, ',', '.') : 0,
+            $record->orderApplication?->surface ? number_format($record->orderApplication->surface, 2, ',', '.') : 0,
+            $record->product_usage ? number_format($record->product_usage, 2, ',', '.') : 0,
             is_array($record->order?->equipment)
                 ? implode(', ', $record->order->equipment)
-                : $record->order?->equipment,
-            $record->applicators_details,
-            $record->order?->user?->name,
-            $record->orderApplication?->temperature,
-            $record->orderApplication?->wind_speed,
-            $record->orderApplication?->moisture,
-            $record->total_cost,
+                : ($record->order?->equipment ?? 'N/A'),
+            $record->applicators_details ?? 'N/A',
+            $record->order?->user?->name ?? 'N/A',
+            $record->orderApplication?->temperature ? number_format($record->orderApplication->temperature, 1, ',', '.') : 0,
+            $record->orderApplication?->wind_speed ? number_format($record->orderApplication->wind_speed, 0, ',', '.') : 0,
+            $record->orderApplication?->moisture ? number_format($record->orderApplication->moisture, 1, ',', '.') : 0,
+            $record->total_cost ? number_format($record->total_cost, 2, ',', '.') : 0,
         ];
     }
 
     public function columnFormats(): array
     {
         return [
-            'A' => NumberFormat::FORMAT_DATE_DDMMYYYY,
-            'K' => NumberFormat::FORMAT_DATE_DDMMYYYY,
-            'L' => NumberFormat::FORMAT_DATE_DDMMYYYY, 
+            'A' => NumberFormat::FORMAT_DATE_DDMMYYYY, // Fecha
+            'P' => NumberFormat::FORMAT_DATE_DDMMYYYY, // Fecha de Reingreso
+            'Q' => NumberFormat::FORMAT_DATE_DDMMYYYY, // Reanudar Cosecha
+            'R' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Dosis L/100
+            'S' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Mojamiento L/Ha
+            'T' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Litros aplicados
+            'U' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Superficie aplicada
+            'V' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Producto utilizado
+            'Y' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Temperatura °C
+            'Z' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Velocidad del viento km/hr
+            'AA' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Humedad %
+            'AB' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1, // Costo aplicación USD
         ];
     }
 }
