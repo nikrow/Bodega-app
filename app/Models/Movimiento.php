@@ -28,7 +28,7 @@ class Movimiento extends Model implements Auditable
         'field_id',
         'bodega_origen_id',
         'bodega_destino_id',
-        'orden_compra',
+        'purchase_order_id',
         'nombre_proveedor',
         'guia_despacho',
         'is_completed',
@@ -130,5 +130,9 @@ class Movimiento extends Model implements Auditable
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');
+    }
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 }

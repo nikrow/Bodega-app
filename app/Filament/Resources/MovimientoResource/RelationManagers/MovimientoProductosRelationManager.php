@@ -10,11 +10,12 @@ use App\Models\Product;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Google\Service\Drive\Label;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use Illuminate\Support\Facades\Log;
 use Filament\Resources\RelationManagers\RelationManager;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use Filament\Notifications\Notification;
 
 class MovimientoProductosRelationManager extends RelationManager
 {
@@ -25,94 +26,100 @@ class MovimientoProductosRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('producto_id')
-                ->options(function (callable $get) {
-                    $movimiento = $this->ownerRecord;
+                    ->options(function (callable $get) {
+                        $movimiento = $this->ownerRecord;
 
-                    if ($movimiento) {
-                        // Check if the movement type is 'entrada'
-                        if ($movimiento->tipo->value === 'entrada') {
-                            // Si no hay orden de compra seleccionada, mostrar todos los productos
-                            if (empty($movimiento->orden_compra)) {
-                                return Product::pluck('product_name', 'id');
-                            }
+                        if ($movimiento) {
+                            // Check if the movement type is 'entrada'
+                            if ($movimiento->tipo->value === 'entrada') {
+                                // Si no hay orden de compra seleccionada (purchase_order_id es null), mostrar todos los productos
+                                if (!$movimiento->purchaseOrder) {
+                                    return Product::pluck('product_name', 'id');
+                                }
 
-                            // Si hay orden de compra, filtrar productos según PurchaseOrderDetail
-                            $purchaseOrderDetail = PurchaseOrderDetail::where('purchase_order_id', $movimiento->orden_compra)->get();
-                            $productIds = $purchaseOrderDetail->pluck('product_id');
-                            return Product::whereIn('id', $productIds)->pluck('product_name', 'id');
-                        } else {
-                            $warehouseId = $movimiento->bodega_origen_id;
-
-                            if ($movimiento->order) {
-                                // Obtener los IDs de productos de las líneas de la orden
-                                $productIdsFromOrder = $movimiento->order->orderLines()->pluck('product_id');
-
-                                // Filtrar productos que están en la orden y tienen stock > 0 en la bodega
-                                $productsWithStock = Stock::where('warehouse_id', $warehouseId)
-                                    ->where('quantity', '>', 0)
-                                    ->whereIn('product_id', $productIdsFromOrder)
-                                    ->pluck('product_id');
-
-                                // Obtener los productos filtrados
-                                $products = Product::whereIn('id', $productsWithStock)->pluck('product_name', 'id');
-
-                                return $products;
+                                // Si hay orden de compra, filtrar productos según PurchaseOrderDetail
+                                $purchaseOrderDetail = PurchaseOrderDetail::where('purchase_order_id', $movimiento->purchaseOrder->id)->get();
+                                $productIds = $purchaseOrderDetail->pluck('product_id');
+                                return Product::whereIn('id', $productIds)->pluck('product_name', 'id');
                             } else {
-                                // Obtener productos que tienen stock > 0 en la bodega
-                                $productsWithStock = Stock::where('warehouse_id', $warehouseId)
-                                    ->where('quantity', '>', 0)
-                                    ->pluck('product_id');
+                                $warehouseId = $movimiento->bodega_origen_id;
 
-                                $products = Product::whereIn('id', $productsWithStock)->pluck('product_name', 'id');
+                                if ($movimiento->order) {
+                                    // Obtener los IDs de productos de las líneas de la orden
+                                    $productIdsFromOrder = $movimiento->order->orderLines()->pluck('product_id');
 
-                                return $products;
+                                    // Filtrar productos que están en la orden y tienen stock > 0 en la bodega
+                                    $productsWithStock = Stock::where('warehouse_id', $warehouseId)
+                                        ->where('quantity', '>', 0)
+                                        ->whereIn('product_id', $productIdsFromOrder)
+                                        ->pluck('product_id');
+
+                                    // Obtener los productos filtrados
+                                    $products = Product::whereIn('id', $productsWithStock)->pluck('product_name', 'id');
+
+                                    return $products;
+                                } else {
+                                    // Obtener productos que tienen stock > 0 en la bodega
+                                    $productsWithStock = Stock::where('warehouse_id', $warehouseId)
+                                        ->where('quantity', '>', 0)
+                                        ->pluck('product_id');
+
+                                    $products = Product::whereIn('id', $productsWithStock)->pluck('product_name', 'id');
+
+                                    return $products;
+                                }
                             }
                         }
-                    }
-                    // Si no hay movimiento, retornar un array vacío
-                    return [];
-                })
-                ->preload()
-                ->live()
-                ->searchable()
-                ->label('Producto')
-                ->required()
-                ->reactive()
-                ->afterStateUpdated(function (callable $get, callable $set) {
-                    $movimiento = $this->ownerRecord;
+                        // Si no hay movimiento, retornar un array vacío
+                        return [];
+                    })
+                    ->preload()
+                    ->live()
+                    ->searchable()
+                    ->label('Producto')
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function (callable $get, callable $set) {
+                        $movimiento = $this->ownerRecord;
 
-                    if ($movimiento && $get('producto_id')) {
-                        $warehouseId = $movimiento->bodega_origen_id;
-                        $productId = $get('producto_id');
+                        if ($movimiento && $get('producto_id')) {
+                            $warehouseId = $movimiento->bodega_origen_id;
+                            $productId = $get('producto_id');
 
-                        $stock = Stock::where('product_id', $productId)
-                            ->where('warehouse_id', $warehouseId)
-                            ->first();
+                            $stock = Stock::where('product_id', $productId)
+                                ->where('warehouse_id', $warehouseId)
+                                ->first();
 
-                        $stockDisponible = $stock ? $stock->quantity : 0;
-                        $set('stock_disponible', $stockDisponible);
+                            $stockDisponible = $stock ? $stock->quantity : 0;
+                            $set('stock_disponible', $stockDisponible);
 
-                        // Obtener el producto y su unidad de medida
-                        $product = Product::find($productId);
+                            // Obtener el producto y su unidad de medida
+                            $product = Product::find($productId);
 
-                        if ($product && $product->requiresBatchControl()) {
-                            $set('requires_batch_control', true);
+                            if ($product && $product->requiresBatchControl()) {
+                                $set('requires_batch_control', true);
+                            } else {
+                                $set('requires_batch_control', false);
+                            }
+
+                            if ($product) {
+                                $set('unidad_medida', $product->unit_measure);
+                                $set('precio_compra', $product->price);
+                            } else {
+                                $set('unidad_medida', 'Sin unidad');
+                                $set('precio_compra', null);
+                            }
+
+                            // Calcular cantidad pendiente para entradas
+                            if ($movimiento->tipo->value === 'entrada') {
+                                $pending = $this->calculatePendingQuantity($productId, $movimiento);
+                                $set('cantidad_pendiente', $pending);
+                            }
                         } else {
-                            $set('requires_batch_control', false);
+                            $set('stock_disponible', 'Sin movimiento o sin producto seleccionado');
+                            $set('warehouse_id', null);
                         }
-
-                        if ($product) {
-                            $set('unidad_medida', $product->unit_measure);
-                            $set('precio_compra', $product->price);
-                        } else {
-                            $set('unidad_medida', 'Sin unidad');
-                            $set('precio_compra', null);
-                        }
-                    } else {
-                        $set('stock_disponible', 'Sin movimiento o sin producto seleccionado');
-                        $set('warehouse_id', null);
-                    }
-                }),
+                    }),
 
                 Forms\Components\TextInput::make('stock_disponible')
                     ->label('Stock Disponible')
@@ -132,7 +139,19 @@ class MovimientoProductosRelationManager extends RelationManager
                     ->label('Cantidad')
                     ->numeric(2)
                     ->live()
-                    ->reactive(),
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, Get $get) {
+                        $movimiento = $this->ownerRecord;
+                        $pending = $this->calculatePendingQuantity($get('producto_id'), $movimiento);
+                        if ($state > $pending && $pending > 0) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Advertencia')
+                                ->body('La cantidad ingresada (' . $state . ') supera la cantidad pendiente (' . $pending . ').')
+                                ->send();
+                        }
+                    }),
+
                 Forms\Components\TextInput::make('cantidad')
                     ->required()
                     ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo && $this->ownerRecord->tipo->value !== 'entrada')
@@ -144,6 +163,14 @@ class MovimientoProductosRelationManager extends RelationManager
                         'lte' => 'La cantidad debe ser menor o igual al stock disponible.',
                     ])
                     ->reactive(),
+
+                Forms\Components\TextInput::make('cantidad_pendiente')
+                    ->label('Cantidad Pendiente')
+                    ->readonly()
+                    ->dehydrated(false)
+                    ->visible(fn (callable $get) => $this->ownerRecord && $this->ownerRecord->tipo && $this->ownerRecord->tipo->value == 'entrada')
+                    ->default(0)
+                    ->helperText('Esta es la cantidad pendiente de la orden de compra asociada.'),
 
                 Forms\Components\TextInput::make('unidad_medida')
                     ->label('Unidad de Medida')
@@ -241,9 +268,36 @@ class MovimientoProductosRelationManager extends RelationManager
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-
                     ExportBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * Calcula la cantidad pendiente para un producto en la orden de compra asociada.
+     */
+    protected function calculatePendingQuantity($productId, $movimiento): float
+    {
+        if (!$productId || $movimiento->tipo->value !== 'entrada' || !$movimiento->purchaseOrder) {
+            return 0;
+        }
+
+        $ordenCompra = $movimiento->purchaseOrder;
+        if (!$ordenCompra) {
+            return 0;
+        }
+
+        $detalle = $ordenCompra->purchaseOrderDetails()->where('product_id', $productId)->first();
+        if (!$detalle) {
+            return 0;
+        }
+
+        $cantidadRecibida = \App\Models\MovimientoProducto::whereHas('movimiento', function ($query) use ($movimiento) {
+            $query->where('purchase_order_id', $movimiento->purchaseOrder->id)
+                  ->where('tipo', 'entrada');
+        })->where('producto_id', $productId)
+          ->sum('cantidad');
+
+        return max(0, $detalle->quantity - $cantidadRecibida);
     }
 }

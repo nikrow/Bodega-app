@@ -285,170 +285,170 @@ class OrderResource extends Resource
                         ->url(fn(Order $record) => route('orders.bodegaPdf', $record->id))
                         ->openUrlInNewTab(),
                     Action::make('addApplication')
-    ->label('Agregar aplicación')
-    ->icon('heroicon-o-plus-circle')
-    ->color('primary')
-    ->form(function ($record) {
-        return [
-            Forms\Components\Select::make('parcel_id')
-                ->label('Cuartel')
-                ->required()
-                ->options(fn () => OrderParcel::with('parcel')
-                    ->where('order_id', $record->id)
-                    ->get()
-                    ->pluck('parcel.name', 'parcel_id')
-                    ->toArray()
-                )
-                ->afterStateUpdated(function (callable $get, callable $set) {
-                    $parcelId = $get('parcel_id');
-                    if ($parcelId) {
-                        $parcel = Parcel::find($parcelId);
-                        $set('parcel_surface', $parcel->surface ?? 0);
-                    } else {
-                        $set('parcel_surface', 0);
+                        ->label('Agregar aplicación')
+                        ->icon('heroicon-o-plus-circle')
+                        ->color('primary')
+                        ->form(function ($record) {
+                            return [
+                                Forms\Components\Select::make('parcel_id')
+                                    ->label('Cuartel')
+                        ->required()
+                        ->options(fn () => OrderParcel::with('parcel')
+                            ->where('order_id', $record->id)
+                            ->get()
+                            ->pluck('parcel.name', 'parcel_id')
+                            ->toArray()
+                        )
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            $parcelId = $get('parcel_id');
+                            if ($parcelId) {
+                                $parcel = Parcel::find($parcelId);
+                                $set('parcel_surface', $parcel->surface ?? 0);
+                            } else {
+                                $set('parcel_surface', 0);
+                            }
+                            static::calculateSurfaceAndValidate($get, $set);
+                        })
+                        ->searchable(),
+                    Forms\Components\Hidden::make('parcel_surface'),
+                    Forms\Components\TextInput::make('liter')
+                        ->label('Litros aplicados')
+                        ->required()
+                        ->numeric()
+                        ->rules(['numeric', 'min:0'])
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            static::calculateSurfaceAndValidate($get, $set);
+                        }),
+                    Forms\Components\TextInput::make('wetting')
+                        ->label('Mojamiento')
+                        ->suffix('l/ha')
+                        ->default(fn () => $record->wetting)
+                        ->numeric()
+                        ->rules(['numeric', 'min:0'])
+                        ->debounce(500)
+                        ->live(onBlur: true)
+                        ->required()
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            static::calculateSurfaceAndValidate($get, $set);
+                        }),
+                    Forms\Components\TextInput::make('wind_speed')
+                        ->label('Viento')
+                        ->suffix('km/h')
+                        ->required()
+                        ->numeric()
+                        ->rules(['numeric', 'min:0'])
+                        ->default(function () use ($record) {
+                            $field = $record->field;
+                            if ($field) {
+                                $cacheKey = "field_{$field->id}_latest_climate_values";
+                                $latestValues = Cache::get($cacheKey);
+                                return $latestValues['Wind Velocity']['value'] ?? 0;
+                            }
+                            return 0;
+                        }),
+                    Forms\Components\TextInput::make('temperature')
+                        ->label('Temperatura')
+                        ->numeric()
+                        ->suffix('°C')
+                        ->required()
+                        ->rules(['numeric'])
+                        ->default(function () use ($record) {
+                            $field = $record->field;
+                            if ($field) {
+                                $cacheKey = "field_{$field->id}_latest_climate_values";
+                                $latestValues = Cache::get($cacheKey);
+                                return $latestValues['Temperature']['value'] ?? 0;
+                            }
+                            return 0;
+                        }),
+                    Forms\Components\TextInput::make('moisture')
+                        ->label('Humedad')
+                        ->numeric()
+                        ->suffix('%')
+                        ->required()
+                        ->rules(['numeric', 'min:0', 'max:100'])
+                        ->default(function () use ($record) {
+                            $field = $record->field;
+                            if ($field) {
+                                $cacheKey = "field_{$field->id}_latest_climate_values";
+                                $latestValues = Cache::get($cacheKey);
+                                return $latestValues['Humidity']['value'] ?? 0;
+                            }
+                            return 0;
+                        }),
+                    Forms\Components\TextInput::make('surface')
+                        ->label('Superficie aplicada')
+                        ->default(0)
+                        ->readonly()
+                        ->suffix('has')
+                        ->numeric()
+                        ->reactive(),
+                    Forms\Components\TextInput::make('application_percentage')
+                        ->label('Porcentaje del cuartel aplicado')
+                        ->suffix('%')
+                        ->numeric()
+                        ->readonly(),
+                    Forms\Components\Select::make('applicators')
+                        ->label('Aplicadores')
+                        ->multiple()
+                        ->required()
+                        ->options(function () {
+                            return \App\Models\Applicator::where('field_id', Filament::getTenant()->id)
+                                ->pluck('name', 'id');
+                        })
+                        ->searchable()
+                        ->preload(),
+                ];
+            })
+            ->action(function (array $data, Order $record) {
+                try {
+                    if (!Order::where('id', $record->id)->exists()) {
+                        throw new \Exception("La orden con ID {$record->id} no existe.");
                     }
-                    static::calculateSurfaceAndValidate($get, $set);
-                })
-                ->searchable(),
-            Forms\Components\Hidden::make('parcel_surface'),
-            Forms\Components\TextInput::make('liter')
-                ->label('Litros aplicados')
-                ->required()
-                ->numeric()
-                ->rules(['numeric', 'min:0'])
-                ->live(onBlur: true)
-                ->afterStateUpdated(function (callable $get, callable $set) {
-                    static::calculateSurfaceAndValidate($get, $set);
-                }),
-            Forms\Components\TextInput::make('wetting')
-                ->label('Mojamiento')
-                ->suffix('l/ha')
-                ->default(fn () => $record->wetting)
-                ->numeric()
-                ->rules(['numeric', 'min:0'])
-                ->debounce(500)
-                ->live(onBlur: true)
-                ->required()
-                ->afterStateUpdated(function (callable $get, callable $set) {
-                    static::calculateSurfaceAndValidate($get, $set);
-                }),
-            Forms\Components\TextInput::make('wind_speed')
-                ->label('Viento')
-                ->suffix('km/h')
-                ->required()
-                ->numeric()
-                ->rules(['numeric', 'min:0'])
-                ->default(function () use ($record) {
-                    $field = $record->field;
-                    if ($field) {
-                        $cacheKey = "field_{$field->id}_latest_climate_values";
-                        $latestValues = Cache::get($cacheKey);
-                        return $latestValues['Wind Velocity']['value'] ?? 0;
+                    if (!Parcel::where('id', $data['parcel_id'])->exists()) {
+                        throw new \Exception("El cuartel con ID {$data['parcel_id']} no existe.");
                     }
-                    return 0;
-                }),
-            Forms\Components\TextInput::make('temperature')
-                ->label('Temperatura')
-                ->numeric()
-                ->suffix('°C')
-                ->required()
-                ->rules(['numeric'])
-                ->default(function () use ($record) {
-                    $field = $record->field;
-                    if ($field) {
-                        $cacheKey = "field_{$field->id}_latest_climate_values";
-                        $latestValues = Cache::get($cacheKey);
-                        return $latestValues['Temperature']['value'] ?? 0;
+
+                    $orderApplication = new \App\Models\OrderApplication([
+                        'order_id' => $record->id,
+                        'parcel_id' => $data['parcel_id'],
+                        'liter' => $data['liter'],
+                        'wetting' => $data['wetting'],
+                        'wind_speed' => $data['wind_speed'],
+                        'temperature' => $data['temperature'],
+                        'moisture' => $data['moisture'],
+                        'surface' => $data['surface'],
+                        'application_percentage' => $data['application_percentage'],
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    $saved = $orderApplication->save();
+                    if (!$saved) {
+                        throw new \Exception('No se pudo guardar la aplicación.');
                     }
-                    return 0;
-                }),
-            Forms\Components\TextInput::make('moisture')
-                ->label('Humedad')
-                ->numeric()
-                ->suffix('%')
-                ->required()
-                ->rules(['numeric', 'min:0', 'max:100'])
-                ->default(function () use ($record) {
-                    $field = $record->field;
-                    if ($field) {
-                        $cacheKey = "field_{$field->id}_latest_climate_values";
-                        $latestValues = Cache::get($cacheKey);
-                        return $latestValues['Humidity']['value'] ?? 0;
+
+                    Log::info("Aplicación creada con ID: {$orderApplication->id} para la orden ID: {$record->id}");
+
+                    if (!empty($data['applicators'])) {
+                        $orderApplication->applicators()->sync($data['applicators']);
+                        Log::info("Aplicadores sincronizados para OrderApplication ID: {$orderApplication->id}", ['applicators' => $data['applicators']]);
                     }
-                    return 0;
-                }),
-            Forms\Components\TextInput::make('surface')
-                ->label('Superficie aplicada')
-                ->default(0)
-                ->readonly()
-                ->suffix('has')
-                ->numeric()
-                ->reactive(),
-            Forms\Components\TextInput::make('application_percentage')
-                ->label('Porcentaje del cuartel aplicado')
-                ->suffix('%')
-                ->numeric()
-                ->readonly(),
-            Forms\Components\Select::make('applicators')
-                ->label('Aplicadores')
-                ->multiple()
-                ->required()
-                ->options(function () {
-                    return \App\Models\Applicator::where('field_id', Filament::getTenant()->id)
-                        ->pluck('name', 'id');
-                })
-                ->searchable()
-                ->preload(),
-        ];
-    })
-    ->action(function (array $data, Order $record) {
-        try {
-            if (!Order::where('id', $record->id)->exists()) {
-                throw new \Exception("La orden con ID {$record->id} no existe.");
-            }
-            if (!Parcel::where('id', $data['parcel_id'])->exists()) {
-                throw new \Exception("El cuartel con ID {$data['parcel_id']} no existe.");
-            }
 
-            $orderApplication = new \App\Models\OrderApplication([
-                'order_id' => $record->id,
-                'parcel_id' => $data['parcel_id'],
-                'liter' => $data['liter'],
-                'wetting' => $data['wetting'],
-                'wind_speed' => $data['wind_speed'],
-                'temperature' => $data['temperature'],
-                'moisture' => $data['moisture'],
-                'surface' => $data['surface'],
-                'application_percentage' => $data['application_percentage'],
-                'created_by' => Auth::id(),
-            ]);
-
-            $saved = $orderApplication->save();
-            if (!$saved) {
-                throw new \Exception('No se pudo guardar la aplicación.');
-            }
-
-            Log::info("Aplicación creada con ID: {$orderApplication->id} para la orden ID: {$record->id}");
-
-            if (!empty($data['applicators'])) {
-                $orderApplication->applicators()->sync($data['applicators']);
-                Log::info("Aplicadores sincronizados para OrderApplication ID: {$orderApplication->id}", ['applicators' => $data['applicators']]);
-            }
-
-            Notification::make()
-                ->title('Aplicación creada exitosamente')
-                ->success()
-                ->send();
-        } catch (\Exception $e) {
-            Log::error("Error al crear la aplicación: {$e->getMessage()}", ['data' => $data, 'order_id' => $record->id]);
-            Notification::make()
-                ->title('Error al crear la aplicación')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-            throw $e;
-        }
-    })
+                    Notification::make()
+                        ->title('Aplicación creada exitosamente')
+                        ->success()
+                        ->send();
+                } catch (\Exception $e) {
+                    Log::error("Error al crear la aplicación: {$e->getMessage()}", ['data' => $data, 'order_id' => $record->id]);
+                    Notification::make()
+                        ->title('Error al crear la aplicación')
+                        ->body($e->getMessage())
+                        ->danger()
+                        ->send();
+                    throw $e;
+                }
+            })
     ->hidden(fn(Order $record) => $record->is_completed)
     ->visible(fn(Order $record) => Auth::user()->can('createApplication', $record)),
                 ])->button()->size(ActionSize::Small)

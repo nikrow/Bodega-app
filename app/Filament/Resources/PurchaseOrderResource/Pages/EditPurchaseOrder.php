@@ -13,7 +13,8 @@ class EditPurchaseOrder extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->visible(fn () => $this->record->PurchaseOrderDetails()->count() === 0),
         ];
     }
 }

@@ -131,13 +131,14 @@ class FertilizationResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->readOnly(),
+                Forms\Components\Hidden::make('product_id')
+                    ->default(null),
                 Forms\Components\TextInput::make('quantity_solution')
                     ->label('Cantidad Solución')
                     ->required()
                     ->numeric()
                     ->minValue(0)
-                    ->reactive()
-                    ->debounce(3000)
+                    ->live(onBlur: true)
                     ->afterStateUpdated(function (callable $set, $state, $get) {
                         $dilution_factor = $get('dilution_factor');
                         $product_price = $get('product_price');

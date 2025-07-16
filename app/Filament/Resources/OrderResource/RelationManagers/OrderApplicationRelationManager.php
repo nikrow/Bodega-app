@@ -2,18 +2,19 @@
 
 namespace App\Filament\Resources\OrderResource\RelationManagers;
 
-use App\Models\OrderParcel;
-use App\Models\Parcel;
-use App\Services\WiseconnService;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use App\Models\Parcel;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use App\Models\OrderParcel;
+use Filament\Facades\Filament;
+use App\Services\WiseconnService;
+use Illuminate\Support\Facades\Cache;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
-use Illuminate\Support\Facades\Cache;
+use Filament\Resources\RelationManagers\RelationManager;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class OrderApplicationRelationManager extends RelationManager
 {
@@ -134,6 +135,10 @@ class OrderApplicationRelationManager extends RelationManager
                     ->multiple()
                     ->required()
                     ->relationship('applicators', 'name')
+                    ->options(function () {
+                    return \App\Models\Applicator::where('field_id', Filament::getTenant()->id)
+                        ->pluck('name', 'id');
+                    })                    
                     ->searchable()
                     ->preload(),
             ]);

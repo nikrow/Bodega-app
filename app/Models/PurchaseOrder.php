@@ -38,17 +38,17 @@ class PurchaseOrder extends Model implements Auditable
         return LogOptions::defaults()
             ->logFillable();
     }
+    
     protected static function booted()
     {
         static::creating(function ($order) {
-
             $order->user_id = Auth::id();
             $order->field_id = Filament::getTenant()->id;
             $order->status = StatusType::PENDIENTE;
             $order->is_received = false;
         });
-        
     }
+    
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -63,16 +63,36 @@ class PurchaseOrder extends Model implements Auditable
     {
         return $this->hasMany(PurchaseOrderDetail::class);
     }
+    
     public function field()
     {
         return $this->belongsTo(Field::class, 'field_id');
     }
+    
     public function product()
     {
         return $this->hasMany(Product::class);
     }
+    
     public function PurchaseOrderDetails()
     {
         return $this->hasMany(PurchaseOrderDetail::class);
+    }
+    
+    public function movimientos()
+    {
+        return $this->hasMany(Movimiento::class)->where('purchase_order_id', $this->id);
+    }
+    
+    public function movimientoProductos()
+    {
+        return $this->hasManyThrough(
+            MovimientoProducto::class,
+            Movimiento::class,
+            'purchase_order_id', // Foreign key en Movimiento (reemplaza orden_compra)
+            'movimiento_id',     // Foreign key en MovimientoProducto
+            'id',                // Local key en PurchaseOrder
+            'id'                 // Local key en Movimiento
+        )->where('tipo', \App\Enums\MovementType::ENTRADA);
     }
 }

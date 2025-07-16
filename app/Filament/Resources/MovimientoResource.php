@@ -178,9 +178,10 @@ class MovimientoResource extends Resource
                     ->visible(fn ($get) => $get('tipo') === MovementType::PREPARACION->value)
                     ->reactive(),
 
-                Select::make('orden_compra')
+                Select::make('purchase_order_id')
                     ->label('Orden de compra')
                     ->native(false)
+                    ->disabled(fn($record) => $record !== null)
                     ->options(function () {
                         
                         $options = PurchaseOrder::all()->pluck('number', 'id')->toArray();
@@ -191,7 +192,10 @@ class MovimientoResource extends Resource
 
                 TextInput::make('nombre_proveedor')
                     ->label('Proveedor')
-                    ->default(fn () => PurchaseOrder::find(request()->input('orden_compra'))?->supplier_name ?? '')
+                    ->default(function (callable $get) {
+                        $purchaseOrder = PurchaseOrder::find($get('purchase_order_id'));
+                        return $purchaseOrder && $purchaseOrder->provider ? $purchaseOrder->provider->name : '';
+                    })
                     ->visible(fn ($get) => $get('tipo') == MovementType::ENTRADA->value),
 
                 TextInput::make('guia_despacho')
