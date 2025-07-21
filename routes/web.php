@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderExportController;
 use App\Http\Controllers\ParcelExportController;
 use App\Http\Controllers\ReportExportController;
+use App\Http\Controllers\OrderParcelExportController;
 use App\Http\Controllers\FertilizationExportController;
 use App\Http\Controllers\StockMovementExportController;
 use App\Http\Controllers\OrderApplicationExportController;
@@ -22,3 +23,4 @@ Route::get('movimientos-stock/exportar/excel', [StockMovementExportController::c
 Route::get('fertilizaciones/exportar/excel', [FertilizationExportController::class, 'exportExcel'])->name('fertilizations.exportar.excel');
 Route::get('aplicaciones-terreno/exportar/excel', [OrderApplicationExportController::class, 'exportExcel'])->name('export.field-application-records');
 Route::get('ordenes/exportar/excel', [OrderExportController::class, 'exportExcel'])->name('export.order-records');
+Route::get('order-parcels/exportar/excel', [OrderParcelExportController::class, 'exportExcel'])->name('export.order-parcels');
