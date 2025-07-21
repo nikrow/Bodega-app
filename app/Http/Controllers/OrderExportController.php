@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class OrderExportController extends Controller
 {
-    public function export(Request $request)
+    public function exportExcel(Request $request)
     {
         // Obtener filtros desde la solicitud
         $filters = $request->only([

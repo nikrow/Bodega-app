@@ -44,6 +44,7 @@ class PurchaseOrderPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::BODEGUERO,
             RoleType::SUPERUSER,
         ]);
     }
@@ -57,6 +58,7 @@ class PurchaseOrderPolicy
             RoleType::ADMIN,
             RoleType::AGRONOMO,
             RoleType::ASISTENTE,
+            RoleType::BODEGUERO,
             RoleType::SUPERUSER,
         ]);
     }
