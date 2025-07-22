@@ -2,31 +2,32 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\MovementType;
-use App\Enums\RoleType;
-use App\Filament\Resources\MovimientoResource\Pages;
-use App\Filament\Resources\MovimientoResource\RelationManagers\MovimientoProductosRelationManager;
-use App\Models\Movimiento;
-use App\Models\Order;
-use App\Models\PurchaseOrder;
 use App\Models\User;
-use App\Models\Warehouse;
-use Filament\Facades\Filament;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Support\Enums\ActionSize;
 use Filament\Tables;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Enums\ActionsPosition;
-use Filament\Tables\Enums\FiltersLayout;
-use Filament\Tables\Filters\TernaryFilter;
+use App\Models\Order;
+use App\Enums\RoleType;
+use Filament\Forms\Form;
+use App\Enums\StatusType;
+use App\Models\Warehouse;
+use App\Models\Movimiento;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use App\Enums\MovementType;
+use App\Models\PurchaseOrder;
+use Filament\Facades\Filament;
+use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Support\Enums\ActionSize;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Enums\ActionsPosition;
+use Filament\Tables\Filters\TernaryFilter;
+use App\Filament\Resources\MovimientoResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use App\Filament\Resources\MovimientoResource\RelationManagers\MovimientoProductosRelationManager;
 
 class MovimientoResource extends Resource
 {
@@ -183,8 +184,12 @@ class MovimientoResource extends Resource
                     ->native(false)
                     ->disabled(fn($record) => $record !== null)
                     ->options(function () {
-                        
-                        $options = PurchaseOrder::all()->pluck('number', 'id')->toArray();
+                        $tenantId = Filament::getTenant()->id;
+                        // Filtrar órdenes de compra con status COMPLETO y que pertenezcan al tenant
+                        $options = PurchaseOrder::where('field_id', $tenantId)
+                            ->where('status', StatusType::COMPLETO)
+                            ->pluck('number', 'id')
+                            ->toArray();
                         return ['' => 'Sin orden de compra'] + $options; // Agrega opción vacía
                     })
                     ->nullable()
