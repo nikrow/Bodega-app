@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 
+use Closure;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Product;
 use Filament\Forms\Form;
+use App\Enums\StatusType;
 use Filament\Tables\Table;
 use App\Enums\MovementType;
 use App\Models\MovimientoProducto;
@@ -29,7 +31,22 @@ class PurchaseOrderDetailsRelationManager extends RelationManager
                     ->options(Product::all()->pluck('product_name', 'id'))
                     ->preload()
                     ->searchable()
-                    ->rules('exists:products,id')
+                    ->rules([
+                        'exists:products,id',
+                        function ($get, $record) {
+                            return function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                                $purchaseOrderId = $get('purchase_order_id') ?? $this->ownerRecord->id;
+                                $query = \App\Models\PurchaseOrderDetail::where('purchase_order_id', $purchaseOrderId)
+                                    ->where('product_id', $value);
+                                if ($record) {
+                                    $query->where('id', '!=', $record->id); // Excluye el registro actual al editar
+                                }
+                                if ($query->exists()) {
+                                    $fail('Este producto ya está incluido en la orden de compra.');
+                                }
+                            };
+                        },
+                    ])
                     ->live()
                     ->afterStateUpdated(function (Forms\Set $set, $state) {
                         $product = Product::find($state);
@@ -50,6 +67,7 @@ class PurchaseOrderDetailsRelationManager extends RelationManager
                             ->label('Modificar Precio')
                             ->default(false)
                             ->live()
+                            ->hidden()
                             ->inline(false)
                             ->columnSpan(1),
                     ])
@@ -85,7 +103,7 @@ class PurchaseOrderDetailsRelationManager extends RelationManager
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('quantity')
-                    ->label('Cantidad')
+                    ->label('Solicitado')
                     ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->sortable()
                     ->searchable(),
@@ -103,12 +121,21 @@ class PurchaseOrderDetailsRelationManager extends RelationManager
                         })->where('producto_id', $record->product_id)
                             ->sum('cantidad');
                     }),
-                Tables\Columns\TextColumn::make('total')
-                    ->label('Total')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ',')
+                Tables\Columns\TextColumn::make('por_recibir')
+                    ->label('Por Recibir')
+                    ->numeric(decimalPlaces: 1, thousandsSeparator: '.', decimalSeparator: ',')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    ->getStateUsing(function ($record) {
+                        if (!$record->purchaseOrder) {
+                            return $record->quantity;
+                        }
+                        $cantidadRecibida = MovimientoProducto::whereHas('movimiento', function (Builder $query) use ($record) {
+                            $query->where('purchase_order_id', $record->purchaseOrder->id)
+                                  ->where('tipo', MovementType::ENTRADA);
+                        })->where('producto_id', $record->product_id)
+                            ->sum('cantidad');
+                        return max(0, $record->quantity - $cantidadRecibida);
+                    }),
                 Tables\Columns\TextColumn::make('status')
                     ->badge(),
                 Tables\Columns\TextColumn::make('observation')
@@ -119,7 +146,9 @@ class PurchaseOrderDetailsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->visible(fn ($record) => $record->status !== StatusType::COMPLETO)
+                ,
             ])
             ->actions([
                 Tables\Actions\EditAction::make()

@@ -185,9 +185,9 @@ class MovimientoResource extends Resource
                     ->disabled(fn($record) => $record !== null)
                     ->options(function () {
                         $tenantId = Filament::getTenant()->id;
-                        // Filtrar órdenes de compra con status COMPLETO y que pertenezcan al tenant
+                        // Filtrar órdenes de compra que pertenezcan al tenant y NO tengan status COMPLETO
                         $options = PurchaseOrder::where('field_id', $tenantId)
-                            ->where('status', StatusType::COMPLETO)
+                            ->where('status', '!=', StatusType::COMPLETO)
                             ->pluck('number', 'id')
                             ->toArray();
                         return ['' => 'Sin orden de compra'] + $options; // Agrega opción vacía
@@ -273,7 +273,24 @@ class MovimientoResource extends Resource
                 Tables\Columns\TextColumn::make('movimiento_productos_count')
                     ->label('Productos')
                     ->badge()
-                    ->numeric(),
+                    ->numeric()
+                    ->tooltip(function (Movimiento $record): ?string {
+                        // Cargar los productos relacionados con el movimiento
+                        $productos = $record->movimientoProductos()->with('producto')->get();
+                        
+                        // Si no hay productos, no mostrar tooltip
+                        if ($productos->isEmpty()) {
+                            return null;
+                        }
+
+                        // Construir una lista con los nombres de los productos
+                        $listaProductos = $productos->map(function ($movimientoProducto) {
+                            $nombreProducto = $movimientoProducto->producto ? $movimientoProducto->producto->product_name : 'Producto desconocido';
+                            return $nombreProducto;
+                        })->implode(', ');
+
+                        return $listaProductos;
+                    }),
                 Tables\Columns\IconColumn::make('is_completed')
                     ->boolean()
                     ->label('Estado'),

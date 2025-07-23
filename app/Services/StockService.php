@@ -175,7 +175,7 @@ class StockService
                 $this->updateStock($stockDestino, $cantidadNueva, $producto->price, $userId, $movimiento, $productoMovimiento);
                 }
                 // Registrar en stock_movements (sin signos negativos)
-                $descripcion = "OC: {$movimiento->orden_compra}, GD: {$movimiento->guia_despacho},
+                $descripcion = "OC: {$movimiento->purchaseOrder->purchase_order_number}, GD: {$movimiento->guia_despacho},
                                 Proveedor: {$movimiento->nombre_proveedor}";
                 $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, $descripcion, $movimiento->bodega_destino_id);
                 break;
