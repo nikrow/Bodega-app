@@ -175,26 +175,16 @@ class FertilizationResource extends Resource
             ->recordTitleAttribute('id')
             ->defaultSort('date', 'desc')
             ->modifyQueryUsing(function (Builder $query) {
-                $query->with(['parcel', 'fertilizerMapping.product']);
+                // Filtro por tenant para reducir dataset
+                $tenantId = Filament::getTenant()->id;
+                $query->where('field_id', $tenantId)
+                    ->with([
+                        'parcel:id,name',
+                        'fertilizerMapping:id,fertilizer_name,dilution_factor,product_id',
+                        'fertilizerMapping.product:id,product_name,price,SAP_code'
+                    ]);
             })
-            ->groups([
-                Group::make('date')
-                    ->label('Fecha')
-                    ->date('d/m/Y')
-                    ->collapsible()
-                    ->titlePrefixedWithLabel(false),
-                Group::make('parcel.name')
-                    ->label('Cuartel')
-                    ->collapsible()
-                    ->titlePrefixedWithLabel(false),
-            ])
-            ->groupingSettingsInDropdownOnDesktop()
-            ->groupRecordsTriggerAction(
-                fn (Action $action) => $action
-                    ->button()
-                    ->label('Agrupar'),
-            )
-            ->defaultPaginationPageOption(50)
+            ->defaultPaginationPageOption(10)
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
@@ -211,29 +201,17 @@ class FertilizationResource extends Resource
                 Tables\Columns\SelectColumn::make('fertilizer_mapping_id')
                     ->label('Fertilizante')
                     ->options(function () {
-                        return FertilizerMapping::all()
-                            ->mapWithKeys(function ($mapping) {
-                                return [$mapping->id => $mapping->fertilizer_name . ' (' . $mapping->product->product_name . ')'];
-                            })
-                            ->toArray();
+                        // Caché para opciones, con eager load
+                        return cache()->remember('fertilizer_mappings_options', 3600, function () {
+                            return FertilizerMapping::with('product')->get()
+                                ->mapWithKeys(function ($mapping) {
+                                    return [$mapping->id => $mapping->fertilizer_name . ' (' . $mapping->product->product_name . ')'];
+                                })
+                                ->toArray();
+                        });
                     })
                     ->searchable()
                     ->disabled(fn ($record) => !Gate::allows('update', $record))
-                    ->tooltip(function ($record) {
-                        if (!Gate::allows('update', $record)) {
-                            $user = Auth::user();
-                            if ($record->field_id !== Filament::getTenant()->id) {
-                                return 'No tienes permiso para modificar este registro.';
-                            }
-                            if (!in_array($user->role, [RoleType::ADMIN, RoleType::AGRONOMO, RoleType::ASISTENTE])) {
-                                return 'No tienes el rol necesario para modificar fertilizaciones.';
-                            }
-                            if ($record->created_at->diffInDays(Carbon::now()) > 4 && $user->role !== RoleType::ADMIN) {
-                                return 'No se puede modificar la fertilización después de 4 días de su creación.';
-                            }
-                        }
-                        return null;
-                    })
                     ->afterStateUpdated(function ($record, $state, $livewire) {
                         if (!Gate::allows('update', $record)) {
                             \Filament\Notifications\Notification::make()

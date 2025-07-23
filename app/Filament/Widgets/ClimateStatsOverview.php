@@ -27,17 +27,20 @@ class ClimateStatsOverview extends BaseWidget
         return 'Últimos valores climáticos.';
     }
 
-    // Intervalo de actualización (polling)
-    protected static ?string $pollingInterval = '15s';
+    // Intervalo de actualización (polling) - aumentado para reducir carga
+    protected static ?string $pollingInterval = '10m'; 
 
-    // Desactivar lazy loading para cargar inmediatamente
-    protected static bool $isLazy = false;
+    // Activar lazy loading para no cargar hasta que sea visible
+    protected static bool $isLazy = true;
 
-    // Obtener el campo seleccionado desde el tenant
+    // Obtener el campo seleccionado desde el tenant, con eager loading
     protected function getSelectedField(): ?Field
     {
         $tenant = Filament::getTenant();
-        return $tenant instanceof Field ? $tenant : null;
+        if ($tenant instanceof Field) {
+            return Field::with('zones')->find($tenant->id); // Eager load zones
+        }
+        return null;
     }
 
     protected function getStats(): array
@@ -52,9 +55,9 @@ class ClimateStatsOverview extends BaseWidget
             ];
         }
 
-        // Clave del caché para el campo
-        $cacheKey = "field_{$field->id}_latest_climate_values";
-        $climateData = Cache::get($cacheKey);
+        // Clave del caché para datos latest (mantiene el original)
+        $cacheKeyLatest = "field_{$field->id}_latest_climate_values";
+        $climateData = Cache::get($cacheKeyLatest);
 
         if (!$climateData) {
             return [
@@ -64,68 +67,74 @@ class ClimateStatsOverview extends BaseWidget
             ];
         }
 
-        // Obtener datos diarios usando WiseconnService
-        $wiseconnService = app(WiseconnService::class);
+        // Preparar fechas para datos diarios
         $today = Carbon::now('America/Santiago');
         $initTime = $today->startOfDay()->toIso8601String();
         $endTime = $today->endOfDay()->toIso8601String();
 
-        $minTemp = null;
-        $maxTemp = null;
-        $dailyRain = null;
+        // Clave de caché para datos diarios (TTL hasta medianoche)
+        $cacheKeyDaily = "field_{$field->id}_daily_climate_{$today->format('Y-m-d')}";
+        $dailyData = Cache::remember($cacheKeyDaily, $today->endOfDay()->diffInSeconds(now()), function () use ($field, $initTime, $endTime) {
+            $wiseconnService = app(WiseconnService::class);
+            $minTemp = null;
+            $maxTemp = null;
+            $dailyRain = null;
 
-        // Obtener la primera zona del campo para las medidas diarias
-        $zone = $field->zones->first();
+            // Obtener la primera zona (ya eager-loaded)
+            $zone = $field->zones->first();
 
-        if ($zone) {
-            try {
-                // Temperatura mínima diaria
-                $minTemp = $wiseconnService->getDailyMinMaxMeasure($field, $zone, 'Temperature', $initTime, $endTime, 'min');
-                // Temperatura máxima diaria
-                $maxTemp = $wiseconnService->getDailyMinMaxMeasure($field, $zone, 'Temperature', $initTime, $endTime, 'max');
-            
-                // Lluvia acumulada diaria
-                $dailyRain = $wiseconnService->getDailySumMeasure($field, $zone, 'Rain', $initTime, $endTime);
-            } catch (\Exception $e) {
-                Log::error("Error al obtener datos diarios para el campo {$field->id}: {$e->getMessage()}");
+            if ($zone) {
+                try {
+                    $minTemp = $wiseconnService->getDailyMinMaxMeasure($field, $zone, 'Temperature', $initTime, $endTime, 'min');
+                    $maxTemp = $wiseconnService->getDailyMinMaxMeasure($field, $zone, 'Temperature', $initTime, $endTime, 'max');
+                    $dailyRain = $wiseconnService->getDailySumMeasure($field, $zone, 'Rain', $initTime, $endTime);
+                } catch (\Exception $e) {
+                    Log::error("Error al obtener datos diarios para el campo {$field->id}: {$e->getMessage()}");
+                }
             }
-        }
+
+            return compact('minTemp', 'maxTemp', 'dailyRain');
+        });
 
         // Preparar las estadísticas
         $stats = [];
 
         // Velocidad del viento
-        $stats[] = Stat::make('Velocidad del Viento', $climateData['Wind Velocity']['value'] ? number_format($climateData['Wind Velocity']['value'], 1) . ' m/s' : 'N/A')
+        $stats[] = Stat::make('Velocidad del Viento', $climateData['Wind Velocity']['value'] ?? 'N/A')
+            ->value(fn() => $climateData['Wind Velocity']['value'] ? number_format($climateData['Wind Velocity']['value'], 1) . ' m/s' : 'N/A')
             ->description($climateData['Wind Velocity']['time'] ? Carbon::parse($climateData['Wind Velocity']['time'])->diffForHumans() : 'Sin datos')
             ->descriptionIcon('bi-wind')
             ->color($climateData['Wind Velocity']['value'] ? 'success' : 'gray');
 
         // Temperatura actual
-        $stats[] = Stat::make('Temperatura', $climateData['Temperature']['value'] ? number_format($climateData['Temperature']['value'], 1) . ' °C' : 'N/A')
+        $stats[] = Stat::make('Temperatura', $climateData['Temperature']['value'] ?? 'N/A')
+            ->value(fn() => $climateData['Temperature']['value'] ? number_format($climateData['Temperature']['value'], 1) . ' °C' : 'N/A')
             ->description($climateData['Temperature']['time'] ? Carbon::parse($climateData['Temperature']['time'])->diffForHumans() : 'Sin datos')
             ->descriptionIcon('carbon-temperature-celsius')
             ->color($climateData['Temperature']['value'] ? 'success' : 'gray');
 
         // Humedad
-        $stats[] = Stat::make('Humedad', $climateData['Humidity']['value'] ? number_format($climateData['Humidity']['value'], 1) . '%' : 'N/A')
+        $stats[] = Stat::make('Humedad', $climateData['Humidity']['value'] ?? 'N/A')
+            ->value(fn() => $climateData['Humidity']['value'] ? number_format($climateData['Humidity']['value'], 1) . '%' : 'N/A')
             ->description($climateData['Humidity']['time'] ? Carbon::parse($climateData['Humidity']['time'])->diffForHumans() : 'Sin datos')
             ->descriptionIcon('carbon-humidity-alt')
             ->color($climateData['Humidity']['value'] ? 'success' : 'gray');
 
-        // Temperatura mínima diaria
-        $stats[] = Stat::make('Temp. Mínima Diaria', $minTemp ? number_format($minTemp, 1) . ' °C' : 'N/A')
-            ->description($minTemp ? 'Hoy' : 'Sin datos')
+        // Datos diarios cacheados
+        $stats[] = Stat::make('Temp. Mínima Diaria', $dailyData['minTemp'] ? number_format($dailyData['minTemp'], 1) . ' °C' : 'N/A')
+            ->description($dailyData['minTemp'] ? 'Hoy' : 'Sin datos')
             ->descriptionIcon('heroicon-m-arrow-down')
-            ->color($minTemp ? 'info' : 'gray');
-        $stats[] = Stat::make('Temp. Máxima Diaria', $maxTemp ? number_format($maxTemp, 1) . ' °C' : 'N/A')
-            ->description($maxTemp ? 'Hoy' : 'Sin datos')
+            ->color($dailyData['minTemp'] ? 'info' : 'gray');
+
+        $stats[] = Stat::make('Temp. Máxima Diaria', $dailyData['maxTemp'] ? number_format($dailyData['maxTemp'], 1) . ' °C' : 'N/A')
+            ->description($dailyData['maxTemp'] ? 'Hoy' : 'Sin datos')
             ->descriptionIcon('heroicon-m-arrow-up')
-            ->color($maxTemp ? 'info' : 'gray');
-        // Lluvia acumulada diaria
-        $stats[] = Stat::make('Lluvia Acumulada', $dailyRain ? number_format($dailyRain, 1) . ' mm' : 'N/A')
-            ->description($dailyRain ? 'Hoy' : 'Sin datos')
+            ->color($dailyData['maxTemp'] ? 'info' : 'gray');
+
+        $stats[] = Stat::make('Lluvia Acumulada', $dailyData['dailyRain'] ? number_format($dailyData['dailyRain'], 1) . ' mm' : 'N/A')
+            ->description($dailyData['dailyRain'] ? 'Hoy' : 'Sin datos')
             ->descriptionIcon('carbon-rain')
-            ->color($dailyRain ? 'info' : 'gray');
+            ->color($dailyData['dailyRain'] ? 'info' : 'gray');
 
         return $stats;
     }
