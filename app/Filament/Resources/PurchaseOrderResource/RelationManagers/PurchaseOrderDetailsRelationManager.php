@@ -147,7 +147,7 @@ class PurchaseOrderDetailsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->visible(fn ($record) => $record->status !== StatusType::COMPLETO)
+                    ->visible(fn () => $this->ownerRecord && $this->ownerRecord->status !== StatusType::COMPLETO)
                 ,
             ])
             ->actions([

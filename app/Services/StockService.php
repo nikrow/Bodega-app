@@ -175,8 +175,14 @@ class StockService
                 $this->updateStock($stockDestino, $cantidadNueva, $producto->price, $userId, $movimiento, $productoMovimiento);
                 }
                 // Registrar en stock_movements (sin signos negativos)
-                $descripcion = "OC: {$movimiento->purchaseOrder->purchase_order_number}, GD: {$movimiento->guia_despacho},
-                                Proveedor: {$movimiento->nombre_proveedor}";
+                $descripcion = '';
+                    if ($movimiento->purchaseOrder) {
+                        $descripcion .= "OC: {$movimiento->purchaseOrder->purchase_order_number}, ";
+                    } else {
+                        $descripcion .= "OC: OC, ";
+                    }
+                    $descripcion .= "GD: " . ($movimiento->guia_despacho ? $movimiento->guia_despacho : 'Sin guía') . ", Proveedor: " . ($movimiento->nombre_proveedor ? $movimiento->nombre_proveedor : 'Sin proveedor');
+
                 $this->logStockMovement($movimiento, $productoMovimiento, $tipo, $cantidadNueva, $descripcion, $movimiento->bodega_destino_id);
                 break;
 
@@ -358,6 +364,10 @@ class StockService
             }
         });
     }
+
+    /**
+     * Registrar un movimiento de stock.
+     */
     private function logStockMovement(
         Movimiento $movimiento,
         MovimientoProducto $productoMovimiento,
@@ -369,7 +379,7 @@ class StockService
         // Convertir $tipoMovimiento a string, sea un enum o un string
         $tipoString = is_string($tipoMovimiento)
             ? $tipoMovimiento
-            : $tipoMovimiento->value; // extrae la propiedad 'value' del enum
+            : $tipoMovimiento->value;
 
         if ($warehouseId === null) {
             $warehouseId = match ($tipoMovimiento) {
@@ -385,7 +395,7 @@ class StockService
 
         // Registrar en stock_movements
         StockMovement::create([
-            'movement_type'   => $tipoString,   // ya es un string
+            'movement_type'   => $tipoString,
             'product_id'      => $productoMovimiento->producto_id,
             'warehouse_id'    => $warehouseId,
             'related_id'      => $productoMovimiento->id,
@@ -397,8 +407,7 @@ class StockService
             'updated_by'      => $movimiento->updated_by ?? $movimiento->user_id,
         ]);
 
-        Log::info("Movimiento registrado: Tipo {$tipoString}, Prod ID {$productoMovimiento->producto_id},
-               Cantidad {$cantidadCambio}, Bodega {$warehouseId}, Desc: {$descripcion}");
+        Log::info("Movimiento registrado: Tipo {$tipoString}, Prod ID {$productoMovimiento->producto_id}, Cantidad {$cantidadCambio}, Bodega {$warehouseId}, Desc: {$descripcion}");
     }
 
     /**
