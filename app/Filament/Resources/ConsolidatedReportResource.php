@@ -9,6 +9,7 @@ use App\Models\ConsolidatedReport;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Forms\Components\DatePicker;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\ConsolidatedReportResource\Pages;
 
@@ -23,18 +24,25 @@ class ConsolidatedReportResource extends Resource
     protected static ?string $modelLabel = 'Reporte consolidado';
     protected static ?string $pluralModelLabel = 'Reportes consolidados';
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-{
-    return parent::getEloquentQuery()
-        ->join('reports', 'consolidated_reports.report_id', '=', 'reports.id')
-        ->select('consolidated_reports.*') 
-        ->with(['report.work']);
-}
+   public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->join('reports', 'consolidated_reports.report_id', '=', 'reports.id')
+            ->select('consolidated_reports.*')
+            ->with([
+                'report.work',
+                'report.field',
+                'report.operator',
+                'report.approvedBy',
+                'machinery',
+                'tractor'
+            ]);
+    }
     public static function table(Table $table): Table
     {
         return $table
             ->defaultSort('reports.id', 'desc')
-            ->defaultPaginationPageOption('25')
+            ->defaultPaginationPageOption('10')
             ->columns([
                 Tables\Columns\TextColumn::make('provider')
                     ->label('Proveedor')
@@ -141,6 +149,12 @@ class ConsolidatedReportResource extends Resource
             ])
             ->bulkActions([
                 ExportBulkAction::make('export')
+                    ->exports([
+                        ExcelExport::make()
+                            ->queue()
+                            ->withChunkSize(100)
+                            ->modifyQueryUsing(fn ($query) => $query->select(['consolidated_reports.id', 'reports.date', 'reports.field_id', 'reports.operator_id', 'reports.initial_hourometer', 'reports.hourometer', 'machinery_id', 'tractor_id', 'machinery_hours', 'tractor_hours', 'machinery_total', 'tractor_total']))
+                    ])
             ]);
     }
 

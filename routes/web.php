@@ -12,6 +12,7 @@ use App\Http\Controllers\FertilizationExportController;
 use App\Http\Controllers\StockMovementExportController;
 use App\Http\Controllers\OrderApplicationExportController;
 use App\Http\Controllers\ApplicationRecordExportController;
+use App\Http\Controllers\ConsolidatedReportExportController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{order}/download-pdf', [OrderController::class, 'downloadPdf'])->name('orders.downloadPdf');
@@ -25,3 +26,4 @@ Route::get('fertilizaciones/exportar/excel', [FertilizationExportController::cla
 Route::get('aplicaciones-terreno/exportar/excel', [OrderApplicationExportController::class, 'exportExcel'])->name('export.field-application-records');
 Route::get('ordenes/exportar/excel', [OrderExportController::class, 'exportExcel'])->name('export.order-records');
 Route::get('stock/exportar/excel', [StockExportController::class, 'exportExcel'])->name('export.stock-records');
+Route::get('reports/exportar/excel', [ConsolidatedReportExportController::class, 'exportExcel'])->name('consolidated-reports.export');

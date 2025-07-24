@@ -125,6 +125,7 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('has')
                     ->numeric()
                     ->reactive(),
+                    
                 Forms\Components\TextInput::make('application_percentage')
                     ->label('Porcentaje del cuartel aplicado')
                     ->suffix('%')
@@ -196,9 +197,8 @@ class OrderApplicationRelationManager extends RelationManager
                     ->suffix('  ha')
                     ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ','),
                 Tables\Columns\TextColumn::make('application_percentage')
-                    ->label('Porcentaje del cuartel aplicado')
-                    ->suffix('%')
-                    ->numeric(decimalPlaces: 2, thousandsSeparator: '.', decimalSeparator: ','),
+                    ->label('Porcentaje Aplicado')
+                    ->formatStateUsing(fn ($state) => $state ? "{$state}%" : 'N/A'),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),

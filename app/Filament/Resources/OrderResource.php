@@ -419,7 +419,6 @@ class OrderResource extends Resource
                         'temperature' => $data['temperature'],
                         'moisture' => $data['moisture'],
                         'surface' => $data['surface'],
-                        'application_percentage' => $data['application_percentage'],
                         'created_by' => Auth::id(),
                     ]);
 
