@@ -71,8 +71,10 @@ class ConsolidatedReportExport implements FromQuery, WithHeadings, WithMapping, 
         $isMachinery = !is_null($record->machinery_id);
 
         return [
-            // Proveedor
-            $isMachinery ? ($record->machinery->provider ?? 'N/A') : ($record->tractor->provider ?? 'N/A'),
+            // Proveedor: Convertir enum a string usando ->value
+            $isMachinery 
+                ? ($record->machinery && $record->machinery->provider ? $record->machinery->provider->value : 'N/A') 
+                : ($record->tractor && $record->tractor->provider ? $record->tractor->provider->value : 'N/A'),
             // ID Report
             $record->report ? $record->report->id : 'Sin reporte',
             // Fecha
@@ -91,8 +93,10 @@ class ConsolidatedReportExport implements FromQuery, WithHeadings, WithMapping, 
             number_format($isMachinery ? ($record->machinery_hours ?? 0) : ($record->tractor_hours ?? 0), 2, ',', '.'),
             // Labores
             $record->report && $record->report->work ? $record->report->work->name : 'N/A',
-            // Centro de Costo
-            $record->report && $record->report->work ? $record->report->work->cost_type : 'N/A',
+            // Centro de Costo: Convertir enum a string usando ->value
+            $record->report && $record->report->work && $record->report->work->cost_type 
+                ? $record->report->work->cost_type->value 
+                : 'N/A',
             // Precio
             $isMachinery ? number_format($record->machinery->price ?? 0, 2, ',', '.') : number_format($record->tractor->price ?? 0, 2, ',', '.'),
             // Total
