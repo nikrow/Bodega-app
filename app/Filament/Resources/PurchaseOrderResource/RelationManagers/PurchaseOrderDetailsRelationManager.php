@@ -5,12 +5,14 @@ namespace App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 use Closure;
 use Filament\Forms;
 use Filament\Tables;
+use App\Enums\RoleType;
 use App\Models\Product;
 use Filament\Forms\Form;
 use App\Enums\StatusType;
 use Filament\Tables\Table;
 use App\Enums\MovementType;
 use App\Models\MovimientoProducto;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -67,7 +69,12 @@ class PurchaseOrderDetailsRelationManager extends RelationManager
                             ->label('Modificar Precio')
                             ->default(false)
                             ->live()
-                            ->hidden()
+                            ->visible(function () {
+                            $user = Auth::user();
+                            return in_array($user->role, [
+                                RoleType::ADMIN,
+                            ]);
+                        })
                             ->inline(false)
                             ->columnSpan(1),
                     ])
