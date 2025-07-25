@@ -340,7 +340,7 @@ class ParcelResource extends Resource
                         ->visible(function () {
                             $user = Auth::user();
                             return in_array($user->role, [
-                                RoleType::ADMIN->value,
+                                RoleType::ADMIN,
                             ]);
                         })
                         ->hidden(fn ($record) => !$record->is_active),
