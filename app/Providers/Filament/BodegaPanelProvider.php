@@ -44,8 +44,9 @@ class BodegaPanelProvider extends PanelProvider
                 'primary' => ('#568203'),
                 'secondary' => ('#2F0381'),
             ])
-            ->spa()
             ->databaseTransactions()
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->sidebarCollapsibleOnDesktop()
             ->tenant(field::class, slugAttribute: 'slug')
             ->brandLogo(secure_asset('/img/logovector2.svg'))

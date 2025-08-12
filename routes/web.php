@@ -1,12 +1,15 @@
 <?php
 
+use App\Models\Program;
 use Illuminate\Support\Facades\Route;
 use App\Exports\OrderApplicationExport;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\OrderExportController;
 use App\Http\Controllers\StockExportController;
 use App\Http\Controllers\ParcelExportController;
 use App\Http\Controllers\ReportExportController;
+use App\Http\Controllers\ProgramExportController;
 use App\Http\Controllers\OrderParcelExportController;
 use App\Http\Controllers\FertilizationExportController;
 use App\Http\Controllers\StockMovementExportController;
@@ -17,6 +20,7 @@ use App\Http\Controllers\ConsolidatedReportExportController;
 Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{order}/download-pdf', [OrderController::class, 'downloadPdf'])->name('orders.downloadPdf');
     Route::get('/orders/{order}/bodega-pdf', [OrderController::class, 'bodegaPdf'])->name('orders.bodegaPdf');
+    Route::get('/programas/{program}/download-pdf', [ProgramController::class, 'downloadPdf'])->name('program.downloadPdf');
 });
 Route::get('/reportes/exportar/excel', [ReportExportController::class, 'exportExcel'])->name('reportes.exportar.excel');
 Route::get('/cuarteles/exportar/excel', [ParcelExportController::class, 'exportExcel'])->name('cuarteles.exportar.excel');
@@ -27,3 +31,4 @@ Route::get('aplicaciones-terreno/exportar/excel', [OrderApplicationExportControl
 Route::get('ordenes/exportar/excel', [OrderExportController::class, 'exportExcel'])->name('export.order-records');
 Route::get('stock/exportar/excel', [StockExportController::class, 'exportExcel'])->name('export.stock-records');
 Route::get('reports/exportar/excel', [ConsolidatedReportExportController::class, 'exportExcel'])->name('consolidated-reports.export');
+Route::get('programas/exportar/excel', [ProgramExportController::class, 'exportExcel'])->name('export.programs');

@@ -25,7 +25,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable implements Auditable, HasTenants, FilamentUser
 {
-    use HasFactory, Notifiable;
+    use HasFactory; 
+    use Notifiable;
     use \Laravel\Sanctum\HasApiTokens;
     use \OwenIt\Auditing\Auditable;
     use LogsActivity;

@@ -34,6 +34,7 @@ class Parcel extends Model implements Auditable
         'deactivated_by',
         'deactivation_reason',
         'sdp',
+        'tank',
         'irrigation_system',
         'planting_scheme_id',
         'planting_scheme_custom',
@@ -138,5 +139,9 @@ class Parcel extends Model implements Auditable
     public function plantingScheme()
     {
         return $this->belongsTo(PlantingScheme::class, 'planting_scheme_id');
+    }
+    public function programParcels()
+    {
+        return $this->hasMany(ProgramParcel::class, 'parcel_id');
     }
 }

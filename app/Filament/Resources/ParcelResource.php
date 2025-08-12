@@ -70,6 +70,10 @@ class ParcelResource extends Resource
                                                     ->whereNull('deactivated_at')
                                                     ->ignore($get('id'));
                                             }),
+                                        Forms\Components\TextInput::make('tank')
+                                            ->label('Estanque')
+                                            ->nullable()
+                                            ->maxLength(255),
                                         Forms\Components\Select::make('crop_id')
                                             ->label('Cultivo')
                                             ->options(Crop::all()->pluck('especie', 'id')->toArray())

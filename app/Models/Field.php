@@ -157,6 +157,18 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(Irrigation::class, 'field_id');
     }
+    public function programs()
+    {
+        return $this->hasMany(Program::class, 'field_id');
+    }
+    public function programFertilizers()
+    {
+        return $this->hasMany(ProgramFertilizer::class, 'field_id');
+    }
+    public function programParcels()
+    {
+        return $this->hasMany(ProgramParcel::class, 'field_id');    
+    }
 
 }
 
