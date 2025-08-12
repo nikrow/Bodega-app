@@ -45,7 +45,7 @@ class Program extends Model implements Auditable
             $model->created_by = Auth::id();
             $model->updated_by = Auth::id();
             $model->field_id = Filament::getTenant()->id;
-            //$model->slug = Str::slug($model->name) . '-' . uniqid();
+            $model->slug = Str::slug($model->name) . '-' . uniqid();
         });
 
         static::updating(function ($model) {
