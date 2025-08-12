@@ -23,8 +23,8 @@ class ProgramController extends Controller
         // 3. Usar Browsershot para convertir el HTML en un PDF
         $pdf = Browsershot::html($html)
 
-            ->setNodeBinary('/home/nikrow/.nvm/versions/node/v22.18.0/bin/node')
-            ->setNpmBinary('/home/nikrow/.nvm/versions/node/v22.18.0/bin/npm')
+            //->setNodeBinary('/home/nikrow/.nvm/versions/node/v22.18.0/bin/node')
+            //->setNpmBinary('/home/nikrow/.nvm/versions/node/v22.18.0/bin/npm')
             ->format('A4') 
             ->landscape() 
             ->margins(10, 10, 10, 10)
