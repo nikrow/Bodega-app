@@ -20,7 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->group('auth', [
             // Otros middleware de autenticación si los tienes
-            \App\Http\Middleware\UpdateLastActivity::class,
             EnsureFrontendRequestsAreStateful::class,
             SubstituteBindings::class,
             \Edwink\FilamentUserActivity\Http\Middleware\RecordUserActivity::class,
@@ -30,7 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withCommands([
-        UpdateActiveMinutesCommand::class,
     ])
     ->withSchedule(function (Illuminate\Console\Scheduling\Schedule $schedule) {
         
