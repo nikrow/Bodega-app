@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\ProgramResource\Pages;
 
-use App\Filament\Resources\ProgramResource;
 use Filament\Actions;
+use App\Models\Program;
 use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\ProgramResource;
 
 class ViewProgram extends ViewRecord
 {
@@ -13,7 +14,8 @@ class ViewProgram extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\EditAction::make()
+                ->visible(fn (Program $record) => $record->is_active),
         ];
     }
 }

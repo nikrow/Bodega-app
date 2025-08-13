@@ -46,7 +46,7 @@ class FertilizerRelationManager extends RelationManager
                 Forms\Components\TextInput::make('application_quantity')
                     ->numeric()
                     ->label('Cantidad de Aplicaciones')
-                    ->default(0),
+                    ->default(1),
             ]);
     }
 
