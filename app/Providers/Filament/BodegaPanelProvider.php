@@ -51,7 +51,6 @@ class BodegaPanelProvider extends PanelProvider
             ->tenant(field::class, slugAttribute: 'slug')
             ->brandLogo(secure_asset('/img/logovector2.svg'))
             ->favicon(secure_asset('/img/logovector2.svg'))
-            ->font('Manrope')
             ->default()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -94,8 +93,7 @@ class BodegaPanelProvider extends PanelProvider
             ->authGuard('web')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                //Widgets\AccountWidget::class,
-                //ClimateStatsOverview::class,
+
             ])
             ->middleware([
                 EncryptCookies::class,

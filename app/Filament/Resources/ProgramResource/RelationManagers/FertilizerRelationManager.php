@@ -42,7 +42,7 @@ class FertilizerRelationManager extends RelationManager
                     ->reactive(),
                 Forms\Components\TextInput::make('units_per_ha')
                     ->numeric()
-                    ->label('Unidades por Hectárea'),
+                    ->label('Kg/lt de producto por hectárea'),
                 Forms\Components\TextInput::make('application_quantity')
                     ->numeric()
                     ->label('Cantidad de Aplicaciones')
