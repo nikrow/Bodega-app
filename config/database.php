@@ -56,16 +56,15 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
-            'sslmode' => 'required',
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                //test
-                PDO::MYSQL_ATTR_SSL_CA => storage_path('config/ca-certificate.crt'),
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
             'dump' => [
                 'useSingleTransaction' => true,
                 'skip-column-statistics' => false,
                 'timeout' => 60,],
+                'sslmode' => 'required',
         ],
 
         'mariadb' => [
