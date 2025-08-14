@@ -5,46 +5,38 @@
     <title>Programas de Fertilización — Consolidado</title>
 
     <style>
-        /* --- Página / pie de página responsivo --- */
+        /* --- Página / pie de página --- */
         @page {
             margin: 10mm;
-
             @bottom-center {
-                /* Tamaño adaptable del pie: nunca menor a 7px ni mayor a 9px */
-                font-size: clamp(7px, 1.2vw, 9px);
+                content: "{{ $tenant->name ?? 'N/A' }} | {{ $cropName ?? 'N/A' }} | {{ \Carbon\Carbon::parse($minDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($maxDate)->format('d/m/Y') }}  —  Página " counter(page) " de " counter(pages);
+                font-size: 9px;
                 color: #444;
                 letter-spacing: 0.1px;
-
-                /* Texto del pie usando las variables del consolidado */
-                content: "{{ $tenant->name ?? 'N/A' }} | {{ $cropName ?? 'N/A' }} | {{ \Carbon\Carbon::parse($minDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($maxDate)->format('d/m/Y') }}  —  Página " counter(page) " de " counter(pages);
             }
         }
 
-        /* Forzar que se impriman colores de fondo y bordes tal cual */
-        * {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
+        /* Respetar colores en impresión (Browsershot/Chromium) */
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-        /* --- Tipografía base más contenida --- */
+        /* Tipografía compacta para muchas columnas */
         body {
             font-family: Tahoma, Arial, sans-serif;
-            font-size: 8.5px; /* un poco menor para ganar aire */
+            font-size: 9px;
             margin: 0;
             padding: 0;
         }
 
-        /* Encabezado informativo superior más compacto y flexible */
         .info-header {
-            margin: 8px 0;
-            font-size: clamp(8px, 1.4vw, 10px);
+            margin: 8px 10px 4px 10px;
+            font-size: 9px;
             line-height: 1.25;
         }
 
         .main-title {
             text-align: center;
             font-size: 11px;
-            margin: 4px 0;
+            margin: 4px 10px 6px 10px;
             border-bottom: 1px solid #ccc;
             padding-bottom: 2px;
         }
@@ -52,60 +44,131 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* mantenemos fixed para layout estable */
+            table-layout: fixed; /* layout estable */
         }
 
-        thead { display: table-header-group; }
+        thead { display: table-header-group; } /* repetir encabezado por página */
 
         th, td {
-            border: 1px solid #555;
+            border: 1px solid #555;   /* líneas más oscuras */
             padding: 3px;
             text-align: center;
             font-size: 9px;
             line-height: 1.15;
             vertical-align: middle;
 
-            /* Claves para que NO se corten palabras extraño */
-            word-break: keep-all;      /* no rompas palabras */
-            overflow-wrap: normal;     /* evita cortes raros */
-            hyphens: none;             /* sin guiones automáticos */
-            white-space: normal;       /* permite salto solo donde haya espacios/BR */
+            /* evitar cortes raros */
+            word-break: keep-all;
+            overflow-wrap: normal;
+            hyphens: none;
+            white-space: normal;
         }
 
         th {
-            background-color: #f0f0f0 !important; /* asegurar el gris */
+            background-color: #f0f0f0 !important;
             font-weight: bold;
-            font-size: 8.5px; /* un pelito más chico para que quepa */
+            font-size: 8.5px;
         }
 
-        /* Anchos mínimos para columnas fijas (ajusta a gusto) */
-        th.col-est,   td.col-est   { min-width: 28px; }
-        th.col-sector,td.col-sector{ min-width: 80px; }
-        th.col-sup,   td.col-sup   { min-width: 40px; }
+        /* Anchos mínimos como en tu formato original */
+        th.col-est,   td.col-est    { min-width: 32px; }
+        th.col-sector,td.col-sector { min-width: 90px; text-align: left; }
+        th.col-sup,   td.col-sup    { min-width: 48px; }
 
-        /* Cabeceras y celdas de fertilizantes algo más compactas */
-        th.fert-head, td.fert-cell  { min-width: 60px; }
-        th.fert-head               { font-size: 8px; } /* opcional: aún más compacto en headers */
+        /* Cabeceras/celdas de fertilizantes */
+        th.fert-head, td.fert-cell { min-width: 60px; }
     </style>
 </head>
 
 <body>
     <div class="info-header">
-        <strong>Reporte Consolidado:</strong> {{ $tenant->name ?? 'N/A' }} <br>
-        <strong>Cultivo:</strong> {{ $cropName ?? 'N/A' }} <br>
+        <strong>Reporte Consolidado:</strong> {{ $tenant->name ?? 'N/A' }}<br>
+        <strong>Cultivo:</strong> {{ $cropName ?? 'N/A' }}<br>
         @php
-            $from = isset($minDate) && $minDate
-                ? \Carbon\Carbon::parse($minDate)->format('d/m/Y')
-                : 'N/A';
-
-            $to = isset($maxDate) && $maxDate
-                ? \Carbon\Carbon::parse($maxDate)->format('d/m/Y')
-                : 'N/A';
+            $from = isset($minDate) && $minDate ? \Carbon\Carbon::parse($minDate)->format('d/m/Y') : 'N/A';
+            $to   = isset($maxDate) && $maxDate ? \Carbon\Carbon::parse($maxDate)->format('d/m/Y') : 'N/A';
         @endphp
         <strong>Periodo:</strong> {{ $from }} - {{ $to }}
     </div>
 
     <h1 class="main-title">Programa Consolidado de Fertilización</h1>
+
+    @php
+        /**
+         * Consolidadores que respetan el FORMATO de tu tabla:
+         * - total por fertilizante (suma global)
+         * - riegos consolidados (suma de riegos)
+         * - litros/ riego = total / riegos (si riegos > 0)
+         *
+         * Soporta varias estructuras en $dataMatrix[$parcelId][$fertilizerId]:
+         *   - número directo
+         *   - ['amount' => x, 'riegos' => y]
+         *   - ['amounts' => [x1, x2, ...], 'riegos' => [y1, y2, ...]]
+         *   - ['lines' => [ ['amount'=>x,'riegos'=>y], ...]]
+         *   - mezclas: suma todo lo que sea numérico plausible
+         */
+        $sumAmounts = function($cell) {
+            if (is_null($cell)) return 0;
+
+            if (is_numeric($cell)) return (float)$cell;
+
+            $sum = 0;
+            if (is_array($cell)) {
+                if (array_key_exists('amount', $cell) && is_numeric($cell['amount'])) {
+                    $sum += (float)$cell['amount'];
+                }
+                if (array_key_exists('amounts', $cell) && is_array($cell['amounts'])) {
+                    $sum += collect($cell['amounts'])->filter('is_numeric')->sum();
+                }
+                if (array_key_exists('lines', $cell) && is_array($cell['lines'])) {
+                    $sum += collect($cell['lines'])->sum(function($ln){
+                        if (is_numeric($ln)) return (float)$ln;
+                        if (is_array($ln) && array_key_exists('amount',$ln) && is_numeric($ln['amount'])) {
+                            return (float)$ln['amount'];
+                        }
+                        return 0;
+                    });
+                }
+                // cualquier otro campo que contenga amount numérico
+                foreach ($cell as $v) {
+                    if (is_numeric($v)) $sum += (float)$v;
+                    if (is_array($v) && array_key_exists('amount',$v) && is_numeric($v['amount'])) {
+                        $sum += (float)$v['amount'];
+                    }
+                }
+            }
+            return $sum;
+        };
+
+        $sumRiegos = function($cell, $fallbackHeaderQty = 1) {
+            if (is_null($cell)) return (int)$fallbackHeaderQty;
+
+            $sum = 0; $found = false;
+
+            if (is_array($cell)) {
+                if (array_key_exists('riegos',$cell) && is_numeric($cell['riegos'])) {
+                    $sum += (int)$cell['riegos']; $found = true;
+                }
+                if (array_key_exists('riegos',$cell) && is_array($cell['riegos'])) {
+                    $sum += collect($cell['riegos'])->filter('is_numeric')->sum(); $found = true;
+                }
+                if (array_key_exists('lines',$cell) && is_array($cell['lines'])) {
+                    $sum += collect($cell['lines'])->sum(function($ln){
+                        if (is_array($ln) && array_key_exists('riegos',$ln) && is_numeric($ln['riegos'])) {
+                            return (int)$ln['riegos'];
+                        }
+                        return 0;
+                    });
+                    $found = true;
+                }
+            }
+
+            // Si no encontramos info explícita de riegos, usa el header como fallback (mantiene formato)
+            if (!$found) $sum = max(1, (int)$fallbackHeaderQty);
+
+            return max(1, (int)$sum);
+        };
+    @endphp
 
     <table>
         <thead>
@@ -114,12 +177,11 @@
                 <th class="col-sector">Sector</th>
                 <th class="col-sup">Sup</th>
 
+                {{-- MISMO FORMATO: por cada fertilizante => TOTAL | Riegos | Litros/riego | 1..N --}}
                 @foreach ($fertilizers as $fertilizer)
-                    @php $headerQty = max(1, (int) $fertilizer->application_quantity); @endphp
+                    @php $headerQty = max(1, (int)$fertilizer->application_quantity); @endphp
 
-                    <th class="fert-head">
-                        {{ $fertilizer->fertilizerMapping->fertilizer_name }}
-                    </th>
+                    <th class="fert-head">{{ $fertilizer->fertilizerMapping->fertilizer_name }}</th>
                     <th class="fert-head">Riegos</th>
                     <th class="fert-head">Litros<br>/riego</th>
 
@@ -131,38 +193,35 @@
         </thead>
 
         <tbody>
-            @foreach ($parcels as $parcel)
+            {{-- Orden alfabético por nombre del sector (sin cambiar formato) --}}
+            @foreach (($parcels ?? collect())->sortBy('name') as $parcel)
                 <tr>
                     <td class="col-est">{{ $parcel->tank->name ?? 'N/A' }}</td>
                     <td class="col-sector">{{ $parcel->name }}</td>
-                    <td>{{ number_format($parcel->pivot->area, 2) }}</td>
+                    <td class="col-sup">{{ number_format($parcel->pivot->area ?? 0, 2, ',', '.') }}</td>
 
                     @foreach ($fertilizers as $fertilizer)
                         @php
-                            // Datos desde la matriz consolidada
-                            $cellData         = $dataMatrix[$parcel->id][$fertilizer->id] ?? null;
-                            $fertilizerAmount = $cellData ? $cellData['amount'] : 0;
-                            $applicationQty   = $cellData
-                                ? $cellData['application_quantity']
-                                : max(1, (int) $fertilizer->application_quantity);
+                            $headerQty = max(1, (int)$fertilizer->application_quantity);
 
-                            // Seguridad extra
-                            $applicationQty   = max(1, (int) $applicationQty);
+                            // Consolidar desde la matriz original (no cambiamos estructura de columnas)
+                            $cell = $dataMatrix[$parcel->id][$fertilizer->id] ?? null;
 
-                            $litrosRiego      = $applicationQty > 0
-                                ? $fertilizerAmount / $applicationQty
+                            $totalConsolidado  = $sumAmounts($cell);
+                            $riegosConsolidados = $sumRiegos($cell, $headerQty);
+
+                            $litrosRiego = $riegosConsolidados > 0
+                                ? $totalConsolidado / $riegosConsolidados
                                 : 0;
-
-                            $headerQty        = max(1, (int) $applicationQty);
                         @endphp
 
-                        {{-- Celdas del fertilizante --}}
-                        <td class="fert-cell">{{ number_format($fertilizerAmount, 0, ',', '.') }}</td>
-                        <td class="fert-cell">{{ $applicationQty }}</td>
+                        <td class="fert-cell">{{ number_format($totalConsolidado, 0, ',', '.') }}</td>
+                        <td class="fert-cell">{{ $riegosConsolidados }}</td>
                         <td class="fert-cell">{{ number_format($litrosRiego, 0, ',', '.') }}</td>
 
+                        {{-- Mantener EXACTAMENTE la cantidad de columnas 1..N del HEADER --}}
                         @for ($i = 1; $i <= $headerQty; $i++)
-                            <td class="fert-cell"></td> {{-- celdas vacías para registro manual --}}
+                            <td class="fert-cell"></td>
                         @endfor
                     @endforeach
                 </tr>
