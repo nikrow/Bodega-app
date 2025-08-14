@@ -59,6 +59,7 @@ return [
             'sslmode' => 'required',
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
+                //test
                 PDO::MYSQL_ATTR_SSL_CA => storage_path('config/ca-certificate.crt'),
             ]) : [],
             'dump' => [
