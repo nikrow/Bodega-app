@@ -56,10 +56,10 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
-            'sslmode' => env('DB_SSL_MODE', 'prefer'),
+            'sslmode' => 'required',
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO::MYSQL_ATTR_SSL_CA => storage_path('config/ca-certificate.crt'),
             ]) : [],
             'dump' => [
                 'useSingleTransaction' => true,
