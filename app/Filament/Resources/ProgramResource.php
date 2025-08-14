@@ -4,21 +4,25 @@ namespace App\Filament\Resources;
 
 use Carbon\Carbon;
 use Filament\Forms;
+use App\Models\Crop;
 use Filament\Tables;
 use App\Models\Program;
+use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Exports\ProgramExport;
 use Filament\Facades\Filament;
+use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Maatwebsite\Excel\Facades\Excel;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ProgramResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ProgramResource\RelationManagers;
-use Illuminate\Validation\Rule;
 
 class ProgramResource extends Resource
 {
@@ -26,7 +30,7 @@ class ProgramResource extends Resource
 
     protected static ?string $navigationIcon = 'carbon-data-table';
     protected static ?string $navigationGroup = 'Aplicaciones';
-    protected static ?string $navigationLabel = 'Programas de fertilización';
+    protected static ?string $navigationLabel = 'Programas de Fertilización';
     protected static ?string $pluralModelLabel = 'Programas';
     protected static ?string $slug = 'programas';
     protected static ?string $modelLabel = 'programa';
@@ -72,6 +76,9 @@ class ProgramResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('crop.especie')
+                    ->label('Cultivo')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre del Programa')
                     ->searchable()
@@ -108,6 +115,43 @@ class ProgramResource extends Resource
 
                         // 4. Pasamos el ID del tenant ($tenantId) al constructor del exportador
                         return Excel::download(new ProgramExport($tenantId), $filename);
+                    }),
+                Action::make('download_combined_pdf')
+                    ->label('Descargar PDF')
+                    ->icon('heroicon-o-document-chart-bar')
+                    ->color('danger')
+                    ->modalHeading('Seleccionar Programas y Filtros')
+                    ->modalSubmitActionLabel('Generar y Abrir PDF')   // <= usamos el submit del modal
+                    ->modalCancelAction(fn ($action) => $action->label('Cerrar'))
+                    ->form([
+                        DatePicker::make('start_date')->label('Fecha de Inicio del Programa')->required()->live(),
+                        DatePicker::make('end_date')->label('Fecha de Fin del Programa')->required()->live(),
+                        Select::make('crop_id')->label('Cultivo')->options(Crop::query()->pluck('especie', 'id'))->required()->live(),
+                        Select::make('programs')
+                            ->label('Seleccionar Programas a Incluir')
+                            ->multiple()->required()->reactive()->preload()
+                            ->options(function (Get $get) {
+                                $startDate = $get('start_date');
+                                $endDate   = $get('end_date');
+                                $cropId    = $get('crop_id');
+                                if (! $startDate || ! $endDate || ! $cropId) return [];
+                                return Program::where('crop_id', $cropId)
+                                    ->whereBetween('start_date', [$startDate, $endDate])
+                                    ->where('field_id', Filament::getTenant()->id)
+                                    ->pluck('name', 'id');
+                            }),
+                    ])
+                    ->action(function (array $data) {
+                        $programs = $data['programs'] ?? [];
+                        if (blank($programs)) {
+                            Filament::notify('warning', 'Selecciona al menos un programa.');
+                            return null;
+                        }
+
+                        $url = route('programs.downloadCombinedPdf', ['programs' => $programs]);
+
+                        // Abre en la misma pestaña (simple y compatible)
+                        return redirect()->to($url);
                     })
             ])
             ->actions([

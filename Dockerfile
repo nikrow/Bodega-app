@@ -13,6 +13,10 @@ RUN docker-php-ext-configure intl \
     && docker-php-ext-install \
     pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
+# Redis y APCu para caché de alto rendimiento
+RUN pecl install redis apcu \
+    && docker-php-ext-enable redis apcu
+
 # Establecemos variables de entorno
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     PATH="$PATH:/root/.composer/vendor/bin"
@@ -31,13 +35,17 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && echo "memory_limit=512M" >> "$PHP_INI_DIR/php.ini" \
     && echo "max_execution_time=300" >> "$PHP_INI_DIR/php.ini"
 
-# Optimizamos OPCache
-RUN echo "opcache.enable=1" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.memory_consumption=256" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.interned_strings_buffer=8" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.max_accelerated_files=10000" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.revalidate_freq=3600" >> $PHP_INI_DIR/conf.d/opcache.ini \
-    && echo "opcache.enable_cli=1" >> $PHP_INI_DIR/conf.d/opcache.ini
+# OPcache optimizado para prod
+RUN { \
+    echo "opcache.enable=1"; \
+    echo "opcache.enable_cli=1"; \
+    echo "opcache.memory_consumption=256"; \
+    echo "opcache.interned_strings_buffer=16"; \
+    echo "opcache.max_accelerated_files=50000"; \
+    echo "opcache.validate_timestamps=0"; \
+    echo "opcache.save_comments=1"; \
+    echo "opcache.fast_shutdown=1"; \
+} > $PHP_INI_DIR/conf.d/opcache.ini
 
 # Copiamos la aplicación
 COPY . /app

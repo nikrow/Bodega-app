@@ -45,6 +45,7 @@ class BodegaPanelProvider extends PanelProvider
                 'secondary' => ('#2F0381'),
             ])
             ->databaseTransactions()
+            ->spa()
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->sidebarCollapsibleOnDesktop()

@@ -16,11 +16,13 @@ use App\Http\Controllers\StockMovementExportController;
 use App\Http\Controllers\OrderApplicationExportController;
 use App\Http\Controllers\ApplicationRecordExportController;
 use App\Http\Controllers\ConsolidatedReportExportController;
+use App\Http\Controllers\DownloadCombinedProgramPdfController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{order}/download-pdf', [OrderController::class, 'downloadPdf'])->name('orders.downloadPdf');
     Route::get('/orders/{order}/bodega-pdf', [OrderController::class, 'bodegaPdf'])->name('orders.bodegaPdf');
     Route::get('/programas/{program}/download-pdf', [ProgramController::class, 'downloadPdf'])->name('program.downloadPdf');
+    Route::get('/programs/download-combined-pdf', [DownloadCombinedProgramPdfController::class, '__invoke'])->name('programs.downloadCombinedPdf');
 });
 Route::get('/reportes/exportar/excel', [ReportExportController::class, 'exportExcel'])->name('reportes.exportar.excel');
 Route::get('/cuarteles/exportar/excel', [ParcelExportController::class, 'exportExcel'])->name('cuarteles.exportar.excel');
