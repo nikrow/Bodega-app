@@ -79,12 +79,13 @@ class DownloadCombinedProgramPdfController extends Controller
         $filename = "programa-consolidado-" . now()->format('Y-m-d') . ".pdf";
 
         $pdf = Browsershot::html($html)
-            ->setNodeBinary(env('NODE_BINARY_PATH', '/usr/bin/node'))
-            ->setNpmBinary(env('NPM_BINARY_PATH', '/usr/bin/npm'))
+            //setNodeBinary(env('NODE_BINARY_PATH', '/usr/bin/node'))
+            //setNpmBinary(env('NPM_BINARY_PATH', '/usr/bin/npm'))
             ->margins(10, 10, 10, 10)
             ->format('A4')
             ->showBackground()
             ->landscape()
+            ->noSandbox()
             ->pdf();
 
         return response()->make($pdf, 200, [
