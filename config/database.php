@@ -63,8 +63,9 @@ return [
             'dump' => [
                 'useSingleTransaction' => true,
                 'skip-column-statistics' => false,
-                'timeout' => 60,],
-                'sslmode' => 'required',
+                'timeout' => 60,
+                'sslmode' => 'REQUIRED',
+            ],
         ],
 
         'mariadb' => [
