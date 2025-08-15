@@ -64,7 +64,7 @@ return [
                 'useSingleTransaction' => true,
                 'skip-column-statistics' => false,
                 'timeout' => 60,
-                'sslmode' => 'REQUIRED',
+                'extra_options' => '--ssl-mode=DISABLED',
             ],
         ],
 
