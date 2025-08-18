@@ -64,6 +64,7 @@ return [
                 'useSingleTransaction' => true,
                 'skip-column-statistics' => false,
                 'timeout' => 60,],
+                'extra_options' => '--ssl-ca="' . env('DB_DUMP_SSL_CA') . '"',
         ],
 
         'mariadb' => [
