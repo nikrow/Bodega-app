@@ -1,6 +1,5 @@
 <?php
 
-use App\Console\Commands\BackupDatabaseCommand;
 use App\Models\Zone;
 use App\Models\Field;
 use Dompdf\Image\Cache;
@@ -25,16 +24,6 @@ Schedule::command('backup:run')
     });
 
 Schedule::command('backup:monitor')->daily()->at('03:00');
-
-Schedule::command(BackupDatabaseCommand::class)
-    ->daily()
-    ->at('02:00')
-    ->onFailure(function () {
-        Log::error('Backup de base de datos fallido a las ' . now());
-    })
-    ->onSuccess(function () {
-        Log::info('Backup de base de datos exitoso a las ' . now());
-    });
 
 Schedule::job(new ProcessEmailAttachments())->dailyAt('08:05')
     ->onFailure(function () {

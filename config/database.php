@@ -61,12 +61,17 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
             'dump' => [
-                'useSingleTransaction' => true,
-                'skip-column-statistics' => false,
-                'timeout' => 60,],
-                'extra_options' => '--ssl-ca="' . env('DB_DUMP_SSL_CA') . '"',
+                'dump_binary_path' => '/usr/bin',  // donde está mysqldump en Ubuntu
+                'use_single_transaction' => true,
+                'timeout' => 900,                  // ⬆️ sube a 15 min (ajústalo a gusto)
+                'add_extra_option' => sprintf(
+                    '--protocol=TCP --host=%s --port=%s --ssl-mode=REQUIRED --column-statistics=0 --set-gtid-purged=OFF',
+                    escapeshellarg(env('DB_HOST')),
+                    escapeshellarg(env('DB_PORT', 3306)),
+                    escapeshellarg(env('DB_SSL_CA'))
+                ),
+            ],
         ],
-
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
