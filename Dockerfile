@@ -1,19 +1,23 @@
 FROM php:8.3-fpm-bookworm
 
+ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# Dependencias base + ca-certificates (importante para TLS)
+# Paquetes base
 RUN apt-get update && apt-get install -y \
-    gnupg lsb-release ca-certificates curl git zip unzip nano \
-    libpng-dev libonig-dev libxml2-dev libzip-dev libicu-dev chromium fonts-liberation libgbm-dev libnss3 \
-    && rm -rf /var/lib/apt/lists/*
+    gnupg ca-certificates lsb-release curl git zip unzip nano \
+    libpng-dev libonig-dev libxml2-dev libzip-dev libicu-dev \
+    chromium fonts-liberation libgbm-dev libnss3 \
+ && rm -rf /var/lib/apt/lists/*
 
-# MySQL APT repo (no interactivo) e instalación del cliente oficial
-RUN curl -fsSL https://repo.mysql.com/RPM-GPG-KEY-mysql-2022 | gpg --dearmor -o /usr/share/keyrings/mysql.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian $(. /etc/os-release && echo $VERSION_CODENAME) mysql-8.0" \
-    > /etc/apt/sources.list.d/mysql.list && \
-    apt-get update && apt-get install -y mysql-client && \
-    rm -rf /var/lib/apt/lists/*
+# 🔐 Importar la clave NUEVA del repo MySQL y registrar el repo para BOOKWORM
+# (usa la key 2023; también sirve para 2024+). Evita apt-key; usa keyring con signed-by.
+RUN curl -fsSL https://repo.mysql.com/RPM-GPG-KEY-mysql-2023 \
+  | gpg --dearmor -o /usr/share/keyrings/mysql.gpg && \
+  echo "deb [signed-by=/usr/share/keyrings/mysql.gpg] https://repo.mysql.com/apt/debian $(. /etc/os-release && echo $VERSION_CODENAME) mysql-8.0" \
+  > /etc/apt/sources.list.d/mysql.list && \
+  apt-get update && apt-get install -y mysql-client && \
+  rm -rf /var/lib/apt/lists/*
 
 # Extensiones PHP
 RUN docker-php-ext-configure intl \
