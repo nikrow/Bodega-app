@@ -41,12 +41,6 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
 # Copiamos la app
 COPY . /app
 
-# Registrar el CA de tu DB (opción 1: como trust del sistema)
-# Si tu cert está en /app/storage/app/cert/ca-certificatecampo.crt:
-RUN mkdir -p /usr/local/share/ca-certificates/custom && \
-    cp /app/storage/app/cert/ca-certificatecampo.crt /usr/local/share/ca-certificates/custom/icc-db-ca.crt && \
-    update-ca-certificates
-
 # Dependencias app
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs \
  && npm ci && npm run build && rm -rf node_modules
