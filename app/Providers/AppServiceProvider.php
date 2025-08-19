@@ -13,7 +13,6 @@ use App\Models\OrderApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\Login;
-use App\Listeners\UpdateLoginTime;
 use App\Models\MovimientoProducto;
 use Illuminate\Auth\Events\Logout;
 use App\Policies\ActivityLogPolicy;
@@ -25,7 +24,7 @@ use Illuminate\Support\ServiceProvider;
 use Spatie\Activitylog\Models\Activity;
 use App\Observers\OrderApplicationObserver;
 use App\Observers\MovimientoProductoObserver;
-use App\Listeners\UpdateActiveMinutesOnLogout;
+
 use App\Console\Commands\UpdateMissingOrderApplicationUsage;
 
 
@@ -45,12 +44,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Activity::class, ActivityLogPolicy::class);
     }
     protected $listen = [
-        Login::class => [
-            UpdateLoginTime::class,
-        ],
-        Logout::class => [
-            UpdateActiveMinutesOnLogout::class,
-        ],
+       
     ];
     protected $commands = [
         UpdateMissingOrderApplicationUsage::class,

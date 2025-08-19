@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\Zone;
 use App\Models\Field;
 use Dompdf\Image\Cache;
@@ -22,7 +23,7 @@ Schedule::command('backup:run')
         Log::info('Backup completed successfully at ' . now());
     });
 
-Schedule::command('backup:monitor')->daily()->at('02:00');
+Schedule::command('backup:monitor')->daily()->at('03:00');
 
 Schedule::job(new ProcessEmailAttachments())->dailyAt('08:05')
     ->onFailure(function () {
