@@ -36,8 +36,6 @@ class Parcel extends Model implements Auditable
         'sdp',
         'tank',
         'irrigation_system',
-        'planting_scheme_id',
-        'planting_scheme_custom',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -63,19 +61,11 @@ class Parcel extends Model implements Auditable
             }
 
             $parcel->slug = $slug;
-            if ($parcel->planting_scheme_id === null && !empty($parcel->planting_scheme_custom)) {
-                $newScheme = PlantingScheme::firstOrCreate(['scheme' => trim($parcel->planting_scheme_custom)]);
-                $parcel->planting_scheme_id = $newScheme->id;
-            }
         });
 
         static::updating(function ($parcel) {
             if ($parcel->is_active) {
                 $parcel->updated_by = Auth::id();
-            }
-            if ($parcel->planting_scheme_id === null && !empty($parcel->planting_scheme_custom)) {
-                $newScheme = PlantingScheme::firstOrCreate(['scheme' => trim($parcel->planting_scheme_custom)]);
-                $parcel->planting_scheme_id = $newScheme->id;
             }
         });
     }
@@ -85,6 +75,16 @@ class Parcel extends Model implements Auditable
         'is_active' => 'boolean',
     ];
 
+    /**
+     * Set the Surface attribute, converting commas to dots.
+     *
+     * @param string|int|float $value
+     * @return void
+     */
+    public function setSurfaceAttribute($value)
+    {
+        $this->attributes['surface'] = str_replace(',', '.', $value);
+    }
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -134,11 +134,6 @@ class Parcel extends Model implements Auditable
     public function parcelCropDetails()
     {
         return $this->hasMany(ParcelCropDetail::class, 'parcel_id');
-    }
-
-    public function plantingScheme()
-    {
-        return $this->belongsTo(PlantingScheme::class, 'planting_scheme_id');
     }
     public function programParcels()
     {

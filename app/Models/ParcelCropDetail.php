@@ -17,11 +17,13 @@ class ParcelCropDetail extends Model implements Auditable
     protected $table = 'parcel_crop_details'; 
 
     protected $fillable = [
+        'subsector',
         'parcel_id',
         'crop_id',
         'variety_id',
         'rootstock_id',
         'surface',
+        'planting_scheme_id',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -49,4 +51,9 @@ class ParcelCropDetail extends Model implements Auditable
     {
         return $this->belongsTo(Rootstock::class, 'rootstock_id');
     }
+    public function plantingScheme()
+    {
+        return $this->belongsTo(PlantingScheme::class, 'planting_scheme_id');
+    }
+
 }

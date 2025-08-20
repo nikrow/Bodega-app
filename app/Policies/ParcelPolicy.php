@@ -45,8 +45,6 @@ class ParcelPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
-            RoleType::AGRONOMO,
-            RoleType::SUPERUSER
         ]);
     }
 
@@ -57,35 +55,9 @@ class ParcelPolicy
     {
         return in_array($user->role, [
             RoleType::ADMIN,
-            RoleType::AGRONOMO,
-            RoleType::SUPERUSER
-
         ]);
     }
 
-    /**
-     * Determinar si el usuario puede eliminar un registro.
-     */
-    public function delete(User $user, Parcel $parcel): bool
-    {
-        return $user->role === RoleType::ADMIN;
-    }
-
-    /**
-     * Determinar si el usuario puede restaurar un registro.
-     */
-    public function restore(User $user, Parcel $parcel): bool
-    {
-        return $user->role === RoleType::ADMIN;
-    }
-
-    /**
-     * Determinar si el usuario puede eliminar permanentemente un registro.
-     */
-    public function forceDelete(User $user, Parcel $parcel): bool
-    {
-        return $user->role === RoleType::ADMIN;
-    }
 
     public function restoreAudit(User $user, Parcel $parcel): bool
     {

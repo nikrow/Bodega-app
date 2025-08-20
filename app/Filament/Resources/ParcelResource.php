@@ -106,43 +106,7 @@ class ParcelResource extends Resource
                                                 'otro' => 'Otro',
                                             ])
                                             ->nullable(),
-                                        Forms\Components\Select::make('planting_scheme_id')
-                                            ->label('Marco de Plantación')
-                                            ->options(function () {
-                                                return PlantingScheme::pluck('scheme', 'id')->toArray();
-                                            })
-                                            ->searchable()
-                                            ->required()
-                                            ->reactive()
-                                            ->afterStateHydrated(function (Forms\Components\Select $component, $state, $record) {
-                                                if ($record && $record->planting_scheme_id) {
-                                                    $component->state($record->planting_scheme_id);
-                                                }
-                                            })
-                                            ->hintAction(
-                                                Forms\Components\Actions\Action::make('add_planting_scheme')
-                                                    ->label('Agregar marco')
-                                                    ->icon('heroicon-o-plus')
-                                                    ->visible(fn (Forms\Get $get) => $get('planting_scheme_id') === null)
-                                                    ->modalHeading('Crear Nuevo Marco de Plantación')
-                                                    ->form([
-                                                        Forms\Components\TextInput::make('new_scheme')
-                                                            ->label('Seguir el formato: 2,5 x 1,5')
-                                                            ->required()
-                                                            ->maxLength(255)
-                                                            ->rules(['unique:planting_schemes,scheme']),
-                                                    ])
-                                                    ->action(function (array $data, Forms\Set $set) {
-                                                        $newScheme = trim($data['new_scheme']);
-                                                        $createdScheme = PlantingScheme::create(['scheme' => $newScheme]);
-                                                        $set('planting_scheme_id', $createdScheme->id);
-                                                        Notification::make()
-                                                            ->title('Éxito')
-                                                            ->body('El nuevo marco de plantación ha sido creado.')
-                                                            ->success()
-                                                            ->send();
-                                                    })
-                                            ),                                        
+                                            
                                         Forms\Components\Hidden::make('field_id')
                                             ->default(Filament::getTenant()->id),
                                     ]),
@@ -164,11 +128,13 @@ class ParcelResource extends Resource
                                                 }
                                             }),
                                         Repeater::make('parcelCropDetails')
-                                            ->label('Variedades y Portainjertos')
+                                            ->label('Subsectores, Variedades, MP y Portainjertos')
                                             ->relationship('parcelCropDetails')
                                             ->schema([
                                                 Forms\Components\Hidden::make('crop_id')
                                                     ->default(fn (Forms\Get $get) => $get('../../crop_id')),
+                                                Forms\Components\TextInput::make('subsector')
+                                                    ->label('Subsector'),
                                                 Forms\Components\Select::make('variety_id')
                                                     ->label('Variedad')
                                                     ->options(function (Forms\Get $get) {
@@ -189,6 +155,39 @@ class ParcelResource extends Resource
                                                     })
                                                     ->nullable()
                                                     ->reactive(),
+                                                
+                                                Forms\Components\Select::make('planting_scheme_id')
+                                                ->label('Marco de Plantación')
+                                                ->options(function () {
+                                                    return PlantingScheme::pluck('scheme', 'id')->toArray();
+                                                })
+                                                ->searchable()
+                                                ->nullable()
+                                                ->reactive()
+                                                ->hintAction(
+                                                    Forms\Components\Actions\Action::make('add_planting_scheme')
+                                                        ->label('Agregar marco')
+                                                        ->icon('heroicon-o-plus')
+                                                        ->modalHeading('Crear Nuevo Marco de Plantación')
+                                                        ->form([
+                                                            Forms\Components\TextInput::make('new_scheme')
+                                                                ->label('Seguir el formato: 2,5 x 1,5')
+                                                                ->required()
+                                                                ->maxLength(255)
+                                                                ->rules(['unique:planting_schemes,scheme']),
+                                                        ])
+                                                        ->action(function (array $data, Forms\Set $set) {
+                                                            $newScheme = trim($data['new_scheme']);
+                                                            $createdScheme = PlantingScheme::create(['scheme' => $newScheme]);
+                                                            $set('planting_scheme_id', $createdScheme->id);
+                                                            Notification::make()
+                                                                ->title('Éxito')
+                                                                ->body('El nuevo marco de plantación ha sido creado.')
+                                                                ->success()
+                                                                ->send();
+                                                        })
+                                                ),
+
                                                 Forms\Components\TextInput::make('surface')
                                                     ->label('Superficie')
                                                     ->suffix('ha')
@@ -255,7 +254,7 @@ class ParcelResource extends Resource
                     ->label('ID')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextInputColumn::make('name')
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
@@ -263,26 +262,48 @@ class ParcelResource extends Resource
                     ->label('Cultivo')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('parcelCropDetails.variety.name')
-                    ->label('Variedades')
-                    ->formatStateUsing(fn ($state, $record) => $record->parcelCropDetails->pluck('variety.name')->filter()->join(', '))
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('planting_year')
+                
+                Tables\Columns\TextInputColumn::make('planting_year')
                     ->label('Año de Plantación')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('plants')
+                Tables\Columns\TextInputColumn::make('plants')
                     ->label('Plantas')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('surface')
+                Tables\Columns\TextInputColumn::make('surface')
                     ->label('Superficie')
                     ->searchable()
-                    ->numeric(2)
                     ->sortable(),
-                Tables\Columns\TextColumn::make('plantingScheme.scheme')
-                    ->label('Marco de Plantación')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('parcelCropDetails')
+                    ->label('Detalles del Subsector')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->formatStateUsing(function ($state, $record) {
+                        // Creamos un array para guardar los detalles
+                        $details = [];
+                        foreach ($record->parcelCropDetails as $detail) {
+                            $parts = [];
+                            // Agregamos el subsector si existe
+                            if ($detail->subsector) {
+                                $parts[] = 'Subsector: ' . $detail->subsector;
+                            }
+                            // Agregamos la variedad si existe
+                            if ($detail->variety) {
+                                $parts[] = 'Variedad: ' . $detail->variety->name;
+                            }
+                            // Agregamos el marco de plantación si existe
+                            if ($detail->plantingScheme) {
+                                $parts[] = 'Marco: ' . $detail->plantingScheme->scheme;
+                            }
+                            // Agregamos la superficie
+                            if ($detail->surface) {
+                                $parts[] = 'Superficie: ' . $detail->surface . ' ha';
+                            }
+                            $details[] = implode(', ', $parts);
+                        }
+                        // Unimos todos los detalles de los subsectores con un separador
+                        return implode(' | ', $details);
+                    }),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->label('Creado por')
                     ->toggleable(isToggledHiddenByDefault: true),
