@@ -122,7 +122,7 @@ class ParcelResource extends Resource
                                         Repeater::make('parcelCropDetails')
                                             ->label('Subsectores, Variedades, MP y Portainjertos')
                                             ->relationship('parcelCropDetails')
-                                            ->required()
+                                            ->default(false)
                                             ->schema([
                                                 Forms\Components\Hidden::make('crop_id')
                                                     ->default(fn (Forms\Get $get) => $get('../../crop_id')),
