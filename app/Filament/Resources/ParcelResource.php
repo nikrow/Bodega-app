@@ -258,11 +258,13 @@ class ParcelResource extends Resource
                 Tables\Columns\TextInputColumn::make('tank')
                     ->label('Estanque')
                     ->searchable()
+                    ->disabled(fn (Parcel $record): bool => !$record->is_active)
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextInputColumn::make('name')
                     ->label('Nombre')
                     ->searchable()
+                    ->disabled(fn (Parcel $record): bool => !$record->is_active)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('crop.especie')
                     ->label('Cultivo')
@@ -272,14 +274,17 @@ class ParcelResource extends Resource
                 Tables\Columns\TextInputColumn::make('planting_year')
                     ->label('Año de Plantación')
                     ->searchable()
+                    ->disabled(fn (Parcel $record): bool => !$record->is_active)
                     ->sortable(),
                 Tables\Columns\TextInputColumn::make('plants')
                     ->label('Plantas')
                     ->searchable()
+                    ->disabled(fn (Parcel $record): bool => !$record->is_active)
                     ->sortable(),
                 Tables\Columns\TextInputColumn::make('surface')
                     ->label('Superficie')
                     ->searchable()
+                    ->disabled(fn (Parcel $record): bool => !$record->is_active)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('parcelCropDetails')
                     ->label('Detalles del Subsector')
