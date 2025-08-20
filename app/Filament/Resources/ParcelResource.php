@@ -122,7 +122,7 @@ class ParcelResource extends Resource
                                         Repeater::make('parcelCropDetails')
                                             ->label('Subsectores, Variedades, MP y Portainjertos')
                                             ->relationship('parcelCropDetails')
-                                            ->default(false)
+                                            ->default([])
                                             ->schema([
                                                 Forms\Components\Hidden::make('crop_id')
                                                     ->default(fn (Forms\Get $get) => $get('../../crop_id')),
@@ -291,7 +291,8 @@ class ParcelResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(function ($state, $record) {
                         $details = [];
-                        foreach ($record->parcelCropDetails as $detail) {
+                        // Use the null-safe operator to check for a valid collection
+                        foreach ($record->parcelCropDetails?->all() ?? [] as $detail) {
                             $parts = [];
                             
                             // Verificamos si la relación y la propiedad existen antes de agregarlas
