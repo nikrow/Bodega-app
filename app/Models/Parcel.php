@@ -35,7 +35,6 @@ class Parcel extends Model implements Auditable
         'deactivation_reason',
         'sdp',
         'tank',
-        'irrigation_system',
     ];
 
     public function getActivitylogOptions(): LogOptions

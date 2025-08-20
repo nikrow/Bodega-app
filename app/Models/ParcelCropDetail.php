@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable; 
 use Spatie\Activitylog\LogOptions;      
 use Spatie\Activitylog\Traits\LogsActivity; 
@@ -11,6 +12,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class ParcelCropDetail extends Model implements Auditable
 {
     use HasFactory;
+    use SoftDeletes;
     use LogsActivity; 
     use \OwenIt\Auditing\Auditable;
 
@@ -24,12 +26,22 @@ class ParcelCropDetail extends Model implements Auditable
         'rootstock_id',
         'surface',
         'planting_scheme_id',
+        'irrigation_system',
     ];
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
             ->logFillable();
+    }
+    protected static function booted()
+    {
+        static::creating(function ($parcelCropDetail) {
+            // Obtenemos el crop_id del modelo Parcel asociado
+            if ($parcelCropDetail->parcel) {
+                $parcelCropDetail->crop_id = $parcelCropDetail->parcel->crop_id;
+            }
+        });
     }
 
     public function parcel()

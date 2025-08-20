@@ -282,7 +282,7 @@ class ReportResource extends Resource
                     ->multiple()
                     ->options(
                         Cache::remember('operators_list', 3600, function () {
-                            return User::where('role', \App\Enums\RoleType::OPERARIO)->pluck('name', 'id')->toArray();
+                            return User::where('role', \App\Enums\RoleType::OPERARIO)->pluck('name', 'id')->sort()->toArray();
                         })
                     ),
                 Tables\Filters\Filter::make('fecha')

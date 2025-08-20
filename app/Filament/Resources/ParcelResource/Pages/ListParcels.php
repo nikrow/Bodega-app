@@ -23,37 +23,6 @@ class ListParcels extends ListRecords
 {
     protected static string $resource = ParcelResource::class;
 
-    public function getTabs(): array
-    {
-        $crops = Crop::all();
-
-        $tabs = [
-            'Todos' => Tab::make()
-                ->label('Todos')
-                ->query(function (Builder $query) {
-                    return $query;
-                }),
-        ];
-
-        if ($crops->isEmpty()) {
-            $tabs['no_crops'] = Tab::make()
-                ->label('Sin cultivo disponible')
-                ->query(function (Builder $query) {
-                    return $query;
-                });
-        } else {
-            foreach ($crops as $crop) {
-                $tabs[$crop->id] = Tab::make()
-                    ->label($crop->especie)
-                    ->query(function (Builder $query) use ($crop) {
-                        return $query->where('crop_id', $crop->id);
-                    });
-            }
-        }
-
-        return $tabs;
-    }
-
     protected function getHeaderActions(): array
     {
         return [

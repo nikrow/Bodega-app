@@ -18,12 +18,14 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
 use App\Filament\Imports\ParcelImporter;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Actions\ImportAction;
+use Filament\Tables\View\TablesRenderHook;
 use App\Filament\Resources\ParcelResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
-use Filament\Notifications\Notification;
 use App\Filament\Resources\ParcelResource\RelationManagers\AplicacionesRelationManager;
 use App\Filament\Resources\ParcelResource\RelationManagers\ParcelCropDetailsRelationManager;
 
@@ -97,16 +99,6 @@ class ParcelResource extends Resource
                                             ->label('SDP')
                                             ->nullable()
                                             ->maxLength(255),
-                                        Forms\Components\Select::make('irrigation_system')
-                                            ->label('Sistema de Riego')
-                                            ->options([
-                                                'gotero' => 'Gotero',
-                                                'aspersor' => 'Aspersor',
-                                                'microjet' => 'Microjet',
-                                                'otro' => 'Otro',
-                                            ])
-                                            ->nullable(),
-                                            
                                         Forms\Components\Hidden::make('field_id')
                                             ->default(Filament::getTenant()->id),
                                     ]),
@@ -130,6 +122,7 @@ class ParcelResource extends Resource
                                         Repeater::make('parcelCropDetails')
                                             ->label('Subsectores, Variedades, MP y Portainjertos')
                                             ->relationship('parcelCropDetails')
+                                            ->required()
                                             ->schema([
                                                 Forms\Components\Hidden::make('crop_id')
                                                     ->default(fn (Forms\Get $get) => $get('../../crop_id')),
@@ -187,7 +180,15 @@ class ParcelResource extends Resource
                                                                 ->send();
                                                         })
                                                 ),
-
+                                                Forms\Components\Select::make('irrigation_system')
+                                                    ->label('Sistema de Riego')
+                                                    ->options([
+                                                        'gotero' => 'Gotero',
+                                                        'aspersor' => 'Aspersor',
+                                                        'microjet' => 'Microjet',
+                                                        'otro' => 'Otro',
+                                                    ])
+                                                    ->required(),
                                                 Forms\Components\TextInput::make('surface')
                                                     ->label('Superficie')
                                                     ->suffix('ha')
@@ -254,6 +255,11 @@ class ParcelResource extends Resource
                     ->label('ID')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextInputColumn::make('tank')
+                    ->label('Estanque')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable(),
                 Tables\Columns\TextInputColumn::make('name')
                     ->label('Nombre')
                     ->searchable()
@@ -279,29 +285,28 @@ class ParcelResource extends Resource
                     ->label('Detalles del Subsector')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(function ($state, $record) {
-                        // Creamos un array para guardar los detalles
                         $details = [];
                         foreach ($record->parcelCropDetails as $detail) {
                             $parts = [];
-                            // Agregamos el subsector si existe
+                            
+                            // Verificamos si la relación y la propiedad existen antes de agregarlas
                             if ($detail->subsector) {
                                 $parts[] = 'Subsector: ' . $detail->subsector;
                             }
-                            // Agregamos la variedad si existe
                             if ($detail->variety) {
                                 $parts[] = 'Variedad: ' . $detail->variety->name;
                             }
-                            // Agregamos el marco de plantación si existe
+                            if ($detail->rootstock) {
+                                $parts[] = 'Portainjerto: ' . $detail->rootstock->name;
+                            }
                             if ($detail->plantingScheme) {
                                 $parts[] = 'Marco: ' . $detail->plantingScheme->scheme;
                             }
-                            // Agregamos la superficie
                             if ($detail->surface) {
                                 $parts[] = 'Superficie: ' . $detail->surface . ' ha';
                             }
                             $details[] = implode(', ', $parts);
                         }
-                        // Unimos todos los detalles de los subsectores con un separador
                         return implode(' | ', $details);
                     }),
                 Tables\Columns\TextColumn::make('createdBy.name')
@@ -327,11 +332,17 @@ class ParcelResource extends Resource
                     ->trueLabel('Activas')
                     ->falseLabel('Inactivas')
                     ->default(true),
+                Tables\Filters\SelectFilter::make('tank')
+                    ->label('Estanque')
+                    ->options(
+                        Parcel::whereNotNull('tank')->distinct()->pluck('tank', 'tank')->sort()->toArray()
+                    )
+                    ->searchable(true),
                 Tables\Filters\SelectFilter::make('crop_id')
                     ->label('Cultivo')
                     ->searchable(true)
-                    ->options(Crop::all()->pluck('especie', 'id')->toArray()),
-            ])
+                    ->options(Crop::all()->pluck('especie', 'id')->sort()->toArray()),
+            ], layout: FiltersLayout::AboveContent)
             ->actions([
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make()
