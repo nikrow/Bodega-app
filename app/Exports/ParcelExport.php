@@ -25,9 +25,9 @@ class ParcelExport implements FromQuery, WithHeadings, WithMapping
             ->with([
                 'field',
                 'crop',
-                'plantingScheme',
                 'parcelCropDetails.variety',
                 'parcelCropDetails.rootstock',
+                'parcelCropDetails.plantingScheme',
                 'createdBy',
                 'updatedBy',
                 'deactivatedBy'
@@ -59,6 +59,7 @@ class ParcelExport implements FromQuery, WithHeadings, WithMapping
     {
         return [
             'ID',
+            'Estanque',
             'Nombre',
             'Campo',
             'Cultivo',
@@ -66,9 +67,7 @@ class ParcelExport implements FromQuery, WithHeadings, WithMapping
             'Plantas',
             'Superficie',
             'SDP',
-            'Sistema de Riego',
-            'Marco de Plantación',
-            'Variedades y Portainjertos',
+            'Detalles de Variedades y Portainjertos',
             'Activa',
             'Desactivada En',
             'Razón de Desactivación',
@@ -80,41 +79,60 @@ class ParcelExport implements FromQuery, WithHeadings, WithMapping
 
     public function map($parcel): array
     {
+        // Separamos la lógica para los detalles de las variedades
+        $subsectorDetails = $parcel->parcelCropDetails->map(function ($detail) {
+            $parts = [];
+            
+            // Verificamos si los datos existen antes de agregarlos a los detalles
+            if ($detail->subsector) {
+                $parts[] = 'Subsector: ' . $detail->subsector;
+            }
+            if ($detail->variety) {
+                $parts[] = 'Variedad: ' . $detail->variety->name;
+            }
+            if ($detail->rootstock) {
+                $parts[] = 'Portainjerto: ' . $detail->rootstock->name;
+            }
+            if ($detail->plantingScheme) {
+                $parts[] = 'Marco: ' . $detail->plantingScheme->scheme;
+            }
+            if ($detail->surface) {
+                $parts[] = 'Superficie: ' . $detail->surface;
+            }
+            if ($detail->irrigation_system) { // Incluimos el sistema de riego
+                $parts[] = 'Sistema de Riego: ' . $detail->irrigation_system;
+            }
+            
+            return implode('; ', $parts);
+        })->implode(' | ');
+
         return [
             $parcel->id,
+            $parcel->tank,
             $parcel->name,
-            $parcel->field?->name ?? 'N/A',
-            $parcel->crop?->especie ?? 'N/A',
-            $parcel->planting_year ?? 'N/A',
-            $parcel->plants ?? 'N/A',
+            $parcel->field?->name ?? 'null',
+            $parcel->crop?->especie ?? 'null',
+            $parcel->planting_year ?? 'null',
+            $parcel->plants ?? 'null',
             $parcel->surface,
-            $parcel->sdp ?? 'N/A',
-            $parcel->irrigation_system ?? 'N/A',
-            $parcel->plantingScheme?->scheme ?? 'N/A',
-            $parcel->parcelCropDetails->isNotEmpty()
-                ? $parcel->parcelCropDetails->map(function ($detail) {
-                    return [
-                        'variedad' => $detail->variety?->name ?? 'N/A',
-                        'portainjerto' => $detail->rootstock?->name ?? 'No tiene',
-                        'superficie' => $detail->surface,
-                    ];
-                })->toJson()
-                : 'N/A',
+            $parcel->sdp ?? 'null',
+            $subsectorDetails,
             $parcel->is_active ? 'Sí' : 'No',
             $parcel->deactivated_at
                 ? Date::PHPToExcel(Carbon::parse($parcel->deactivated_at))
                 : null,
-            $parcel->deactivation_reason ?? 'N/A',
-            $parcel->createdBy?->name ?? 'N/A',
-            $parcel->updatedBy?->name ?? 'N/A',
-            $parcel->deactivatedBy?->name ?? 'N/A',
+            $parcel->deactivation_reason ?? 'null',
+            $parcel->createdBy?->name ?? 'null',
+            $parcel->updatedBy?->name ?? 'null',
+            $parcel->deactivatedBy?->name ?? 'null',
         ];
     }
 
     public function columnFormats(): array
     {
         return [
-            'M' => NumberFormat::FORMAT_DATE_DDMMYYYY, // Columna 'Desactivada En'
+            'J' => NumberFormat::FORMAT_TEXT,
+            'K' => NumberFormat::FORMAT_DATE_DDMMYYYY,
         ];
     }
 }

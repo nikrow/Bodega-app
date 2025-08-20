@@ -196,7 +196,7 @@ class ParcelResource extends Resource
                                                     ->nullable()
                                                     ->rules(['min:0']),
                                             ])
-                                            ->columns(3)
+                                            ->columns(6)
                                             ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set) {
                                                 $totalSurface = collect($get('parcelCropDetails'))->sum('surface');
                                                 $set('total_variety_surface', $totalSurface);
