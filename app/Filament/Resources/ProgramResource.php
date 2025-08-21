@@ -15,6 +15,7 @@ use Filament\Facades\Filament;
 use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\ActionGroup;
@@ -180,6 +181,7 @@ class ProgramResource extends Resource
                         ->label('Cerrar Programa')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
+                        ->visible(fn(Program $record) => Gate::allows('deactivate', $record))
                         ->action(function (Program $record) {
                             $record->update(['is_active' => false]);
                             Filament::notify('success', 'Programa desactivado correctamente.');

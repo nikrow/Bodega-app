@@ -22,18 +22,21 @@ use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
 use Filament\Forms\Components\Section;
 use Filament\Support\Enums\ActionSize;
-use Filament\Tables\Actions\ActionGroup;
 use Filament\Notifications\Notification;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\ActionsPosition;
 use App\Filament\Resources\OrderResource\Pages;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderLinesRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderParcelRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\ApplicationUsageRelationManager;
 use App\Filament\Resources\OrderResource\RelationManagers\OrderApplicationRelationManager;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
 {
@@ -128,6 +131,7 @@ class OrderResource extends Resource
                                         if ($cropId) {
                                             return Parcel::where('crop_id', $cropId)
                                                 ->where('field_id', $tenantId)
+                                                ->where('is_active', true)
                                                 ->pluck('name', 'id')->toArray();
                                         }
                                         return [];
@@ -269,7 +273,8 @@ class OrderResource extends Resource
                             }
                         })
                         ->hidden(fn(Order $record) => $record->is_completed)
-                        ->visible(fn(Order $record) => Auth::user()->can('complete', $record)),
+                        ->visible(fn(Order $record) => Gate::allows('complete', $record))
+                        ->authorize('complete', Order::class),
                     Tables\Actions\DeleteAction::make()
                         ->visible(fn(Order $record) => $record->orderLines()->count() === 0),
                     Actions\Action::make('downloadPdf')
@@ -288,6 +293,7 @@ class OrderResource extends Resource
                         ->label('Agregar aplicación')
                         ->icon('heroicon-o-plus-circle')
                         ->color('primary')
+                        ->visible(fn(Order $record) => Gate::allows('update', $record))
                         ->form(function ($record) {
                             return [
                                 Forms\Components\Select::make('parcel_id')
@@ -449,7 +455,7 @@ class OrderResource extends Resource
                 }
             })
     ->hidden(fn(Order $record) => $record->is_completed)
-    ->visible(fn(Order $record) => Auth::user()->can('createApplication', $record)),
+    ->visible(fn(Order $record) => Gate::allows('createApplication', $record)),
                 ])->button()->size(ActionSize::Small)
             ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
@@ -486,6 +492,13 @@ class OrderResource extends Resource
             ApplicationUsageRelationManager::class,
             OrderParcelRelationManager::class,
         ];
+    }
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 
     public static function getPages(): array

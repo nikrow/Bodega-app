@@ -8,6 +8,7 @@ use App\Enums\FamilyType;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
@@ -19,6 +20,7 @@ class Order extends Model implements Auditable
 {
 
     use HasFactory;
+    use SoftDeletes;
     use LogsActivity;
     use \OwenIt\Auditing\Auditable;
 

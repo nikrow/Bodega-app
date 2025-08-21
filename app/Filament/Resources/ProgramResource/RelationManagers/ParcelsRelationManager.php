@@ -147,6 +147,7 @@ class ParcelsRelationManager extends RelationManager
     {
         return Parcel::query()
             ->where('field_id', Filament::getTenant()->id)
+            ->where('is_active', true)
             ->where('crop_id', $this->getOwnerRecord()->crop_id);
     }
     
@@ -272,7 +273,7 @@ protected function getAttachAction(): Tables\Actions\AttachAction
                     ->success()
                     ->title('Asociación Exitosa')
                     ->body('Se asociaron ' . count($validParcelIds) . ' cuartel(es) correctamente.')
-                    ->sendToDatabase(auth()->user());
+                    ->sendToDatabase(Auth::user());
             }
 
             // 3. Notificar al usuario sobre los conflictos encontrados (si los hay)
@@ -282,7 +283,7 @@ protected function getAttachAction(): Tables\Actions\AttachAction
                     ->title('Algunos Cuarteles No se Pudieron Asociar')
                     ->body(implode("\n", $conflictMessages))
                     ->persistent() // La dejamos visible hasta que el usuario la cierre
-                    ->sendToDatabase(auth()->user());
+                    ->sendToDatabase(Auth::user());
             }
 
             // Si no hubo cuarteles válidos ni conflictos (ej. IDs no encontrados), no hacemos nada.
@@ -291,7 +292,7 @@ protected function getAttachAction(): Tables\Actions\AttachAction
                     ->warning()
                     ->title('No se asoció ningún cuartel')
                     ->body('No se encontraron cuarteles válidos para asociar.')
-                    ->sendToDatabase(auth()->user());
+                    ->sendToDatabase(Auth::user());
             }
 
         });
@@ -386,7 +387,7 @@ protected function getAttachAction(): Tables\Actions\AttachAction
                     Notification::make()
                         ->success()
                         ->title("Se actualizaron {$updatedCount} superficies correctamente.")
-                        ->sendToDatabase(auth()->user());
+                        ->sendToDatabase(Auth::user());
                 }
             });
     }
