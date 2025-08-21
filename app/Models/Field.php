@@ -153,7 +153,7 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(Fertilization::class, 'field_id');
     }
-    public function irrigation()
+    public function irrigations()
     {
         return $this->hasMany(Irrigation::class, 'field_id');
     }
