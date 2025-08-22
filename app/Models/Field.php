@@ -169,6 +169,9 @@ class Field extends Model implements Auditable
     {
         return $this->hasMany(ProgramParcel::class, 'field_id');    
     }
-
+    public function workLogs()
+    {
+        return $this->hasMany(WorkLog::class, 'field_id');
+    }
 }
 

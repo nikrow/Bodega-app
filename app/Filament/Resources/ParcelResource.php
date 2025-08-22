@@ -379,11 +379,7 @@ class ParcelResource extends Resource
                             ]);
                         })
                         ->requiresConfirmation()
-                        ->visible(function () {
-                            $user = Auth::user();
-                            return in_array($user->role, [
-                                RoleType::ADMIN,
-                            ]);
+                        ->visible(function () { $user = Auth::user(); return in_array($user->role, [RoleType::ADMIN,]);
                         })
                         ->hidden(fn ($record) => !$record->is_active),
                 ])
